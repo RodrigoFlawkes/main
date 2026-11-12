@@ -2,7 +2,9 @@
 
 Planejamento atualizado em 12/11/2026. Fase 1 em andamento, com incrementos verificáveis. Escopo detalhado em [REQUIREMENTS.md](REQUIREMENTS.md).
 
-Incrementos 1–5 publicados e revisados. F1-I6 fornece checkpoint técnico com correções da revisão F1-I5, picos por sessão a 1 Hz, publicação Release x64 e roteiro de aceitação. Builds Debug/Release com zero erros/avisos e 184 testes aprovados em cada configuração. Aceitação física/visual e Windows 11 permanecem pendentes. A Fase 1 continua em validação.
+Incrementos 1–5 publicados e revisados. F1-I6 fornece checkpoint técnico com correções da revisão F1-I5, picos por sessão a 1 Hz, publicação Release x64 e roteiro de aceitação. O adendo autorizado F1-I6-MIC acrescenta captura curta em memória e reprodução explícita para diagnóstico. Builds Debug/Release com zero erros/avisos e 228 testes aprovados em cada configuração. Aceitação física/visual, A11 e Windows 11 permanecem pendentes. A Fase 1 continua em validação.
+
+O adendo usa os projetos existentes, NAudio.Wasapi 3.1.0 e um worker de diagnóstico com estados/cancelamento testáveis. Não inicia a Fase 2. Após publicação, receber resultados A01–A11 por sistema/dispositivo, corrigir falhas comprovadas e aguardar aprovação explícita. Monitoramento ao vivo permanece no planejamento da Fase 2.
 
 ## Incrementos
 

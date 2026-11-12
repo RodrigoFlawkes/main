@@ -4,11 +4,15 @@ Aplicação desktop para gerenciamento de áudio no Windows, independente de fab
 
 ## Estado do projeto
 
-F1-I6 com checkpoint técnico publicado para validação. A prévia oferece seleção independente, volume/mute, balanço condicional, medidores reais, mixer de sessões, notificações e preferências JSON. A aceitação física da v0.1.0 Alpha permanece pendente.
+F1-I6-MIC adiciona o teste curto de microfone ao checkpoint técnico da Alpha. A prévia oferece seleção independente, volume/mute, balanço condicional, medidores reais, mixer de sessões, notificações e preferências JSON. A aceitação física da v0.1.0 Alpha permanece pendente.
+
+Na aba **Testar microfone**, clique em **Gravar teste**, fale e use **Parar** (limite de 10 segundos). Depois, com fones e volume baixo, clique em **Ouvir gravação**. A reprodução começa em nível digital de 20%, ajustável de 0 a 100%, sem alterar volume/mute do Windows. **Parar reprodução** interrompe a saída; **Limpar teste** apaga o trecho. Não há captura/reprodução automática nem monitoramento ao vivo. O áudio fica somente em memória e é descartado na troca/atualização de dispositivos, desconexão, suspensão ou fechamento.
+
+O teste aceita mix mono/estéreo em PCM 16 bits ou float 32 bits, de 8 a 96 kHz. WASAPI compartilhado negocia a reprodução na saída selecionada; formato incompatível, acesso negado e mute geram mensagens. Nenhum destino alternativo é escolhido pelo teste. Microfone mono continua sem balanço L/R, com explicação próxima ao controle.
 
 A aba **Mixer de aplicativos** lista sessões reais da saída selecionada, com nome/processo quando disponível, PID auxiliar, estado, volume/mute e pico por instância. Edite Volume (%) e confirme com Enter, ou use o botão de mute. Picos são consultados a cada segundo, com silêncio, pausa, indisponibilidade e atraso identificados. A reconciliação por chave preserva linhas, foco e edição.
 
-Verificação atual com 184 testes aprovados em Debug e Release, incluindo os 174 anteriores, e builds com zero erros/avisos. O executável publicado completou ensaio de processo de dez minutos e encerramento normal, com armazenamento temporário isolado. Automação visual está indisponível por falha no pipe nativo. Resposta à fala/música, controles físicos, USB/retomada, layout e Windows 11 x64 aguardam o roteiro do proprietário. Windows 10 é experimental.
+Verificação atual com 228 testes aprovados em Debug e Release, incluindo os 184 anteriores, e builds com zero erros/avisos. O executável atualizado abriu e fechou normalmente com armazenamento isolado, sem acionar captura/reprodução. O ensaio de dez minutos pertence ao checkpoint F1-I6 anterior. O proprietário confirmou volume/mute do microfone; os demais critérios completos e o novo A11 aguardam evidência física. Windows 10 é experimental e Windows 11 x64 continua pendente.
 
 Versão v0.1.0 Alpha em desenvolvimento. Preferências duráveis de sessões aguardam identidade inequívoca. A Fase 1 aguarda aprovação explícita após os testes físicos.
 
@@ -28,11 +32,11 @@ Versão v0.1.0 Alpha em desenvolvimento. Preferências duráveis de sessões agu
 
 ## Executável de teste local
 
-A publicação fica em `artifacts/alpha-preview/win-x64/WaveStudio.exe`. Use a pasta completa e .NET Desktop Runtime 10 x64. Para validar com preferências isoladas, execute na raiz.
+A publicação atualizada fica em `artifacts/alpha-preview/mic-build/WaveStudio.exe`. A substituição da pasta habitual `artifacts/alpha-preview/win-x64` aguarda o fechamento normal da prévia anterior, ainda aberta. Use a pasta completa e .NET Desktop Runtime 10 x64. Para validar com preferências isoladas, execute na raiz.
 
 ```powershell
 $arquivoDeAceitacao = Join-Path $env:TEMP ('WaveStudio-aceitacao-' + [guid]::NewGuid().ToString('N') + '/settings.json')
-& './artifacts/alpha-preview/win-x64/WaveStudio.exe' --settings-file $arquivoDeAceitacao
+& './artifacts/alpha-preview/mic-build/WaveStudio.exe' --settings-file $arquivoDeAceitacao
 ```
 
 O [roteiro de aceitação](docs/ALPHA_ACCEPTANCE.md) contém SHA-256, comando de publicação e casos a relatar como aprovado, falhou ou pendente. O diretório artifacts é ignorado pelo Git, e a distribuição atual destina-se a testes locais.
@@ -63,7 +67,7 @@ As barras mostram pico do Windows em percentual e dBFS, com silêncio e indispon
 
 Os controles refletem alterações externas por consultas em segundo plano a cada aproximadamente 600 ms. Balanço exige dois canais de volume e formato com máscara frontal L/R confirmada. O centro iguala os canais ao maior nível atual. Extremos atenuam o lado oposto e preservam esse nível-base. Mono e mapeamento desconhecido deixam o balanço desabilitado com explicação. Erros de escrita desabilitam o controle afetado até atualizar ou selecionar novamente. O volume é o controle do endpoint do Windows.
 
-A suíte possui 173 casos de regras, simulações, armazenamento e WinForms STA e 11 integrações Windows. Escritas automatizadas de áudio usam simulações. Siga os [passos físicos dos incrementos](docs/TEST_PLAN.md).
+A suíte possui 217 casos de regras, simulações, armazenamento e WinForms STA e 11 integrações Windows. Captura/reprodução do teste novo e escritas automatizadas de áudio usam simulações. Nenhum teste automatizado aciona o microfone real. Siga os [passos físicos dos incrementos](docs/TEST_PLAN.md).
 
 ## Preferências locais
 

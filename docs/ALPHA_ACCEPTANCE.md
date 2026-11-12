@@ -1,14 +1,14 @@
 # Aceitação da prévia v0.1.0 Alpha
 
-Estado da F1-I6 em 12/11/2026 — validação pendente. Este roteiro registra evidências do proprietário e verificações técnicas. A aceitação da Fase 1 depende dos ensaios físicos e de aprovação explícita.
+Estado da F1-I6-MIC em 12/11/2026 — validação física pendente. Este roteiro registra evidências do proprietário e verificações técnicas. A aceitação da Fase 1 depende dos ensaios físicos e de aprovação explícita.
 
-O executável local está em `artifacts/alpha-preview/win-x64/WaveStudio.exe`. Use a pasta completa da publicação. Requer .NET Desktop Runtime 10 x64, com Microsoft.NETCore.App e Microsoft.WindowsDesktop.App da linha 10. O ensaio utilizou 10.0.15 em Windows 10 Pro 22H2, build 19045.6466, experimental. Windows 11 x64 é prioritário e aguarda ensaio próprio.
+O executável atualizado F1-I6-MIC está em `artifacts/alpha-preview/mic-build/WaveStudio.exe`. A pasta habitual `artifacts/alpha-preview/win-x64` aguarda o fechamento normal da prévia anterior pelo proprietário antes de ser substituída; não foi encerrado seu processo. Use a pasta completa da publicação atualizada. Requer .NET Desktop Runtime 10 x64, com Microsoft.NETCore.App e Microsoft.WindowsDesktop.App da linha 10. O ensaio utilizou 10.0.15 em Windows 10 Pro 22H2, build 19045.6466, experimental. Windows 11 x64 é prioritário e aguarda ensaio próprio.
 
 Na raiz do repositório, inicie com armazenamento isolado para aceitação.
 
 ```powershell
 $arquivoDeAceitacao = Join-Path $env:TEMP ('WaveStudio-aceitacao-' + [guid]::NewGuid().ToString('N') + '/settings.json')
-& './artifacts/alpha-preview/win-x64/WaveStudio.exe' --settings-file $arquivoDeAceitacao
+& './artifacts/alpha-preview/mic-build/WaveStudio.exe' --settings-file $arquivoDeAceitacao
 ```
 
 Mantenha `$arquivoDeAceitacao` para repetir o teste de reinício. A janela permite ver o caminho na aba Preferências locais.
@@ -27,6 +27,7 @@ Antes dos testes, use volume baixo, anote volume/mute/balanço de endpoints e ap
 | A08 Interface | Conferir rolagem, foco, diálogos e teclado em 1366×768 ou resolução disponível e DPI 100/150/200% | Pendente |
 | A09 Estabilidade | Observar uso prolongado, atualizar/trocar seleção e fechar durante atividade. Registrar travamento, erro ou recuperação | Pendente |
 | A10 Windows 11 | Repetir os casos no Windows 11 x64 e registrar versão/dispositivo | Pendente — proprietário dispõe somente de Windows 10 |
+| A11 Testar microfone | Com fones e volume baixo: gravar, falar, parar, ouvir explicitamente na saída selecionada, parar reprodução e limpar. Conferir limite 10 s, mono, nível digital, ausência de captura/playback automático e descarte em mudança/USB/suspensão/fechamento | Pendente — nenhuma captura/reprodução física automatizada |
 
 Envie o sistema/versão, dispositivo e resultados por ID, usando aprovado, falhou ou pendente. Em falha, informe ação, mensagem e valores antes/depois. Resultados observados por acessibilidade e testes automatizados ficam registrados separadamente em PROJECT_STATUS.md e TEST_PLAN.md.
 
@@ -51,7 +52,7 @@ Picos zero e custo de consulta descrevem as leituras observadas. A aceitação d
 
 ## Reprodução da publicação local
 
-Em Windows x64 com o SDK fixado, execute os comandos abaixo. O projeto define PlatformTarget x64, e o apphost desta máquina foi conferido como AMD64.
+Em Windows x64 com o SDK fixado, feche normalmente o executável da pasta de destino antes de publicar. Execute os comandos abaixo. O projeto define PlatformTarget x64, e o apphost desta máquina foi conferido como AMD64. Nesta etapa foi usada a pasta de preparação mic-build para preservar a janela anterior ainda aberta. Os comandos abaixo reproduzem a pasta habitual após seu fechamento.
 
 ```powershell
 dotnet restore WaveStudio.slnx --locked-mode
@@ -82,6 +83,20 @@ SHA-256 do WaveStudio.exe local, com 162.304 bytes.
 ```
 
 Relatório detalhado do ensaio fica em artifacts/alpha-preview/validation, ignorado pelo Git. A pasta publicada é uma prévia para testes locais. A aprovação final da Alpha aguarda as evidências físicas e aprovação do proprietário.
+
+## Novo teste A11 e evidências técnicas F1-I6-MIC
+
+1. Selecione o microfone e o headset na aba Dispositivos. Confira IDs/nomes, mute e níveis baixos do Windows. O teste usa exatamente esses alvos, sem escolher outro se ficarem indisponíveis. Para microfone mono, balanço L/R continua indisponível.
+2. Abra Testar microfone e confirme que nada está sendo capturado/reproduzido. O nível digital para ouvir começa em 20%, separado do Windows. Use fones.
+3. Clique em Gravar teste, fale uma frase curta, confira GRAVANDO e o tempo. Use Parar; em outra tentativa aguarde o limite de 10 s. Parar também está disponível na reprodução. Nunca deve ouvir automaticamente ao terminar.
+4. Clique em Ouvir gravação, confirme voz e saída selecionada. Confira nível digital com valores baixos; não aumente níveis do sistema para compensar uma falha sem investigar mute/permissões. Use Parar reprodução e repita explicitamente se necessário.
+5. Clique em Limpar teste. Ouvir deve ficar desabilitado. Troque um dispositivo, atualize a lista ou feche e confirme que o trecho não retorna. O teste não cria arquivos de áudio nem salva seu nível digital.
+6. Teste mute/permissões e formatos diferentes quando disponíveis. Com hardware seguro, troque/desconecte USB, suspenda/retome ou feche durante gravação/reprodução. A operação deve parar, o trecho ser descartado e nunca reiniciar automaticamente ou migrar para outro endpoint.
+7. Relate A11 aprovado/falhou/pendente, sistema, entrada/saída, canais/formato, ação e mensagem. Não envie áudio pessoal; uma descrição do resultado basta. Restaure os níveis/padrões originais ao terminar.
+
+Restore locked com auditoria aprovado; Debug/Release sem erros/avisos, 228 testes aprovados em cada configuração (44 novos + regressão dos 184). Todos os testes novos de captura/playback são simulados. O novo pacote abriu com título esperado, fechou normalmente e criou somente configuração/lock isolados. Nenhum teste automatizado abriu o microfone real ou emitiu áudio de teste. A negociação de formatos e a qualidade audível continuam pendentes de A11. Monitoramento ao vivo e motor completo da Fase 2 não foram iniciados.
+
+O apphost WaveStudio.exe tem o mesmo SHA-256 indicado acima porque o destino WaveStudio.dll é constante. Não copie somente o EXE. O WaveStudio.dll atualizado possui 121.344 bytes e SHA-256 `2FDFA46222331D51D30BDB01AD0B512BF8D4DFF360DDA561A37FE3567C80D20E`; o manifesto local registra também a DLL de áudio e todos os arquivos da pasta completa.
 
 ## Evidências físicas parciais do proprietário — 12/11/2026
 

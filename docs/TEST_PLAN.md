@@ -1,5 +1,15 @@
 # Plano de testes
 
+## F1-I6-MIC — captura/reprodução curta, validação física pendente
+
+Restore locked e auditoria aprovados após repetir com acesso ao NuGet (a tentativa restrita teve três NU1900). Debug/Release x64 compilados sem erros/avisos. Em cada configuração, 228 aprovados, zero falhas/ignorados: 184 de regressão + 44 novos, totalizando 217 regras/simulações/arquivos/STA e as 11 integrações Windows de leitura/execução isolada existentes.
+
+MicrophoneTestTests verifica ausência de captura/reprodução automáticas, IDs exatos sem fallback, exclusão mútua, duração/bytes/frames, parada nativa pendente, mono, subconjunto de formatos, rejeição de formatos/níveis inválidos, atenuação PCM/float/zero/unidade, NaN/Infinity, gerações e callbacks obsoletos, abertura bloqueada cancelada por troca/Parar/Limpar, erros/permissões, conclusão/watchdog, falha durante playback, descarte e fechamento idempotente. MicrophoneTestUiTests exercita botões reais com backend simulado em STA, nível inicial de 20%, seleção sem efeitos e mudança de alvo. As camadas de teste não possuem API para gravar configurações ou escrever volume/mute do Windows; a revisão confirmou ausência dessas chamadas no diagnóstico.
+
+As capturas e reproduções automatizadas usam exclusivamente fakes; nenhum microfone real foi aberto e nenhum áudio foi emitido pelo teste novo. O executável atualizado abriu com título esperado, fechou normalmente e gerou apenas settings.json e seu lock em diretório próprio, com zero preferências de níveis. A tentativa inicial com janela oculta não expôs MainWindowHandle para CloseMainWindow; somente esse processo próprio de ensaio foi encerrado. O ensaio visível seguinte passou. O processo anterior do proprietário foi preservado.
+
+Executar o novo caso [A11](ALPHA_ACCEPTANCE.md) com fones e volume baixo: gravar/falar/parar, conferir ausência de reprodução automática, ouvir explicitamente, parar, repetir e limpar. Conferir mono, mute/permissões, formatos diferentes, troca de dispositivos, USB, suspensão e fechamento durante atividade. A01–A10 continuam pendentes de resultados completos, com volume/mute do microfone já confirmados parcialmente pelo proprietário. Windows 11 aguarda ambiente. Abertura de janela e simulações não confirmam qualidade audível, latência ou negociação física.
+
 ## F1-I6 — checkpoint técnico, validação pendente
 
 Restore locked aprovado com auditoria de dependências após repetir com acesso ao NuGet. A primeira tentativa teve NU1900 por restrição de rede. Builds Debug/Release x64 terminaram com zero erros e zero avisos. Em cada configuração, 184 testes passaram, zero falhas e zero ignorados, incluindo regressão dos 174 anteriores. São 173 casos de regras/simulações/arquivos/STA e 11 integrações Windows. Runner com TESTINGPLATFORM_TELEMETRY_OPTOUT=1.

@@ -2,7 +2,41 @@
 
 Atualizado em 12/11/2026.
 
-## Estado atual — F1-I6, checkpoint técnico com validação pendente
+## Estado atual — F1-I6-MIC implementada, aceitação física pendente
+
+Repositório inicialmente limpo em main, atualizado por git pull --ff-only de 4c05092 para 91552b0. Remoto confirmado como https://github.com/Wave-Universal-Studio/main.git. AGENTS.md, NEXT_TASK.md, REVIEW.md, requisitos, arquitetura, planos, aceitação, propostas futuras e status consultados. Implementação, commit e push autorizados pelo proprietário. Nenhum incremento anterior foi reimplementado; Fase 2 não iniciada.
+
+| Categoria | Resultado desta etapa |
+| --- | --- |
+| Implementado | Aba Testar microfone: Gravar teste, Parar, Ouvir gravação, Parar reprodução e Limpar teste, com estados, tempo e mensagens em pt-BR |
+| Captura/reprodução | WASAPI compartilhado nos IDs selecionados, sem fallback do diagnóstico, sem simultaneidade e sem início automático |
+| Segurança/privacidade | Trecho em memória até 10 s / 8 MiB, sem arquivo/envio/persistência; nível digital de reprodução inicial 20%, máximo 100%; volumes/mute/padrões do Windows preservados |
+| Ciclo de vida | Worker MTA, snapshots sem COM, revisão/cancelamento antes/depois de abrir streams, callbacks limitados e descarte em troca/atualização, desconexão, suspensão e fechamento |
+| Formatos | Mono/estéreo, PCM 16 ou float 32, mix de 8–96 kHz; conversão compartilhada do Windows na saída, com falha compreensível quando recusada |
+| Dependências | NAudio.Wasapi 3.1.0 existente, APIs públicas/builder e ownership conferidos na tag; nenhuma dependência nova ou mudança de lock |
+| Compilado/testado | Restore locked com auditoria. Debug e Release x64 sem erros/avisos; 228 aprovados por configuração, zero falhas/ignorados (184 anteriores + 44 novos) |
+| Natureza dos testes | 217 regras/simulações/arquivos/STA e 11 integrações Windows existentes de leitura/execução isolada. Nenhuma captura real ou playback físico automatizado |
+| Execução | Novo pacote iniciou com título esperado, fechou normalmente e criou somente settings.json/lock em diretório isolado, sem preferências de níveis |
+| Pacote atualizado | Release AMD64 framework-dependent em artifacts/alpha-preview/mic-build/WaveStudio.exe, com dependências e licenças; requer .NET Desktop Runtime 10 x64 |
+| Pasta habitual | Substituição de artifacts/alpha-preview/win-x64 aguarda fechamento normal do executável anterior pelo proprietário; processo preservado e fechamento solicitado |
+| Evidência física já recebida | Proprietário confirmou volume/mute do microfone. Captura mono (1 canal), balanço corretamente desabilitado; isto não aprova integralmente A03 |
+| Pendências | A11 gravar/ouvir/descarte, negociação real, qualidade, mute/permissões, USB/troca/suspensão/fechamento durante atividade e layout. A01–A10 seguem pendentes de resultados completos; Windows 11 sem ambiente |
+| Próximo passo | Proprietário testar o novo executável e relatar A11 e demais casos; aguardar revisão/aceitação explícita. Windows 10 experimental; Fase 1 continua em validação |
+
+### Verificações da F1-I6-MIC
+
+- dotnet restore WaveStudio.slnx --locked-mode --force aprovado com auditoria após permitir acesso ao NuGet. A tentativa restrita retornou três NU1900, resolvidos na repetição sem alterar versões. Builds Debug/Release --no-restore e dotnet test --solution WaveStudio.slnx em ambas as configurações aprovados, com TESTINGPLATFORM_TELEMETRY_OPTOUT=1.
+- MicrophoneTestModels, BoundedTestAudio, MicrophoneTestEngine, MicrophoneTestSession e CoreAudioMicrophoneTestBackend em Audio; MicrophoneTestPanel e integração mínima em MainForm; testes MicrophoneTestTests e MicrophoneTestUiTests. Estado inicial sem streams, nenhum acesso a SettingsStore/setters de volume no diagnóstico e nenhum novo controle DSP/driver.
+- Os 44 casos novos cobrem estados, limites, frames, formatos/mono, atenuação PCM/float e valores inválidos, ausência de execução automática, alvos exatos, erros, parada pendente, cancelamento de abertura, callbacks obsoletos, desconexão/falha, conclusão/watchdog, fechamento idempotente e botões em STA. Escritas de áudio e captura/reprodução desses casos são simuladas.
+- Os ensaios publicados visíveis usaram PIDs próprios 20788 e 9856 (pacote final), com configuração isolada. Início, título, CloseMainWindow, WaitForExit e arquivo v1 confirmados; zero preferências de níveis salvas. Uma tentativa anterior oculta não expôs janela para fechamento normal; somente o processo próprio de ensaio 15212 foi encerrado. O PID 22460 da prévia anterior do proprietário foi preservado. Nenhuma captura/reprodução real foi iniciada. Inspeção visual e resultado audível continuam pendentes.
+- README, arquitetura, plano, testes, changelog e aceitação A11 atualizados. AGENTS.md, REQUIREMENTS.md, NEXT_TASK.md, REVIEW.md, FUTURE_AUDIO_FEATURES.md, SDK/build e lock files preservados. Busca de padrões comuns de credenciais e inventário de nomes sensíveis sem correspondências no conteúdo versionável. Nenhum binário/artefato de compilação preparado para commit. git diff --check e git diff --cached --check aprovados. Remoto reconferido por fetch, sem divergência antes do commit autorizado; publicação por push normal e conferência final de main/origin/main previstas na entrega.
+- Pacote final com 14 arquivos, apphost PE AMD64 0x8664 e licenças preservadas. O apphost WaveStudio.exe pode manter o mesmo SHA-256 entre builds: seu destino gerenciado é constante. O pacote inteiro é necessário; hashes das DLLs e manifesto local mic-package-manifest.json em artifacts/alpha-preview/validation identificam a implementação atualizada. WaveStudio.Audio.dll SHA-256 B07AA9836370D74CB5256F25C144D20270DEF18BC6ADAF49FF1113DCEE65A05D. Áudio de teste não acompanha o pacote ou o Git.
+
+### Testes físicos ainda pendentes
+
+Usar o novo A11 em docs/ALPHA_ACCEPTANCE.md com headset, volume baixo e níveis/padrões anotados. Conferir gravação explícita, fala, parada automática/manual, nenhuma reprodução até clicar, saída correta, nível digital independente, stop e limpar. Repetir com mono, mute/permissão negada, formatos fora do subconjunto, troca rápida, desconexão, suspensão e fechamento, sem retomada automática. Não foi emitida evidência audível nesta etapa. O relato anterior de volume/mute de captura permanece parcial. Windows 11 x64 prioritário e indisponível; Windows 10 disponível permanece experimental. A aceitação da Alpha não foi concluída.
+
+## Histórico — F1-I6, checkpoint técnico com validação pendente
 
 Repositório inicialmente limpo em main, sincronizado por fast-forward até 8d0e688. Remoto confirmado como https://github.com/Wave-Universal-Studio/main.git. AGENTS.md, requisitos, arquitetura, plano, testes, status, NEXT_TASK.md, revisão F1-I5 e FUTURE_AUDIO_FEATURES.md lidos. O proprietário autorizou implementação, commit e push desta etapa. Os incrementos anteriores permaneceram como base, com regressão obrigatória.
 

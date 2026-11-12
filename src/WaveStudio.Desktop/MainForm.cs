@@ -10,6 +10,7 @@ internal sealed partial class MainForm : Form
     private readonly CoreAudioDeviceService audio = new();
     private readonly DeviceSelection selection = new();
     private readonly ApplicationMixerPanel mixer = new();
+    private readonly MicrophoneTestPanel microphoneTest = new();
     private readonly CancellationTokenSource lifetime = new();
     private readonly DevicePanel playback = new("Dispositivo de reprodução / headset");
     private readonly DevicePanel capture = new("Dispositivo de captura / microfone");
@@ -75,6 +76,9 @@ internal sealed partial class MainForm : Form
         mixerPage.Controls.Add(mixer);
         tabs.TabPages.Add(devicesPage);
         tabs.TabPages.Add(mixerPage);
+        var microphoneTestPage = new TabPage("Testar microfone");
+        microphoneTestPage.Controls.Add(microphoneTest);
+        tabs.TabPages.Add(microphoneTestPage);
         tabs.TabPages.Add(CreatePreferencesPage());
         layout.Controls.Add(tabs, 0, 2);
         layout.SetColumnSpan(tabs, 2);
@@ -91,7 +95,7 @@ internal sealed partial class MainForm : Form
         capture.DeviceSelected += device => SelectExplicit(device);
         followPlayback.CheckedChanged += (_, _) => ChangeFollowMode(EndpointDirection.Playback, followPlayback);
         followCapture.CheckedChanged += (_, _) => ChangeFollowMode(EndpointDirection.Capture, followCapture);
-        refresh.Click += (_, _) => { watch.Recover(); RequestRefresh(true); };
+        refresh.Click += (_, _) => { _ = microphoneTest.InvalidateAsync(); watch.Recover(); RequestRefresh(true); };
         playback.SavePreferenceRequested += () => RunPreferenceAction(() => SaveEndpointPreferenceAsync(EndpointDirection.Playback, playback));
         capture.SavePreferenceRequested += () => RunPreferenceAction(() => SaveEndpointPreferenceAsync(EndpointDirection.Capture, capture));
         playback.RestorePreferenceRequested += () => RunPreferenceAction(() => RestoreEndpointPreferenceAsync(EndpointDirection.Playback, playback));
@@ -122,6 +126,7 @@ internal sealed partial class MainForm : Form
             if (stopping)
                 return;
             stopping = true;
+            _ = microphoneTest.InvalidateAsync();
             peakTimer.Stop();
             watch.CatalogChanged -= OnCatalogChanged;
             SystemEvents.PowerModeChanged -= OnPowerModeChanged;
@@ -130,7 +135,7 @@ internal sealed partial class MainForm : Form
             await startupTask;
             await SaveWindowOnCloseAsync();
             await refreshTask;
-            await Task.WhenAll(playback.StopAsync().AsTask(), capture.StopAsync().AsTask(), mixer.StopAsync().AsTask(), watch.DisposeAsync().AsTask());
+            await Task.WhenAll(playback.StopAsync().AsTask(), capture.StopAsync().AsTask(), mixer.StopAsync().AsTask(), watch.DisposeAsync().AsTask(), microphoneTest.StopAsync().AsTask());
             closing = true;
             Close();
         };
@@ -139,11 +144,13 @@ internal sealed partial class MainForm : Form
 
     private void OnPowerModeChanged(object? sender, PowerModeChangedEventArgs args)
     {
+        if (args.Mode is PowerModes.Suspend or PowerModes.Resume) _ = microphoneTest.InvalidateAsync();
         if (args.Mode == PowerModes.Resume) watch.Recover();
     }
 
     private void OnCatalogChanged(bool resetControls)
     {
+        if (resetControls) _ = microphoneTest.InvalidateAsync();
         try
         {
             if (IsHandleCreated && !IsDisposed)
@@ -177,6 +184,7 @@ internal sealed partial class MainForm : Form
     private void ChangeFollowMode(EndpointDirection direction, CheckBox check)
     {
         if (!settingsLoaded || stopping || bindingFollow || recoveringPreferences) return;
+        _ = microphoneTest.InvalidateAsync();
         if (check.Checked) selection.FollowDefault(direction);
         else
         {
@@ -193,8 +201,9 @@ internal sealed partial class MainForm : Form
         SaveSelectionPreferences();
     }
 
-    private void UpdateWatchSelection()
+    private void UpdateWatchSelection(bool invalidateTest = false)
     {
+        microphoneTest.SelectDevices(currentCapture, currentPlayback, invalidateTest);
         watchSelection = watch.Select(currentPlayback?.State == EndpointState.Active ? currentPlayback.Id : null,
             currentCapture?.State == EndpointState.Active ? currentCapture.Id : null);
         playback.ShowPeak(PeakReading.Unavailable);
@@ -248,7 +257,7 @@ internal sealed partial class MainForm : Form
             playback.ShowDevices(catalog, EndpointDirection.Playback, selectedPlayback, resetControls, selection.PlaybackId);
             capture.ShowDevices(catalog, EndpointDirection.Capture, selectedCapture, resetControls, selection.CaptureId);
             if (resetControls || playbackChanged) mixer.SelectDevice(selectedPlayback);
-            UpdateWatchSelection();
+            UpdateWatchSelection(resetControls);
             ShowSavedPreferences();
             var warnings = catalog.Warnings.ToList();
             AddFallbackWarning(warnings, selectedPlayback, EndpointDirection.Playback, selection.PlaybackId);

@@ -1,6 +1,22 @@
 # Arquitetura do Wave Studio
 
-Decisões da Fase 0, em 12/11/2026, com atualizações até o checkpoint técnico F1-I6, em validação pendente. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). A implementação atual é descrita primeiro, seguida pelo histórico e planejamento de evolução.
+Decisões da Fase 0, em 12/11/2026, com atualizações até F1-I6-MIC, em validação física pendente. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). A implementação atual é descrita primeiro, seguida pelo histórico e planejamento de evolução.
+
+## Diagnóstico curto de microfone — F1-I6-MIC
+
+Adendo autorizado à Alpha: gravação curta seguida de reprodução por gesto explícito. O motor contínuo, DSP, monitoramento/sidetone, exportação e roteamento externos continuam nas fases posteriores. O microfone mono conserva seu único canal; balanço L/R permanece indisponível.
+
+MicrophoneTestPanel apresenta snapshots e comandos. MicrophoneTestSession possui uma thread MTA dedicada, fila serializada, revisão de alvos e cancelamento de operações. Nenhum objeto COM chega à UI. MicrophoneTestEngine concentra estados e regras testáveis sem hardware. O worker aguarda sem polling quando ocioso e, durante atividade, verifica limites/finalização a cada 25 ms. A UI consulta snapshots a 10 Hz.
+
+CoreAudioMicrophoneTestBackend abre somente IDs selecionados, valida direção/estado/mute e mantém propriedade de cada MMDevice. WasapiRecorder e WasapiPlayer possuem seus clientes/threads internos; criação, comandos e descarte dos wrappers ocorrem na thread proprietária. A conclusão nativa sinaliza flags gerenciadas. O worker libera streams antes dos dispositivos e apaga o clip. Stop da captura aguarda sair de Starting antes de sinalizar parada, evitando a sobrescrita desse sinal pela thread da versão 3.1.0. Não se faz Join nem descarte no callback.
+
+BoundedTestAudio aceita apenas PCM 16 ou float 32, mono/estéreo, 8–96 kHz, com frames completos. Pré-aloca até 10 s, limitado a 8 MiB (máximo atual de 7.680.000 bytes para 96 kHz estéreo float). O callback copia somente o que cabe no buffer, sem disco/rede/UI. A captura utiliza o mix suportado; a reprodução compartilhada usa AutoConvertPcm/SrcDefaultQuality do Windows para adaptar o formato ao destino. Formatos fora do subconjunto ou recusados pela inicialização são informados, sem fallback de endpoint ou alteração de formato padrão.
+
+Após parar, o trecho fica selado e nunca toca automaticamente. Um IWaveProvider.Read(Span<byte>) aplica somente atenuação digital de 0 a 1, inicialmente 0,2; amostras float não finitas viram silêncio e valores fora de escala são limitados. Esse nível não usa SessionVolume, DeviceVolume ou setters de Core Audio. O teste não referencia SettingsStore nem persiste áudio ou seu nível digital.
+
+Mudança de seleção, formato/ciclo de vida, atualização manual, suspensão/retomada e fechamento invalidam a revisão imediatamente. Callbacks e provider verificam revisão/cancelamento, inclusive depois de copiar um pacote. Comandos verificam novamente antes de Start após uma abertura potencialmente lenta. Parar/Limpar cancelam também a operação em abertura. Desconexão/falha de stream descarta o trecho, mesmo antes do catálogo; indisponibilidade detectada ao abrir a saída também descarta. Falha de mute/formato/permissão ao abrir uma saída mantém o trecho para tentativa explícita após conferência. Não há captura e reprodução simultâneas.
+
+APIs e ownership conferidos no código da tag fixada: [WasapiRecorder](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/WasapiRecorder.cs), [builder de captura](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/WasapiRecorderBuilder.cs), [WasapiPlayer](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/WasapiPlayer.cs), [builder de reprodução](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/WasapiPlayerBuilder.cs). A negociação real e o resultado audível aguardam A11. Nenhuma nova dependência ou mudança de lock.
 
 ## Correções e medição da prévia — F1-I6
 

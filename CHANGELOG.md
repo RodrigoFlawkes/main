@@ -2,6 +2,15 @@
 
 ## Em desenvolvimento
 
+### 2026-11-12 — F1-I6-MIC, teste local de microfone
+
+- Aba Testar microfone com gravação explícita de até 10 s, parada, reprodução explícita na saída selecionada, parada da reprodução e descarte. Sem monitoramento contínuo.
+- Trecho em memória limitado a 8 MiB e 10 s, sem arquivo/envio/persistência. Descarte na mudança de alvos/formato, atualização, desconexão, suspensão e fechamento.
+- Nível digital de reprodução inicialmente em 20%, com ajuste 0–100% e sem boost. Preservados volumes/mute/padrões do Windows e balanço indisponível em mono.
+- Worker MTA separado da UI, snapshots, cancelamento/geração, callbacks limitados e descarte de streams/dispositivos. APIs públicas WasapiRecorderBuilder/WasapiPlayerBuilder da versão 3.1.0, sem novas dependências.
+- Restore locked com auditoria, builds Debug/Release sem erros/avisos e 228 testes aprovados em cada configuração (184 anteriores + 44 novos). Novo executável conferido em abertura/fechamento com configuração isolada, sem gravação real.
+- Roteiro A11 e documentação atualizados. Volume/mute de captura confirmados pelo proprietário são evidências parciais; A01–A11 e Windows 11 continuam aguardando aceitação física completa.
+
 ### 2026-11-12 — F1-I6, checkpoint técnico de validação e pacote x64
 
 - Sincronizado até 8d0e688 e tratados os pontos 1–3 da revisão F1-I5. Arquivo excessivo recebe estado protegido, com escrita/reset/recuperação bloqueados e preservação em crescimento concorrente.
