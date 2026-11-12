@@ -1,6 +1,29 @@
 # Plano de testes
 
-## F1-I3 — resultados e aceitação pendente
+## F1-I4 — resultados atuais
+
+Restore locked aprovado e build Debug x64 com zero erros/avisos. Suíte com 101 aprovados, zero falhas e zero ignorados, incluindo os 77 anteriores. São 95 casos de regras, simulações e grid WinForms STA e seis integrações Windows de leitura, usando TESTINGPLATFORM_TELEMETRY_OPTOUT=1.
+
+As regressões cobrem pico zero/intermediário/máximo, NaN/infinito/fora da faixa, indisponibilidade, coalescência de duplicatas/rajadas com prazo máximo, reutilização de fontes, troca e revisão de seleção, ausência/retorno, recuperação após falha, inscrição indisponível e fallback, pausa de medição oculta, descarte idempotente e callback tardio. Worker bloqueado em leitura aguarda a operação e descarta fontes na mesma thread. Preferências testam padrão por direção, seleção explícita ausente e retorno ao modo automático. Grid STA testa identidade de linha/célula, edição/cancelamento, binding e snapshot atrasado na reescolha do mesmo endpoint. Sessão inacessível na abertura ou leitura da chave antes do alvo válido tem regressão própria, preservando os testes de erro do alvo e identidade antes de escrever.
+
+Integração de leitura abriu medidores reais e inscrição de notificações. Foram observados 20 snapshots em 2,21 s, picos de reprodução/captura em zero, detecção automática ativa e consulta média de 0,083 ms. Delta de CPU do runner completo de 31,2 ms, working set inicial/final de 59.949.056/61.140.992 bytes. Cinco sessões expuseram medidor, todas com pico zero na leitura pontual. A amostra mede o ambiente local e inclui o runner. Escritas automatizadas continuam em simulações.
+
+O executável abriu e encerrou normalmente. Acessibilidade reconheceu barras reais, textos de silêncio, opções seguir padrão e detecção automática ativa. Captura visual retornou window capture timed out nas duas tentativas. Os testes STA verificam comportamento da grid. Validação visual da aplicação permanece pendente.
+
+### Aceitação física da F1-I4
+
+1. Anotar volume, mute, balanço e padrões multimídia/comunicações antes dos ensaios e restaurar ao final. Comparar abertura e atualização com os níveis existentes no Windows.
+2. Reproduzir áudio em nível confortável e falar no microfone por ação do proprietário. Conferir resposta independente dos picos e retorno ao silêncio. Comparar dispositivo selecionado e origem do sinal. Conferir indisponibilidade em endpoint inativo.
+3. Selecionar explicitamente USB, removê-lo e reconectá-lo. Conferir preferência preservada, controles/mixer desabilitados durante ausência e recuperação do mesmo ID. Repetir trocas rápidas durante leitura e edição, inclusive reescolha do mesmo ID.
+4. Em modo seguir padrão, alterar padrão multimídia de reprodução e captura separadamente pelo Windows. Conferir somente a direção correspondente. Alterar padrão de comunicações e conferir marcas reais. Repetir com preferência explícita e observar sua preservação.
+5. Por ação do proprietário, suspender e retomar a máquina. Conferir nova inscrição/consulta, barras, mixer, níveis existentes e encerramento estável. Repetir USB e atualização manual após retomada.
+6. Abrir dois aplicativos reproduzindo, conferir volume/mute por instância, mudanças externas, foco e rolagem durante polling, edição numérica, Enter/Esc, criação/encerramento e sessões inacessíveis. Restaurar valores anteriores. Repetir os passos físicos dos Incrementos 2 e 3.
+7. Alternar abas/minimizar e conferir retomada dos medidores, ausência de flicker e edição estável. Verificar consumo e estabilidade por período prolongado, com diversos dispositivos/sessões. Fechar durante eventos/operações.
+8. Validar rolagem e controles em 1366×768 e DPI 100/150/200%. Executar em Windows 11 x64. Windows 10 continua experimental.
+
+Medidores contínuos por sessão aguardam avaliação de ciclo de vida e custo. A integração atual valida leitura pontual dessa API. Os cenários físicos acima permanecem pendentes.
+
+## Histórico F1-I3 — resultados e aceitação pendente
 
 Restore locked e build Debug x64 aprovados, com zero erros/avisos. Suíte final com 77 aprovados, zero falhas e zero ignorados, incluindo os 56 anteriores. São 73 casos de simulações/regras e 4 integrações Windows de leitura. Telemetria MTP desativada na sessão.
 
@@ -12,7 +35,7 @@ O executável abriu e as abas foram reconhecidas por acessibilidade. Captura vis
 
 Para aceitação física, o proprietário deve abrir dois aplicativos com reprodução no mesmo endpoint e anotar/restaurar os níveis originais. Conferir nome, volume numérico com Enter/Esc, mute/unmute e isolamento entre sessões e endpoints. Alterar volume pelo Windows e conferir atualização, iniciar/encerrar aplicativos, trocar rapidamente de saída, remover USB e encerrar durante operação. Conferir arraste contínuo, roda do mouse e teclado dos sliders de endpoint e rolagem em 1366×768 e DPI 100/150/200%. Validar Windows 11 x64. Windows 10 segue experimental. As escritas dos testes automatizados usam simulações.
 
-Estado em 12/11/2026 — Incrementos 1 e 2 implementados, com verificações executadas abaixo. Os casos das etapas posteriores permanecem planejados.
+As seções seguintes preservam verificações e critérios dos incrementos anteriores e o planejamento das fases posteriores.
 
 ## Verificação do Incremento 2
 

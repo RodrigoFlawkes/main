@@ -5,6 +5,10 @@ public sealed record SessionKey(string EndpointId, string InstanceId);
 public sealed record ApplicationSessionSnapshot(SessionKey Key, string Name, uint? ProcessId,
     bool IsSystemSounds, SessionActivity Activity, double? VolumePercent, bool? Muted, string? Error);
 public sealed record ApplicationSessionCatalog(IReadOnlyList<ApplicationSessionSnapshot> Sessions, IReadOnlyList<string> Warnings);
+public sealed record ApplicationSessionBinding(EndpointSelection Selection, ApplicationSessionSnapshot Snapshot)
+{
+    public bool IsCurrent(EndpointSelection current) => Selection == current && Snapshot.Key.EndpointId == current.DeviceId;
+}
 public abstract record ApplicationSessionCommand;
 public sealed record SetSessionVolume(double Percent) : ApplicationSessionCommand;
 public sealed record SetSessionMute(bool Muted) : ApplicationSessionCommand;
@@ -68,27 +72,34 @@ public sealed class ApplicationSessionService : IAsyncDisposable
             for (int index = 0; index < endpoint.Count; index++)
             {
                 token.ThrowIfCancellationRequested();
-                using var session = endpoint.Open(index);
-                if (session.Key != key)
-                    continue;
-                if (session.Activity == SessionActivity.Expired || session.Key != key)
-                    throw new InvalidOperationException("A sessão foi encerrada. Atualize o mixer.");
-                token.ThrowIfCancellationRequested();
-                switch (command)
+                IApplicationSessionAccess session;
+                try { session = endpoint.Open(index); }
+                catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error)) { continue; }
+                using (session)
                 {
-                    case SetSessionVolume requested:
-                        session.VolumeScalar = requested.Percent / 100;
-                        break;
-                    case SetSessionMute requested:
-                        session.Muted = requested.Muted;
-                        break;
-                    default: throw new ArgumentException("Comando de sessão desconhecido.", nameof(command));
+                    SessionKey observed;
+                    try { observed = session.Key; }
+                    catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error)) { continue; }
+                    if (observed != key) continue;
+                    if (session.Activity == SessionActivity.Expired || session.Key != key)
+                        throw new InvalidOperationException("A sessão foi encerrada. Atualize o mixer.");
+                    token.ThrowIfCancellationRequested();
+                    switch (command)
+                    {
+                        case SetSessionVolume requested:
+                            session.VolumeScalar = requested.Percent / 100;
+                            break;
+                        case SetSessionMute requested:
+                            session.Muted = requested.Muted;
+                            break;
+                        default: throw new ArgumentException("Comando de sessão desconhecido.", nameof(command));
+                    }
+                    var actual = session.Read();
+                    if (command is SetSessionVolume value && (actual.VolumePercent is null || Math.Abs(actual.VolumePercent.Value - value.Percent) > 2)
+                        || command is SetSessionMute mute && actual.Muted != mute.Muted)
+                        throw new NotSupportedException("O Windows não confirmou a alteração da sessão. Atualize o mixer.");
+                    return actual;
                 }
-                var actual = session.Read();
-                if (command is SetSessionVolume value && (actual.VolumePercent is null || Math.Abs(actual.VolumePercent.Value - value.Percent) > 2)
-                    || command is SetSessionMute mute && actual.Muted != mute.Muted)
-                    throw new NotSupportedException("O Windows não confirmou a alteração da sessão. Atualize o mixer.");
-                return actual;
             }
             throw new InvalidOperationException("A sessão não está mais disponível. Atualize o mixer.");
         });

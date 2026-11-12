@@ -150,6 +150,12 @@
           "xunit.v3.runner.common": "[4.0.3]"
         }
       },
+      "WaveStudio": {
+        "type": "Project",
+        "dependencies": {
+          "WaveStudio.Audio": "[1.0.0, )"
+        }
+      },
       "wavestudio.audio": {
         "type": "Project",
         "dependencies": {

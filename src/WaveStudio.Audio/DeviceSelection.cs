@@ -6,6 +6,12 @@ public sealed class DeviceSelection
     public string? PlaybackId { get; private set; }
     public string? CaptureId { get; private set; }
 
+    public void FollowDefault(EndpointDirection direction)
+    {
+        if (direction == EndpointDirection.Playback) PlaybackId = null;
+        else CaptureId = null;
+    }
+
     public void Select(DeviceSnapshot device)
     {
         if (device.Direction == EndpointDirection.Playback)

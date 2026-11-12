@@ -1,12 +1,12 @@
 # Plano da v0.1.0 Alpha
 
-Planejamento em 12/11/2026. A implementação começa pela Fase 1, em incrementos verificáveis. Escopo detalhado em [REQUIREMENTS.md](REQUIREMENTS.md).
+Planejamento atualizado em 12/11/2026. Fase 1 em andamento, com incrementos verificáveis. Escopo detalhado em [REQUIREMENTS.md](REQUIREMENTS.md).
 
-O Incremento 1 foi publicado no commit 60238ea após aprovação provisória do proprietário. O Incremento 2 foi implementado e aprovado provisoriamente para publicação e revisão técnica, com volume/mute/balanço, sincronização externa por polling, proteção de seleção e erros de suporte. Restore/build e 56 testes passaram no Windows 10 experimental, incluindo a regressão dos 16 anteriores. Leituras reais foram confirmadas. Testes físicos de escrita e avaliação visual permanecem pendentes. O Incremento 3 aguarda revisão técnica e configuração do fluxo ChatGPT/Codex pelo GitHub.
+Incrementos 1–3 publicados e revisados. F1-I4 implementa medidores reais de endpoints, notificações de hotplug/padrão, recuperação e correções do mixer apontadas na revisão. Restore locked, build e 101 testes aprovados no Windows 10 experimental. Aceitação física e visual permanece pendente. Persistência JSON da F1-I5 aguarda nova orientação.
 
 ## Incrementos
 
-F1-I3 executada conforme NEXT_TASK.md e REVIEW.md, com mixer compilado, 77 testes aprovados e sessões reais enumeradas. O critério físico de dois aplicativos permanece pendente. Incremento 4 aguarda nova orientação. As etapas abaixo mantêm a sequência do roadmap.
+F1-I4 executada conforme NEXT_TASK.md e REVIEW.md sincronizados até b4a6223. Fontes de pico e inscrições pertencem a um worker MTA persistente, com snapshots por geração e coalescência de eventos. A leitura real observou zero nos medidores da amostra. Medidor contínuo por sessão fica para avaliação posterior, devido ao ciclo de vida adicional de wrappers e custo por instância. As etapas abaixo mantêm os critérios de aceitação do roadmap, incluindo os ensaios físicos ainda pendentes dos incrementos implementados.
 
 1. Criar `WaveStudio.slnx`, Desktop, Audio e testes conforme a arquitetura. Fixar SDK e dependências após conferir APIs e runner. Abrir janela pt-BR, enumerar endpoints reais, mostrar estados e padrões e permitir seleção independente. Critério de saída — restore/build/test bem-sucedidos e comparação manual da enumeração com o Windows.
 2. Adicionar volume/mute por endpoint e balanço condicional. Sincronizar mudanças externas, validar intervalos e erros de dispositivo. Critério — alterações verificadas no Windows e teste físico dos canais, incluindo mono e suporte ausente.
@@ -17,7 +17,7 @@ F1-I3 executada conforme NEXT_TASK.md e REVIEW.md, com mixer compilado, 77 teste
 
 Cada incremento inclui testes relevantes e atualização de status/changelog. Falha de suporte por endpoint deve ter explicação visível. Ganho digital, EQ, mesa, roteamento, soundboard e demais telas entram conforme as fases posteriores ganhem implementação.
 
-## Verificação prevista após criar os projetos
+## Verificação da solução
 
 Executar na raiz, em PowerShell.
 

@@ -1,8 +1,30 @@
 # Arquitetura do Wave Studio
 
-Decisões da Fase 0, em 12/11/2026, com atualizações dos Incrementos 1 e 2. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). As seções iniciais registram a implementação por incremento. As demais descrevem a arquitetura prevista para a Alpha e sua evolução.
+Decisões da Fase 0, em 12/11/2026, com atualizações até F1-I4. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). A implementação atual é descrita primeiro, seguida pelo histórico e planejamento de evolução.
 
-## Implementação do Incremento 2
+## Medidores, notificações e recuperação — F1-I4
+
+AudioWatchWorker possui uma thread MTA dedicada. Nela são construídos, consultados e descartados AudioWatchEngine, CoreAudioWatchBackend, MMDeviceEnumerator, MMDeviceNotificationClient e os dois medidores selecionados. Cada MMDevice é proprietário de AudioMeterInformation e o libera no descarte. Os wrappers permanecem abertos entre ticks. A UI recebe somente AudioWatchSnapshot, PeakReading e IDs/revisões de seleção. A referência do último snapshot é publicada atomicamente.
+
+As APIs públicas conferidas na tag NAudio 3.1.0 e no XML instalado são MMDeviceEnumerator.CreateNotificationClient(useSynchronizationContext: false), seus eventos e AudioMeterInformation.MasterPeakValue. O wrapper público administra IMMNotificationClient e seu registro nativo. Uma inscrição atende adição, remoção, estado e mudança de padrão de qualquer papel/direção. Propriedades são filtradas para nome amigável, nome da interface e formato do engine. Callbacks sinalizam uma flag atômica. O worker agrega eventos com 200 ms de quietude e limite de 1.000 ms por rajada. [Enumerador NAudio](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/CoreAudioApi/MMDeviceEnumerator.cs), [medidor NAudio](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/CoreAudioApi/AudioMeterInformation.cs).
+
+O worker espera 100 ms entre ciclos e mede os dois endpoints ativos. A UI aplica os dados em timer de 100 ms somente quando IDs e revisão coincidem. Selecionar outro alvo invalida a exibição imediatamente. Fontes anteriores são liberadas no próximo ciclo do proprietário. Aba oculta e janela minimizada pausam consultas de pico. Valores finitos de 0 a 1 são aceitos, zero representa silêncio, e valores inválidos ou erros produzem indisponibilidade. Percentual e 20 log10(pico) em dBFS descrevem o pico publicado pelo Windows. RMS, LUFS e detecção de clipping ficam sujeitos a medições específicas futuras.
+
+Falha isolada de leitura fecha a fonte afetada e agenda nova abertura em cinco segundos. Notificações invalidam fontes e antecipam nova consulta. Falha de inscrição é mostrada, com consulta de catálogo e nova tentativa de registro a cada cinco segundos. Atualização manual continua disponível. PowerModeChanged com PowerModes.Resume solicita reconstrução do backend no proprietário e reconciliação do catálogo. A UI serializa consultas de catálogo e retém pedidos recebidos durante uma consulta. Atualizações automáticas preservam controles existentes quando identidade, estado e formato permanecem iguais.
+
+As consultas pontuais de catálogo continuam em CoreAudioDeviceService. Volume de endpoint e sessões continuam nas filas EndpointOperationQueue de seus serviços, com wrappers locais à operação. Essas filas e o worker persistente possuem objetos COM próprios e trocam somente modelos copiados. O callback nativo apenas sinaliza o worker. Encerramento remove o evento público de energia e os assinantes da UI, cancela consultas, drena as filas e aguarda o worker liberar fontes, inscrição e enumerador na própria thread. Chamadas nativas iniciadas podem terminar antes do descarte.
+
+DeviceSelection mantém preferência explícita mesmo que o ID desapareça. A UI mostra indisponibilidade e recupera o mesmo endpoint ao retornar. Inicialmente, cada direção acompanha seu padrão multimídia. Os checkboxes permitem voltar a esse modo. Binding de listas aplica snapshots somente para leitura, preservando o modo automático. Marcas de padrões multimídia e comunicações continuam independentes e baseadas no catálogo real. Atualização, reconexão e retomada consultam os níveis atuais.
+
+O mixer reconcilia DataGridViewRow por SessionKey, atualizando células alteradas e preservando as demais linhas e célula corrente. Edição pausa a aplicação de snapshots. Tag da linha e edição capturam ApplicationSessionBinding com EndpointSelection completo, incluindo a geração. Cancelamento de edição, binding e reescolha do mesmo ID são protegidos contra gerar comandos. Índices são validados antes do acesso. Comando solicita releitura imediata, e seu erro permanece visível nas consultas seguintes. Na busca de uma sessão, falhas ao abrir ou identificar entradas isoladas permitem continuar até um alvo confirmado. Falhas após confirmação do alvo propagam-se.
+
+O medidor de sessão foi consultado pontualmente na integração através de AudioSessionControl.AudioMeterInformation. Medição contínua no mixer exige ampliar o gerenciamento persistente por instância ou medir recriação de wrappers em maior frequência. Essa opção foi adiada para manter o ciclo de vida incremental e verificável. O polling de sessões permanece em 1.000 ms e a sincronização dos controles de endpoint em 600 ms.
+
+Uma amostra de 20 snapshots em 2,21 s observou consulta média de 0,083 ms e picos zero em ambas as direções. O processo completo de testes consumiu delta de 31,2 ms de CPU e working set de 59.949.056 a 61.140.992 bytes. A amostra inclui o runner e descreve esta máquina. Simulação de 11 ticks confirmou duas fontes abertas e 22 leituras, com reutilização e descarte. Ensaios longos, dispositivos adicionais e Windows 11 continuam na matriz física.
+
+Tests passou a referenciar Desktop e habilitar Windows Forms para três regressões STA da grid real. Audio mantém independência de WinForms. Versões NuGet permanecem fixadas. O lock de testes acrescenta somente a referência de projeto.
+
+## Histórico — evolução dos Incrementos 1–3
 
 ### Atualização F1-I3
 

@@ -2,6 +2,16 @@
 
 ## Em desenvolvimento
 
+### 2026-11-12 — F1-I4, picos reais e recuperação de dispositivos
+
+- Repositório sincronizado até b4a6223 e executada a tarefa autorizada de NEXT_TASK.md, preservando os documentos normativos e a revisão.
+- Barras reais de pico de reprodução/captura, percentual e dBFS, silêncio e indisponibilidade distintos, consulta aproximada de 10 Hz com pausa quando ocultas.
+- Notificações públicas NAudio de adição, remoção, estado, padrões e propriedades relevantes, coalescência de rajadas, fallback de cinco segundos e recuperação na retomada.
+- Worker MTA persistente proprietário de inscrições e medidores, snapshots por geração e descarte ordenado. Seleção explícita preservada e modo seguir padrão independente por direção.
+- Mixer reconciliado por chave com preservação de foco/edição, eventos vinculados à geração e acesso isolado a sessões inacessíveis durante busca do alvo.
+- Restore locked e build com zero erros/avisos. 101 testes aprovados, incluindo os 77 anteriores e seis integrações de leitura. Picos observados em zero nos endpoints e em cinco sessões. Executável iniciado e controles reconhecidos por acessibilidade.
+- Medidor contínuo individual por sessão adiado para avaliação de ciclo de vida/custo. Resposta à fala/música, USB, padrões externos, suspensão, escritas, layout e Windows 11 continuam pendentes de ensaio físico.
+
 ### 2026-11-12 — F1-I3, mixer de aplicativos
 
 - Sincronizadas NEXT_TASK.md e REVIEW.md até 4ab114d e executada F1-I3 mediante autorização do proprietário.

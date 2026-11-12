@@ -38,10 +38,15 @@ public sealed class ApplicationSessionTests
         public void Dispose() => state.Dispose();
     }
 
-    private sealed class Endpoint(List<Session> sessions, Action? opening = null, Action? disposing = null) : IApplicationSessionEndpoint
+    private sealed class Endpoint(List<Session> sessions, Action? opening = null, Action? disposing = null, int? deniedIndex = null) : IApplicationSessionEndpoint
     {
         public int Count => sessions.Count;
-        public IApplicationSessionAccess Open(int index) { opening?.Invoke(); return new BorrowedSession(sessions[index]); }
+        public IApplicationSessionAccess Open(int index)
+        {
+            opening?.Invoke();
+            if (index == deniedIndex) throw new UnauthorizedAccessException();
+            return new BorrowedSession(sessions[index]);
+        }
         public void Dispose() => disposing?.Invoke();
     }
 
@@ -161,6 +166,24 @@ public sealed class ApplicationSessionTests
         Assert.Single(catalog.Warnings);
         Assert.Equal(available.Key, catalog.Sessions[0].Key);
         Assert.Equal(1, denied.Disposals);
+        Assert.Equal(1, available.Disposals);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task InaccessibleUnrelatedSessionDoesNotBlockConfirmedTarget(bool failOpening)
+    {
+        var denied = new Session("out", "denied");
+        if (!failOpening) denied.KeyReader = () => throw new UnauthorizedAccessException();
+        var available = new Session("out", "available");
+        await using var service = new ApplicationSessionService(_ =>
+            new Endpoint([denied, available], deniedIndex: failOpening ? 0 : null));
+        var actual = await service.ApplyAsync(service.Select("out"), available.Key, new SetSessionMute(true));
+        Assert.True(actual.Muted);
+        Assert.Equal(0, denied.Writes);
+        Assert.Equal(1, available.Writes);
+        Assert.Equal(failOpening ? 0 : 1, denied.Disposals);
         Assert.Equal(1, available.Disposals);
     }
 

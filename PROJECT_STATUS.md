@@ -2,7 +2,42 @@
 
 Atualizado em 12/11/2026.
 
-## Estado atual — F1-I3 executada
+## Estado atual — F1-I4 executada
+
+Repositório limpo inicialmente, sincronizado por fetch e fast-forward até b4a6223 em main. Remoto confirmado como https://github.com/Wave-Universal-Studio/main.git. AGENTS.md, requisitos, arquitetura, plano, testes, NEXT_TASK.md e REVIEW.md foram lidos. A revisão mais recente é F1-I3. O proprietário autorizou implementação, commit e push da tarefa F1-I4. Persistência da F1-I5 aguarda nova orientação.
+
+| Categoria | Resultado atual |
+| --- | --- |
+| Implementado | Medidores reais dos endpoints, notificações de dispositivos/padrões, recuperação, seguir padrão por direção e correções do mixer |
+| Ciclo de vida | Worker MTA persistente proprietário de fontes e inscrição, snapshots por geração, descarte ordenado e callback breve |
+| Compilado | Debug x64, zero erros e zero avisos |
+| Testado automaticamente | 101 aprovados, zero falhas e zero ignorados, incluindo os 77 anteriores. 95 casos de regras/simulações/grid STA e seis integrações Windows de leitura |
+| Integração real | Reprodução e captura com pico zero na amostra, inscrição automática ativa e descarte aprovado. Cinco sessões com medidor disponível e pico zero na leitura pontual |
+| Execução | Executável abriu e encerrou normalmente. Acessibilidade reconheceu barras, silêncio, seguir padrão, 67 endpoints e detecção ativa. Captura visual retornou timeout em duas tentativas |
+| Medidores por sessão | API avaliada pontualmente. Exibição contínua adiada para avaliação do custo e gerenciamento persistente por instância |
+| Testes físicos | Resposta a fala/música, hotplug USB, padrões externos, suspensão/retomada, escrita de controles, dois aplicativos, DPI e estabilidade prolongada pendentes |
+| Compatibilidade | Windows 10 Pro 22H2 experimental. Windows 11 x64 ainda pendente |
+| Próximo passo | Revisão técnica da F1-I4 e ensaios físicos |
+
+### Decisões e verificações da F1-I4
+
+- Pico consultado por AudioMeterInformation.MasterPeakValue do NAudio.Wasapi 3.1.0. APIs públicas e propriedade de wrappers conferidas na tag e no XML instalado. Percentual e dBFS têm silêncio tratado, rejeição de valores inválidos e estado de indisponibilidade. A leitura é local e consulta medidores publicados pelo Windows.
+- Worker de aproximadamente 10 Hz mantém dois medidores abertos, pausa leituras quando ocultos e publica snapshots com IDs/revisão. Simulação de 11 ticks verificou duas aberturas e 22 leituras, com descarte na troca e encerramento na thread proprietária. Filas existentes mantêm objetos próprios e continuam serializando controles e sessões.
+- Notificações de adição, remoção, estado, padrão e propriedades relevantes apenas sinalizam flag atômica. Coalescência usa 200 ms de quietude e máximo de 1.000 ms. Falha de inscrição é indicada e ativa fallback de catálogo/registro a cada cinco segundos. PowerModeChanged solicita reconstrução e consulta na retomada.
+- Seleção explícita é mantida durante ausência e retorno. Modo inicial e checkboxes acompanham padrão multimídia por direção. Binding de listas preserva o modo automático. Refresh/hotplug/retomada usam leitura dos níveis existentes. Os comandos continuam associados ao alvo e à geração capturados.
+- Grid reconciliada por SessionKey, com preservação de linha/célula e edição. Cancelamento, binding, índices e reescolha do mesmo ID são protegidos. Aplicação de comando solicita consulta imediata e mantém erro visível. Falhas de abertura/identidade de sessões isoladas permitem buscar o alvo confirmado. Falhas após confirmação propagam-se.
+- Uma amostra específica de 20 snapshots em 2,21 s observou consulta média de 0,083 ms. O processo completo do runner apresentou delta de CPU de 31,2 ms e working set de 59.949.056 a 61.140.992 bytes. Valores descrevem esta máquina e uma amostra curta. A resposta a fala/música continua pendente.
+- dotnet restore WaveStudio.slnx --locked-mode aprovado. Durante o desenvolvimento, uma restauração encontrou três NU1900 por restrição de rede na auditoria NuGet. Repetição com acesso à rede passou com auditoria e zero avisos.
+- dotnet build WaveStudio.slnx -c Debug --no-restore aprovado com zero erros e zero avisos. dotnet test --solution WaveStudio.slnx -c Debug --no-build aprovou 101 testes, com TESTINGPLATFORM_TELEMETRY_OPTOUT=1.
+- Testes STA iniciais expuseram edição ainda ativa após CancelEdit e descarte da grid nessa condição. O encerramento e a troca agora finalizam a edição sob proteção de binding. Os três testes da grid passaram na suíte final.
+- Arquivos novos de produto são AudioWatchModels.cs, AudioWatchEngine.cs, AudioWatchWorker.cs e CoreAudioWatchBackend.cs. Testes novos em AudioWatchTests.cs, HotplugSelectionTests.cs, MixerGridTests.cs e AudioWatchIntegrationTests.cs, com regressões adicionais em ApplicationSessionTests.cs. Atualizados os painéis, MainForm, seleção e serviço de sessões. Projeto de testes referencia Desktop para regressão STA, e seu lock registra essa referência. Versões NuGet e locks de Audio/Desktop preservados.
+- Atualizados README, CHANGELOG, arquitetura, plano de implementação e plano de testes. AGENTS.md, docs/REQUIREMENTS.md, NEXT_TASK.md e REVIEW.md conferidos contra b4a6223 e preservados integralmente. git diff --check aprovado. Busca por padrões comuns de credenciais e nomes sensíveis sem correspondências no conteúdo versionável. bin/obj confirmados como ignorados. Links locais válidos e arquivos novos conferidos quanto a espaços finais e conflitos. Publicação autorizada com commit descritivo e push normal, seguida de conferência da árvore e sincronização com origin/main.
+
+### Testes físicos pendentes da F1-I4
+
+O proprietário deve anotar níveis, mute, balanço e padrões existentes e restaurá-los ao final de ensaios de escrita. Reproduzir áudio e falar por ação própria para conferir movimento e silêncio nas duas barras. Desconectar/reconectar USB com seleção explícita e confirmar retorno ao mesmo ID. Alterar padrões multimídia/comunicações pelo Windows e verificar modo automático independente e marcas reais. Suspender/retomar somente por ação do proprietário. Testar dois aplicativos, foco/edição/Enter/Esc e volume/mute por sessão, arraste/teclado dos controles, encerramento durante atividade e uso prolongado. Conferir 1366×768, DPI 100/150/200% e Windows 11 x64. Procedimento detalhado em docs/TEST_PLAN.md.
+
+## Histórico — F1-I3 executada
 
 NEXT_TASK.md e REVIEW.md foram lidos após sincronização por fetch e fast-forward até 4ab114d. O proprietário autorizou implementação, commit e push desta etapa. A tarefa F1-I3 foi executada, incluindo os ajustes da revisão do Incremento 2. O Incremento 4 aguarda nova orientação.
 
@@ -37,13 +72,13 @@ NEXT_TASK.md e REVIEW.md foram lidos após sincronização por fetch e fast-forw
 - AGENTS.md, docs/REQUIREMENTS.md, NEXT_TASK.md e REVIEW.md são preservados. Os registros abaixo são históricos e suas autorizações/pendências devem ser interpretadas conforme a entrega a que pertencem.
 - git diff --check aprovado. Busca por padrões comuns de credenciais sem correspondências no conteúdo versionável. bin/obj conferidos como ignorados. Dependências e lock files preservados. Publicação autorizada pelo proprietário com commit descritivo e push normal, seguida de conferência da árvore e sincronização com origin/main.
 
-## Testes físicos pendentes
+### Testes físicos pendentes registrados na F1-I3
 
 Anotar volume e mute de cada aplicativo e do endpoint antes do teste e restaurar ao final. Com dois aplicativos reproduzindo áudio por ação do proprietário, conferir identificação, alteração de uma sessão sem afetar a outra ou outro endpoint, mute/unmute, volume numérico com Enter/Esc, mudanças pelo mixer do Windows, criação/encerramento de processos e troca rápida de saída. Testar acesso negado, remoção/reconexão, arraste contínuo dos controles de endpoint e encerramento durante uma operação. Conferir layout e rolagem em 1366×768, 100/150/200% e Windows 11 x64. A aceitação física da Alpha continua pendente. Ver docs/TEST_PLAN.md.
 
 ## Histórico das entregas anteriores
 
-As seções seguintes preservam os registros das Fases 0 e Incrementos 1–2. O estado atual da tarefa é o da seção F1-I3 acima.
+As seções seguintes preservam os registros das Fases 0 e Incrementos 1–2. O estado atual da tarefa é o da seção F1-I4 acima.
 
 ### Etapa atual
 
