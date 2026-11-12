@@ -1,6 +1,18 @@
 # Arquitetura do Wave Studio
 
-Decisões da Fase 0, em 12/11/2026. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). Os componentes abaixo estão planejados.
+Decisões da Fase 0, em 12/11/2026, com atualização do Incremento 1. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). A seção inicial registra a implementação atual. As demais seções descrevem a arquitetura prevista para a Alpha e sua evolução.
+
+## Implementação do Incremento 1
+
+A revisão técnica do commit a3a3358 foi aprovada pelo proprietário. A solução possui Desktop → Audio e Tests → Audio. Audio referencia somente `NAudio.Wasapi` 3.1.0, com `NAudio.Core` 3.1.0 e `System.Numerics.Tensors` 9.0.0 transitivos. Os três projetos têm lock files e destino `net10.0-windows`, x64. O destino técnico do framework permite compilar com as APIs utilizadas. A matriz de suporte do produto continua priorizando Windows 11, com Windows 10 experimental.
+
+`CoreAudioDeviceService.QueryAsync` serializa consultas com `SemaphoreSlim` e usa `Task.Run` em worker MTA. Cada consulta cria e descarta seus próprios objetos COM na mesma thread, através de `using`. A UI recebe `DeviceCatalog`, `DeviceSnapshot` e `MixFormatSnapshot`, com valores copiados e listas somente de leitura. Como o Incremento 1 usa apenas consultas pontuais, a thread MTA dedicada e notificações persistentes descritas abaixo ficam para o incremento de hotplug.
+
+A API NAudio 3.1.0 foi conferida no código da tag e validada por compilação e consultas reais. São usados `EnumerateAudioEndPoints`, `TryGetDefaultAudioEndpoint`, `MMDevice.ID`, `FriendlyName`, `State`, `CreateAudioClient` e `MixFormat`. A coleção e cada endpoint têm descarte próprio. `CreateAudioClient` exige descarte de cada cliente. [Enumerador](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/CoreAudioApi/MMDeviceEnumerator.cs), [coleção](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/CoreAudioApi/MMDeviceCollection.cs), [endpoint](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/CoreAudioApi/MMDevice.cs).
+
+`DeviceSelection` guarda IDs independentes durante a execução. Inicialmente prefere o padrão multimídia. Uma preferência ausente continua registrada e é exibida como indisponível após atualizar. A seleção pode ser substituída explicitamente. Todas as chamadas Core Audio atuais são consultas. O botão Atualizar solicita nova enumeração e mantém as seleções. A consulta desabilita temporariamente os seletores e o botão, mantendo o loop de mensagens da janela disponível. Ao fechar, o token cancela a consulta entre endpoints e impede atualizar controles encerrados. Chamadas COM em andamento terminam antes do descarte local dos wrappers.
+
+Erros por endpoint/direção geram avisos e preservam os dados obtidos dos outros dispositivos. Falha geral esvazia os controles e informa como tentar novamente. Metadados ausentes e endpoints inativos mantêm formato indisponível. O formato mostrado representa o mix do Windows. O campo de bits representa `BitsPerSample` do contêiner, com codificação exposta pelo wrapper.
 
 ## Base da primeira versão
 

@@ -2,6 +2,17 @@
 
 ## Em desenvolvimento
 
+### 2026-11-12 — Fase 1, Incremento 1
+
+- Solução .slnx, SDK .NET 10 fixado, projetos Desktop/Audio/Tests x64 e referências.
+- Dependência específica NAudio.Wasapi 3.1.0, xUnit v3 4.0.3 com MTP 2.5.2 e lock files dos três projetos.
+- Janela pt-BR com seleção independente, padrões de multimídia/comunicações, estados, IDs e formato real do mix.
+- Consultas serializadas em worker MTA, snapshots independentes de COM, descarte local, cancelamento e mensagens de indisponibilidade.
+- README corrigido e instruções de execução/testes atualizadas.
+- Build com zero erros/avisos, 16 testes aprovados e enumeração real de 67 endpoints. Executável iniciado e conteúdo da janela lido por acessibilidade. Avaliação visual/interativa e testes físicos adicionais pendentes.
+
+Windows 10 permanece experimental. O Incremento 2 aguarda autorização.
+
 ### 2026-11-12 — Fase 0
 
 - Leitura das instruções e requisitos, inspeção de Git, SDK, sistema e estrutura.

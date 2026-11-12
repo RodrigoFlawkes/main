@@ -2,6 +2,8 @@
 
 Planejamento em 12/11/2026. A implementação começa pela Fase 1, em incrementos verificáveis. Escopo detalhado em [REQUIREMENTS.md](REQUIREMENTS.md).
 
+O Incremento 1 foi implementado após aprovação da revisão técnica do commit a3a3358. Restore, build e 16 testes passaram no Windows 10 experimental. A enumeração real foi confirmada com 67 endpoints. Inicialização e conteúdo dos controles foram confirmados por acessibilidade. Comparação física com as configurações do Windows e avaliação visual das interações permanecem pendentes. O Incremento 2 aguarda autorização.
+
 ## Incrementos
 
 1. Criar `WaveStudio.slnx`, Desktop, Audio e testes conforme a arquitetura. Fixar SDK e dependências após conferir APIs e runner. Abrir janela pt-BR, enumerar endpoints reais, mostrar estados e padrões e permitir seleção independente. Critério de saída — restore/build/test bem-sucedidos e comparação manual da enumeração com o Windows.
@@ -18,13 +20,14 @@ Cada incremento inclui testes relevantes e atualização de status/changelog. Fa
 Executar na raiz, em PowerShell.
 
 ```powershell
-dotnet restore WaveStudio.slnx
+dotnet restore WaveStudio.slnx --locked-mode
 dotnet build WaveStudio.slnx -c Debug --no-restore
-dotnet test WaveStudio.slnx -c Debug --no-build
+$env:TESTINGPLATFORM_TELEMETRY_OPTOUT = '1'
+dotnet test --solution WaveStudio.slnx -c Debug --no-build
 dotnet run --project src/WaveStudio.Desktop
 ```
 
-`restore` obtém as dependências, `build` compila, `test` executa os testes e `run` inicia a janela. Esses comandos dependem dos projetos futuros. Publicação self-contained e instalador serão avaliados posteriormente com licenças e suporte do sistema.
+`restore` verifica as dependências fixadas, `build` compila, `test` executa os testes e `run` inicia a janela. A opção `--solution` é usada pelo modo MTP do SDK .NET 10. Publicação self-contained e instalador serão avaliados posteriormente com licenças e suporte do sistema.
 
 ## Sequência posterior
 

@@ -1,9 +1,12 @@
-# main
-Plataforma universal de gerenciamento, processamento e mixagem de áudio para Windows, com foco em desempenho, personalização e compatibilidade entre dispositivos., independentemente do fabricante.
+# Wave Studio
+
+Aplicação desktop para gerenciamento de áudio no Windows, independente de fabricante, com processamento e mixagem previstos no roadmap.
 
 ## Estado do projeto
 
-Fase 0 documentada em 12/11/2026. A primeira versão funcional planejada é a v0.1.0 Alpha. O repositório está na etapa de arquitetura e planejamento.
+Fase 0 aprovada por revisão técnica do commit a3a3358. Fase 1, Incremento 1 implementado em 12/11/2026, com janela pt-BR, enumeração real de endpoints, identificação dos padrões, seleção independente de reprodução/captura e informações de disponibilidade e formato de mixagem.
+
+Versão v0.1.0 Alpha em desenvolvimento. Os controles de volume/mute/balanço, sessões, medidores, hotplug automático e persistência permanecem nos próximos incrementos da Fase 1.
 
 ## Documentação
 
@@ -22,12 +25,22 @@ Janela Windows Forms em pt-BR, seleção independente de entrada e saída, ident
 
 Windows 11 x64 é a plataforma prioritária. O ambiente inspecionado possui .NET SDK 10.0.404, runtime desktop 10.0.15 e Git 2.56.0, em Windows 10 Pro 22H2. A compatibilidade e a situação de suporte do Windows 10 serão avaliadas separadamente.
 
-## Execução futura
+## Compilar, testar e executar
 
-Após criar os projetos da Fase 1, o comando abaixo iniciará a aplicação.
+Na raiz do repositório, execute em PowerShell com .NET SDK 10.0.404 ou patch compatível da mesma faixa.
 
 ```powershell
+dotnet restore WaveStudio.slnx --locked-mode
+dotnet build WaveStudio.slnx -c Debug --no-restore
+$env:TESTINGPLATFORM_TELEMETRY_OPTOUT = '1'
+dotnet test --solution WaveStudio.slnx -c Debug --no-build
 dotnet run --project src/WaveStudio.Desktop
 ```
 
-Os comandos previstos de restauração, compilação e testes estão no plano de implementação. A aceitação da Alpha exige validação física dos controles no Windows. DSP global e microfone processado para aplicativos externos dependem das provas de integração das fases seguintes.
+O executável fica em `src/WaveStudio.Desktop/bin/Debug/net10.0-windows/WaveStudio.exe`. A pasta de saída contém as dependências e requer .NET Desktop Runtime 10 x64. A seleção administra a preferência da janela. As consultas ao Windows são de leitura.
+
+As listas incluem endpoints ativos e históricos, com ativos primeiro. Clique em **Atualizar dispositivos** após conectar/remover hardware ou alterar padrões no Windows. Campos de formato descrevem o mix compartilhado do Windows e seus bits de contêiner. Fabricante e modelo comercial dependem do nome exposto pelo sistema.
+
+Foram aprovados 16 testes, sendo 14 de regras e mensagens e 2 de integração com Core Audio no Windows 10 local. Foram encontrados 67 endpoints com zero avisos de consulta. O executável abriu e os controles foram lidos por acessibilidade. A verificação visual e das interações permanece pendente devido a falhas da ferramenta de automação. Windows 10 mantém classificação experimental. Siga os [passos físicos do Incremento 1](docs/TEST_PLAN.md).
+
+O runner usa xUnit v3 4.0.3 e Microsoft Testing Platform 2.5.2. A variável acima desativa a telemetria do runner na sessão de PowerShell. As dependências de testes ficam no projeto de testes.

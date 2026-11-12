@@ -1,6 +1,27 @@
 # Plano de testes
 
-Estado em 12/11/2026 — planejamento. A execução dos ensaios de produto depende da implementação.
+Estado em 12/11/2026 — Incremento 1 implementado e verificações abaixo executadas. Os casos das etapas posteriores permanecem planejados.
+
+## Resultados do Incremento 1
+
+- `dotnet restore WaveStudio.slnx` passou após repetir com acesso autorizado ao NuGet fora do sandbox. `dotnet restore WaveStudio.slnx --locked-mode` também passou.
+- `dotnet build WaveStudio.slnx -c Debug --no-restore` passou com zero erros e zero avisos.
+- `dotnet test --solution WaveStudio.slnx -c Debug --no-build --output Detailed`, com telemetria MTP desativada na sessão, aprovou 16 testes, zero falhas e zero ignorados. Foram 14 casos de regras/mensagens e 2 testes de integração Core Audio.
+- A integração enumerou 67 endpoints reais, com zero avisos. Observou estados ativo/ausente/desconectado, padrão de reprodução multimídia diferente do de comunicações, captura padrão e formatos de mixagem. Consultas concorrentes serializadas e consulta após cancelamento também passaram.
+- `WaveStudio.exe` foi iniciado. A acessibilidade da janela confirmou nome/versão, seletores, dados de entrada e saída, botão Atualizar e status de 67 endpoints. A captura de tela falhou com `FrameArrived timed out` e `window capture timed out`. O clique automatizado falhou com `coordinate input geometry is unavailable`. A conferência visual e das interações permanece pendente.
+
+Os testes `WindowsIntegration` consultam a configuração real do host. Um inventário vazio é válido. Avisos de falha de API reprovam esses testes e exigem diagnóstico local. Para executar apenas regras, use `dotnet test --solution WaveStudio.slnx --filter-not-trait Category=WindowsIntegration`.
+
+## Passos físicos do Incremento 1
+
+1. Executar `dotnet run --project src/WaveStudio.Desktop`. Conferir título, versão, textos, legibilidade e navegação por teclado em 100%, 150% e 200% de escala.
+2. Comparar nomes, estados e padrões de multimídia/comunicações das duas listas com as configurações de som do Windows. Dispositivos históricos podem aparecer como ausentes. Ativos aparecem primeiro.
+3. Selecionar outro headset e conferir nome, ID, estado, canais, taxa e bits do mix. Confirmar que a seleção de microfone e o padrão do Windows continuam os mesmos. Repetir trocando somente o microfone.
+4. Clicar em Atualizar e conferir preservação das duas seleções. Alterar um padrão explicitamente pelo Windows e atualizar para conferir sua identificação.
+5. Remover um USB selecionado e clicar em Atualizar. Conferir estado ausente/desconectado ou aviso de indisponibilidade. Reconectar, atualizar e conferir recuperação pelo mesmo ID quando preservado pelo Windows.
+6. Consultar um endpoint inativo. Conferir indicação de formato indisponível. Fechar a janela durante uma atualização e reabrir para conferir estabilidade.
+
+Registrar modelo/conexão, versão do Windows e resultado por passo. Repetir em Windows 11 x64 suportado. No Windows 10 local, os resultados atuais cobrem execução experimental e consultas reais. Os passos de volume, sessões e medidores abaixo pertencem aos incrementos seguintes.
 
 ## Testes automatizados planejados
 

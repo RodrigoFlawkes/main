@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WaveStudio.Audio/WaveStudio.Audio.csproj" />
+    <Project Path="src/WaveStudio.Desktop/WaveStudio.Desktop.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WaveStudio.Tests/WaveStudio.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -4,16 +4,17 @@ Atualizado em 12/11/2026.
 
 ## Etapa atual
 
-Fase 0 concluída inicialmente e preparada para publicação e revisão técnica. Arquitetura, matriz de viabilidade, dependências candidatas e planejamento da Alpha definidos. A integração global tem caminho preferido por endpoints virtuais, com escolha concreta e prova física pendentes nas Fases 2–3. A Fase 1 aguarda a revisão técnica dos documentos publicados, conforme orientação do proprietário.
+Fase 0 publicada no commit a3a3358 e aprovada por revisão técnica informada pelo proprietário. Fase 1, Incremento 1 implementado mediante autorização explícita. A v0.1.0 Alpha segue em desenvolvimento, com os demais incrementos pendentes. A integração global tem caminho preferido por endpoints virtuais, com escolha concreta e prova física pendentes nas Fases 2–3.
 
 | Categoria | Estado real |
 | --- | --- |
-| Implementado | Documentação da Fase 0 |
-| Código de produto | Ainda ausente |
-| Compilado | Pendente de criação da solução |
-| Testado automaticamente | Sem projetos de testes disponíveis |
-| Testado fisicamente | Pendente |
-| Condição para iniciar a Fase 1 | Aguardar revisão técnica da arquitetura e dos documentos publicados |
+| Implementado | Solução e três projetos, UI pt-BR, enumeração real, padrões, seleção independente e informações dos endpoints |
+| Código de produto | Desktop e Audio, com snapshots independentes de COM e consultas assíncronas |
+| Compilado | Debug x64, zero erros e zero avisos |
+| Testado automaticamente | 16 aprovados, zero falhas/ignorados. 14 casos de regras/mensagens e 2 integrações Windows |
+| Execução real | 67 endpoints enumerados, zero avisos. Executável abriu e conteúdo dos controles foi confirmado por acessibilidade |
+| Testado fisicamente | Comparação com o Windows, trocas na UI, hotplug manual e escala de tela pendentes |
+| Próximo incremento | Incremento 2 aguarda autorização do proprietário |
 | Dependências futuras | Integração virtual/licença/assinatura e prova externa pendentes |
 | Plataforma prioritária | Windows 11 x64 ainda pendente de validação |
 
@@ -31,7 +32,21 @@ Fase 0 concluída inicialmente e preparada para publicação e revisão técnica
 | Estrutura inicial | README.md, .gitignore, AGENTS.md e docs/REQUIREMENTS.md, sem solução ou projetos |
 | global.json | Ausente, fixação planejada ao criar a solução |
 
-O suporte/ESU do Windows 10 local permanece desconhecido. A presença do SDK permite a próxima verificação de compilação. A aprovação do produto no Windows 11 depende de ensaio nesse sistema.
+O suporte/ESU do Windows 10 local permanece desconhecido. A execução nesta máquina está classificada como experimental. A aprovação do produto no Windows 11 depende de ensaio nesse sistema. O inventário acima descreve o início da Fase 0. Agora existem WaveStudio.slnx, global.json e os três projetos previstos.
+
+## Verificação do Incremento 1
+
+O proprietário aprovou provisoriamente o relatório, autorizou a publicação com a mensagem `feat: initialize Wave Studio desktop and audio endpoint discovery` e autorizou o início do Incremento 2 após o push. A revisão prévia à publicação conferiu os arquivos implementados, os lock files, a ausência de padrões comuns de credenciais no conteúdo versionável e a exclusão de bin/obj pelo .gitignore. Permanecem pendentes os testes físicos e visuais registrados abaixo.
+
+- `dotnet restore WaveStudio.slnx` falhou inicialmente por acesso ao NuGet.Config fora do sandbox. A repetição autorizada restaurou os três projetos com sucesso. O restore em `--locked-mode` passou posteriormente.
+- `dotnet build WaveStudio.slnx -c Debug --no-restore` passou com zero erros e zero avisos.
+- `dotnet test --solution WaveStudio.slnx -c Debug --no-build --output Detailed` passou com 16 testes aprovados, zero falhas e zero ignorados, usando `TESTINGPLATFORM_TELEMETRY_OPTOUT=1` na sessão.
+- Dependências diretas fixadas em NAudio.Wasapi `[3.1.0]` e xunit.v3 `[4.0.3]`. MTP 2.5.2 e transitivos registrados nos três packages.lock.json.
+- A consulta real identificou 67 endpoints. O headset padrão multimídia foi exposto como Alto-falantes (3- USB Audio Device), com mix de 48 kHz, dois canais e contêiner de 32 bits. O microfone padrão expôs 48 kHz, um canal e contêiner de 32 bits. O padrão de reprodução para comunicações era outro endpoint já existente no host.
+- O executável `src/WaveStudio.Desktop/bin/Debug/net10.0-windows/WaveStudio.exe` abriu. A ferramenta computer-use confirmou os textos e valores dos controles pela acessibilidade. Capturas falharam por timeout e clique por geometria indisponível. Inspeção visual e troca interativa ficaram pendentes. As regras de seleção independente e preservação após atualização foram verificadas automaticamente.
+- As APIs NAudio da tag 3.1.0 foram consultadas e seu uso foi validado por build e execução real. Consultas utilizam COM somente em workers MTA, com descarte dentro da operação. Nenhuma chamada atual escreve configurações de áudio.
+- AGENTS.md e docs/REQUIREMENTS.md foram relidos integralmente e preservados. Alterações desta etapa permanecem locais para revisão do proprietário.
+- `git diff --check` passou. O Git informou somente avisos de normalização futura LF → CRLF. A janela de verificação permaneceu aberta após a ferramenta detectar interação do usuário, preservando o uso em andamento.
 
 ## Comandos e resultados desta etapa
 
@@ -44,7 +59,20 @@ O suporte/ESU do Windows 10 local permanece desconhecido. A presença do SDK per
 
 ## Próxima etapa
 
-Revisão técnica da Fase 0. Após a revisão, retomar o planejamento do incremento 1 da Fase 1. Ver [arquitetura](docs/ARCHITECTURE.md), [viabilidade](docs/FEASIBILITY.md) e [testes](docs/TEST_PLAN.md).
+Realizar os passos físicos do Incremento 1 descritos no plano de testes e revisar a implementação. O Incremento 2 aguarda autorização. Ver [arquitetura](docs/ARCHITECTURE.md), [viabilidade](docs/FEASIBILITY.md) e [testes](docs/TEST_PLAN.md).
+
+## Arquivos do Incremento 1
+
+Foram criados 19 arquivos versionáveis. Saídas bin/obj são geradas e ignoradas pelo Git.
+
+| Local | Arquivos criados |
+| --- | --- |
+| Raiz | WaveStudio.slnx, global.json, Directory.Build.props |
+| src/WaveStudio.Audio | WaveStudio.Audio.csproj, packages.lock.json, DeviceSnapshot.cs, DeviceSelection.cs, AudioError.cs, CoreAudioDeviceService.cs |
+| src/WaveStudio.Desktop | WaveStudio.Desktop.csproj, packages.lock.json, Program.cs, MainForm.cs, DevicePanel.cs |
+| tests/WaveStudio.Tests | WaveStudio.Tests.csproj, packages.lock.json, DeviceSelectionTests.cs, AudioErrorTests.cs, CoreAudioIntegrationTests.cs |
+
+Documentos atualizados — README.md, CHANGELOG.md, PROJECT_STATUS.md, docs/ARCHITECTURE.md, docs/FEASIBILITY.md, docs/IMPLEMENTATION_PLAN.md e docs/TEST_PLAN.md. Os links locais foram verificados sem destinos ausentes. Os 19 novos arquivos também foram inspecionados por PowerShell, sem espaços finais ou marcadores de conflito.
 
 ## Conferência para publicação da Fase 0
 
@@ -52,4 +80,4 @@ Revisão técnica da Fase 0. Após a revisão, retomar o planejamento do increme
 - O inventário contém somente documentos Markdown e .gitignore fora dos metadados internos do Git. A inspeção de arquivos, incluindo ocultos e ignorados, e a busca por padrões comuns de credenciais não encontraram credenciais, arquivos sensíveis ou temporários no conteúdo a publicar.
 - O remoto origin de leitura e envio corresponde a `https://github.com/Wave-Universal-Studio/main.git`.
 - O proprietário autorizou commit e push da Fase 0 com a mensagem `docs: initialize Wave Studio architecture and development roadmap`.
-- A verificação final de diferenças e a confirmação do envio serão realizadas antes de encerrar a publicação. A Fase 1 permanece aguardando revisão técnica.
+- A publicação foi concluída no commit a3a3358, com main sincronizada com origin/main naquela entrega. Posteriormente, o proprietário informou a aprovação técnica e autorizou o Incremento 1 da Fase 1.

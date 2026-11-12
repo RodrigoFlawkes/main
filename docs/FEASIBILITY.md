@@ -1,6 +1,16 @@
 # Viabilidade, suporte e dependências
 
-Avaliação documental de 12/11/2026. A Fase 0 estabelece uma base técnica. Validação física e compatibilidade de pacotes pelo build continuam pendentes.
+Avaliação documental da Fase 0 em 12/11/2026, atualizada com resultados de compilação e execução do Incremento 1. A matriz e a tabela de dependências da Fase 0 são mantidas como referência do planejamento inicial. A seção seguinte registra as escolhas implementadas e as validações ainda pendentes.
+
+## Validação no Incremento 1
+
+Em 12/11/2026, `NAudio.Wasapi` 3.1.0 foi restaurado, compilado e executado com .NET 10.0.404 no Windows 10 local. A enumeração encontrou 67 endpoints, com padrões independentes e formatos reais dos dispositivos ativos. A cobertura observada é de consulta. Testes de conexão física e Windows 11 permanecem pendentes. Windows 10 é experimental.
+
+O pacote específico contém os wrappers Core Audio necessários. A dependência direta foi fixada em `[3.1.0]`. Os transitivos de áudio são NAudio.Core 3.1.0 e System.Numerics.Tensors 9.0.0, documentados nos lock files. O metapacote NAudio e módulos MIDI/ASIO/WinMM ficam fora da árvore atual. [Pacote Wasapi e licença MIT](https://www.nuget.org/packages/NAudio.Wasapi/3.1.0).
+
+Os testes usam `xunit.v3` `[4.0.3]`, que resolve MTP v2 e Microsoft.Testing.Platform 2.5.2. `global.json` seleciona `Microsoft.Testing.Platform`, e o projeto usa `UseMicrosoftTestingPlatformRunner`. A execução com .NET 10 usa `dotnet test --solution WaveStudio.slnx`. As dependências transitivas e seus hashes estão fixados no lock do projeto. Os pacotes MTP são MIT, e xUnit usa Apache-2.0. [Integração oficial xUnit/MTP](https://xunit.net/docs/getting-started/v3/microsoft-testing-platform), [modo MTP do .NET](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-with-dotnet-test), [licença MTP](https://github.com/microsoft/testfx/blob/main/LICENSE).
+
+O xUnit inclui a extensão de telemetria MTP nos testes. A execução foi feita com `TESTINGPLATFORM_TELEMETRY_OPTOUT=1`. O README inclui a mesma configuração para os testes locais. A distribuição da aplicação contém somente sua árvore de dependências de áudio. A conferência de avisos de redistribuição continua prevista para a fase de distribuição.
 
 ## Matriz de suporte e limites
 
