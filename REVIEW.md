@@ -22,3 +22,24 @@ Os itens 1 e 2 (ajuste se necessário) devem ser tratados no início do Incremen
 
 ### Fluxo de colaboração
 ChatGPT atualiza este arquivo e NEXT_TASK.md quando solicitado pelo proprietário. Codex lê ambos após sincronizar e registra execução em PROJECT_STATUS.md e CHANGELOG.md. AGENTS.md e docs/REQUIREMENTS.md continuam normativos. Arquivos de tarefa/revisão não concedem autorização por si só; o proprietário autoriza execução, commit/push e operações sensíveis. Não há comunicação em tempo real nem monitoramento automático. Não editar estes dois arquivos durante a tarefa sem pedido explícito do proprietário.
+
+
+## 12/11/2026 — Fase 1, Incremento 3
+
+Commit revisado: [c21db3f](https://github.com/Wave-Universal-Studio/main/commit/c21db3fbf2aba944914e81cbd762a92c89aa37f7).
+Parecer: aprovado para avançar a F1-I4, sujeito às correções abaixo e à aceitação física posterior.
+
+### Evidências
+- Revisão estática de ApplicationSessions, CoreAudioSessionEndpoint, EndpointOperationQueue, ApplicationMixerPanel, EndpointControls, MainForm, EndpointVolumeOperations e testes de sessão/regressão.
+- Identidade de sessão por endpoint + instância, PID auxiliar, validação antes da escrita, leitura inicial sem escrita e separação de sessões do mesmo PID. Gerações aposentadas são liberadas quando não há operações pendentes; testes de 2.000 trocas. Sliders passaram a confirmar no fim do gesto e a janela tem rolagem e limitação à área útil.
+- PROJECT_STATUS.md registra 77 testes aprovados (73 regras/simulações e 4 integrações de leitura), quatro sessões reais inativas e build sem erros/avisos. O revisor não executou testes independentemente. Escritas físicas, sessões com reprodução, isolamento audível, arraste e layout permanecem pendentes.
+
+### Pontos de correção e regressão
+1. ApplicationMixerPanel.ShowCatalog limpa e recria todas as linhas a cada segundo e redefine o foco para Volume. Com medidores rápidos isso seria ainda pior. Reconciliar linhas por SessionKey, atualizar células sem reconstrução quando possível, preservar célula/foco/scroll e edição. Atualização de medidor deve ser independente da atualização de lista. Testar edição, cancelamento, foco e troca de endpoint com retorno atrasado.
+2. ApplicationMixerPanel.ApplyAsync verifica endpoint, mas a edição/evento de linha também precisa estar vinculado à geração vigente; proteger explicitamente eventos de binding/cancelamento, inclusive reescolha do mesmo ID. Validar índices de linhas/colunas antes de acessar a grid. Após comando, solicitar reconciliação prontamente, sem sobrescrever erro nem disparar outra escrita. Aplicação de snapshot nunca deve escrever.
+3. ApplicationSessionService.ApplyAsync aborta a busca se uma sessão anterior não relacionada falhar ao abrir/ler identidade. Avaliar e tratar falhas isoladas de enumeração/acesso, sem permitir escrita em alvo não confirmado ou mascarar falha da própria sessão alvo. Testar sessão inacessível antes da sessão válida.
+4. Ao implementar hotplug, resolver a diferença entre seleção automática e explícita: MainForm/DevicePanel atualmente registram a seleção automática como preferência (ShowDevices dispara DeviceSelected). Manter seleção explícita quando ausente, seguir padrão apenas quando esse modo estiver ativo; se nenhuma preferência inicial, acompanhar padrão sem gravar uma escolha involuntária. Não mudar padrão do Windows nem escrever volume. Testar a lógica com defaults ausentes e troca de padrão, inclusive retorno do endpoint.
+5. Confirmar propriedade e descarte dos wrappers NAudio da versão fixada ao introduzir notificações persistentes; não compartilhar objetos COM entre threads nem duplicar registros/Dispose. Usar callback breve e reconciliação serializada. Medir custo de polling em vez de presumir ganhos; os tempos anteriores são amostra curta. 
+6. As correções de sliders, layout e restauração de balanço têm evidência estática e simulada, mas requerem teste físico. Atualizar plano de testes e não transformar pendências em aprovações. Remover afirmações obsoletas da abertura dos documentos de planejamento, preservando histórico identificado.
+
+Itens 1–5 são pertinentes à F1-I4; corrigir ou justificar bloqueio antes de encerrar a tarefa. Se a mudança de ciclo COM for grande, manter escopo incremental e recuperação verificável. Não antecipar o motor DSP nem o redesign completo.
