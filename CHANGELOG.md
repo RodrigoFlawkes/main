@@ -11,6 +11,7 @@
 - Restore locked, builds Debug/Release com zero erros/avisos e 184 testes aprovados em cada configuração, incluindo os 174 anteriores.
 - Publicação local framework-dependent AMD64, avisos de licença, SHA-256 e roteiro ALPHA_ACCEPTANCE. Processo ensaiado por 600,34 s e encerrado normalmente, com dados de CPU/RAM/handles registrados.
 - Automação visual indisponível por falha do pipe nativo. Validação física e Windows 11 aguardam evidências do proprietário. A Alpha permanece com validação pendente.
+- Após o checkpoint 06d2c3f, proprietário confirmou que testará a prévia pronta e que dispõe somente de Windows 10. Roteiro e status atualizados para iniciar A01/A02, com Windows 11 pendente por ambiente indisponível.
 
 ### 2026-11-12 — F1-I5, preferências versionadas e recuperação segura
 

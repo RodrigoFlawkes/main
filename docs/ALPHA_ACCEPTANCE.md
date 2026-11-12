@@ -26,9 +26,11 @@ Antes dos testes, use volume baixo, anote volume/mute/balanço de endpoints e ap
 | A07 Arquivos | Em pasta temporária, conferir backup, corrupção, recuperação explícita e arquivo futuro preservado | Pendente |
 | A08 Interface | Conferir rolagem, foco, diálogos e teclado em 1366×768 ou resolução disponível e DPI 100/150/200% | Pendente |
 | A09 Estabilidade | Observar uso prolongado, atualizar/trocar seleção e fechar durante atividade. Registrar travamento, erro ou recuperação | Pendente |
-| A10 Windows 11 | Repetir os casos no Windows 11 x64 e registrar versão/dispositivo | Pendente — ambiente a confirmar |
+| A10 Windows 11 | Repetir os casos no Windows 11 x64 e registrar versão/dispositivo | Pendente — proprietário dispõe somente de Windows 10 |
 
 Envie o sistema/versão, dispositivo e resultados por ID, usando aprovado, falhou ou pendente. Em falha, informe ação, mensagem e valores antes/depois. Resultados observados por acessibilidade e testes automatizados ficam registrados separadamente em PROJECT_STATUS.md e TEST_PLAN.md.
+
+O proprietário confirmou disponibilidade para testar após o executável ficar pronto. A prévia já foi disponibilizada. A primeira rodada será A01/A02 no Windows 10, registrando dispositivo selecionado, padrão e reação dos picos à reprodução/fala. Os resultados físicos aguardam relato.
 
 ## Evidências técnicas da F1-I6
 
