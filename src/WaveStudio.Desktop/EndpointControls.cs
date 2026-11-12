@@ -23,6 +23,8 @@ internal sealed class EndpointControls : UserControl
     private bool writing;
     private bool stopped;
     private long stateRevision;
+    private bool volumeDirty;
+    private bool balanceDirty;
 
     public EndpointControls()
     {
@@ -49,13 +51,21 @@ internal sealed class EndpointControls : UserControl
         volumeNumber.AccessibleName = "Volume numérico do endpoint do Windows";
         balanceSlider.AccessibleName = "Balanço, negativo à esquerda e positivo à direita";
         balanceNumber.AccessibleName = "Balanço numérico";
-        volumeSlider.Scroll += async (_, _) => await SendAsync(new SetEndpointVolume(volumeSlider.Value));
+        volumeSlider.Scroll += (_, _) => PreviewSlider(volumeSlider, volumeNumber);
+        volumeSlider.MouseUp += async (_, _) => await CommitSliderAsync(true);
+        volumeSlider.KeyUp += async (_, _) => await CommitSliderAsync(true);
+        volumeSlider.MouseWheel += (_, _) => BeginInvoke(new Action(async () => await CommitSliderAsync(true)));
+        volumeSlider.Leave += async (_, _) => await CommitSliderAsync(true);
         volumeNumber.ValueChanged += async (_, _) =>
         {
             if (!applyingSnapshot)
                 await SendAsync(new SetEndpointVolume((double)volumeNumber.Value));
         };
-        balanceSlider.Scroll += async (_, _) => await SendAsync(new SetEndpointBalance(balanceSlider.Value));
+        balanceSlider.Scroll += (_, _) => PreviewSlider(balanceSlider, balanceNumber);
+        balanceSlider.MouseUp += async (_, _) => await CommitSliderAsync(false);
+        balanceSlider.KeyUp += async (_, _) => await CommitSliderAsync(false);
+        balanceSlider.MouseWheel += (_, _) => BeginInvoke(new Action(async () => await CommitSliderAsync(false)));
+        balanceSlider.Leave += async (_, _) => await CommitSliderAsync(false);
         balanceNumber.ValueChanged += async (_, _) =>
         {
             if (!applyingSnapshot)
@@ -77,6 +87,7 @@ internal sealed class EndpointControls : UserControl
             return;
         target = session.Select(device?.State == EndpointState.Active ? device.Id : null);
         stateRevision++;
+        volumeDirty = balanceDirty = false;
         current = null;
         volumeFailure = muteFailure = balanceFailure = null;
         DisableEditors();
@@ -87,7 +98,7 @@ internal sealed class EndpointControls : UserControl
 
     private async Task ReadAsync()
     {
-        if (reading || writing || stopped || target.DeviceId is null)
+        if (reading || writing || stopped || target.DeviceId is null || volumeSlider.Capture || balanceSlider.Capture || volumeDirty || balanceDirty)
             return;
         var requestedTarget = target;
         long requestedRevision = stateRevision;
@@ -168,6 +179,30 @@ internal sealed class EndpointControls : UserControl
                 message.Text = "Volume do Windows no endpoint. Balanço de −100 (esquerda) a +100 (direita).";
         }
         finally { applyingSnapshot = false; }
+    }
+
+    private void PreviewSlider(TrackBar slider, NumericUpDown number)
+    {
+        if (slider == volumeSlider) volumeDirty = true;
+        else balanceDirty = true;
+        stateRevision++;
+        applyingSnapshot = true;
+        try { number.Value = slider.Value; }
+        finally { applyingSnapshot = false; }
+    }
+
+    private async Task CommitSliderAsync(bool isVolume)
+    {
+        if (isVolume && volumeDirty)
+        {
+            volumeDirty = false;
+            await SendAsync(new SetEndpointVolume(volumeSlider.Value));
+        }
+        else if (!isVolume && balanceDirty)
+        {
+            balanceDirty = false;
+            await SendAsync(new SetEndpointBalance(balanceSlider.Value));
+        }
     }
 
     private void ShowError(Exception error)

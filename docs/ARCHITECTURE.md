@@ -4,6 +4,24 @@ Decisões da Fase 0, em 12/11/2026, com atualizações dos Incrementos 1 e 2. Re
 
 ## Implementação do Incremento 2
 
+### Atualização F1-I3
+
+EndpointOperationQueue passou a ser compartilhada pelo controle de endpoint e pelo mixer. Cada geração tem contagem de operações pendentes e é liberada depois de cancelada e drenada. A UI confirma sliders ao fim do gesto, com prévia local durante Scroll, evitando fila de escritas por movimento. Restauração de balanço interrompe-se quando detecta estado externo diferente do original/tentado, informando o usuário. Janelas menores usam rolagem e tamanho limitado à área útil. Essas mudanças sucedem o comportamento original descrito abaixo.
+
+## Mixer de aplicativos — F1-I3
+
+A aba Mixer de aplicativos acompanha a saída selecionada e usa ApplicationSessionService → EndpointOperationQueue → CoreAudioSessionEndpoint. Cada consulta cria seus wrappers no worker MTA, copia snapshots e descarta sessões antes do dispositivo. O dispositivo é proprietário do manager e da coleção. O wrapper SimpleAudioVolume é emprestado da sessão e descartado antes dela. As inscrições internas criadas pelo NAudio são removidas pelo descarte do manager. Notificações persistentes da aplicação ficam para o Incremento 4.
+
+SessionKey combina endpoint e identificador de instância. PID e nome servem como metadados, com fallback para indisponibilidade. Sessões do mesmo PID ficam separadas. Antes de escrever, o serviço reencontra a instância dentro do endpoint, confere sua identidade e estado novamente e verifica cancelamento. Volume é validado em 0–100% e mute é independente. A releitura confirma o resultado. Uma chamada nativa já iniciada pode terminar na sessão original, mesmo após troca de seleção.
+
+Polling de 1.000 ms reconcilia sessões novas, encerradas e alterações externas. A aba oculta ou uma célula em edição pausa consultas periódicas. Erros por sessão geram avisos preservando outras sessões. Falha geral invalida a lista. Escritas só partem de edição confirmada ou botão de mute, com proteção de revisão para ignorar respostas antigas. A lista preserva o foco por chave quando possível e oferece rolagem, volume numérico e botão de mute por linha. O volume desta aba representa a sessão do aplicativo.
+
+Wrappers verificados na tag 3.1.0 incluem AudioSessionManager.Sessions, AudioSessionControl.GetSessionInstanceIdentifier/GetProcessID/IsSystemSoundsSession/State e SimpleAudioVolume.Volume/Mute. [Manager](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/CoreAudioApi/AudioSessionManager.cs), [sessão](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/CoreAudioApi/AudioSessionControl.cs), [volume](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/CoreAudioApi/SimpleAudioVolume.cs).
+
+Dez consultas de leitura nesta máquina observaram médias de 1,40 ms para endpoint e 1,57 ms para mixer. A amostra curta mede tempo de parede. Frequências continuam moderadas. Medição de CPU, otimização e notificações de longo prazo serão avaliadas no Incremento 4.
+
+## Implementação original do Incremento 2
+
 `CoreAudioVolumeAccess` encapsula o endpoint e seu `AudioEndpointVolume`. Acesso master escalar e mute usam `MasterVolumeLevelScalar` e `Mute`. O formato e `Channels.Count` confirmam o mapeamento para `Channels[index].VolumeLevelScalar`. Os objetos são criados, consultados e descartados dentro de uma operação em worker MTA. `MMDevice.Dispose` descarta o wrapper de volume, que cancela seu callback nativo interno. A UI recebe `EndpointVolumeState`, sem referências COM. [NAudio 3.1.0](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/CoreAudioApi/AudioEndpointVolume.cs).
 
 `EndpointVolumeSession` serializa as leituras e escritas de cada painel. Cada seleção possui ID fixo, revisão e token de cancelamento. Trocar a seleção invalida comandos enfileirados e respostas antigas, inclusive ao selecionar novamente o mesmo ID. Uma chamada nativa já iniciada pode terminar no endpoint original. Todos os comandos usam o ID capturado. Cancelamento é conferido antes das escritas, e uma operação de balanço parcialmente aplicada tenta restaurar os canais anteriores. O encerramento aguarda a enumeração e as filas de controle, descarta os recursos de vida útil e encerra os timers.

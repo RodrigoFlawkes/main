@@ -2,6 +2,15 @@
 
 ## Em desenvolvimento
 
+### 2026-11-12 — F1-I3, mixer de aplicativos
+
+- Sincronizadas NEXT_TASK.md e REVIEW.md até 4ab114d e executada F1-I3 mediante autorização do proprietário.
+- Mixer de sessões reais por endpoint/instância, nome/processo quando disponível, PID auxiliar, estado, sons do sistema, volume e mute individuais.
+- Reconciliação por polling, snapshots sem COM, comandos serializados e invalidação de seleção/instância antigas.
+- Corrigida retenção de gerações do Incremento 2, com liberação após drenagem, confirmação dos sliders ao fim do gesto, rolagem da janela e proteção da restauração de balanço contra mudança externa detectável.
+- Build com zero erros/avisos e 77 testes aprovados, incluindo os 56 anteriores. Integração de leitura encontrou quatro sessões reais e mediu custo de consultas. Escritas físicas e layout permanecem pendentes.
+- Separados estado atual e histórico em PROJECT_STATUS.md. Incremento 4 aguarda orientação.
+
 ### 2026-11-12 — Fase 1, Incremento 2
 
 - Publicado o Incremento 1 no commit 60238ea com a mensagem autorizada.

@@ -4,9 +4,13 @@ Aplicação desktop para gerenciamento de áudio no Windows, independente de fab
 
 ## Estado do projeto
 
+F1-I3 implementada. A aba **Mixer de aplicativos** lista sessões reais da saída selecionada, com nome/processo quando disponível, PID auxiliar, estado, volume e mute por instância. Edite Volume (%) e confirme com Enter, ou use o botão de mute. A lista é atualizada periodicamente e preserva instâncias distintas do mesmo aplicativo. O controle atua na sessão do Windows.
+
+Verificação atual com 77 testes aprovados, incluindo os 56 anteriores, build sem erros/avisos e quatro sessões reais enumeradas na integração de leitura. Escritas físicas, isolamento audível e revisão visual permanecem pendentes. Os parágrafos seguintes registram o escopo dos incrementos anteriores. O Incremento 4 aguarda orientação.
+
 Fase 0 aprovada por revisão técnica do commit a3a3358. O Incremento 1 da Fase 1 foi publicado no commit 60238ea. O Incremento 2 recebeu aprovação provisória para publicação e revisão técnica, com volume do endpoint de 0 a 100%, mute independente e balanço condicional para reprodução e captura, além da enumeração e seleção independentes.
 
-Versão v0.1.0 Alpha em desenvolvimento. Sessões, medidores, hotplug automático e persistência permanecem nos próximos incrementos da Fase 1.
+Versão v0.1.0 Alpha em desenvolvimento. Medidores, hotplug automático e persistência permanecem nos próximos incrementos da Fase 1.
 
 ## Documentação
 

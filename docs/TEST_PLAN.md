@@ -1,5 +1,17 @@
 # Plano de testes
 
+## F1-I3 — resultados e aceitação pendente
+
+Restore locked e build Debug x64 aprovados, com zero erros/avisos. Suíte final com 77 aprovados, zero falhas e zero ignorados, incluindo os 56 anteriores. São 73 casos de simulações/regras e 4 integrações Windows de leitura. Telemetria MTP desativada na sessão.
+
+Novos testes verificam volume 0/100% e frações, valores inválidos, mute/unmute, abertura e refresh sem escrita, mudanças externas, instâncias do mesmo PID, sons do sistema, identidade alterada antes da escrita, PID reutilizado, endpoint divergente, sessão encerrada/removida, novas sessões, acesso negado, falhas parciais de leitura, descarte e troca de seleção com comando enfileirado. Regressões da revisão cobrem 2.000 seleções, descarte durante operação e balanço com alteração externa detectável.
+
+Integração de leitura no endpoint padrão encontrou quatro sessões inativas, zero avisos, incluindo duas instâncias do mesmo PID e sons do sistema. Em dez leituras completas foram observadas médias de 1,40 ms no endpoint e 1,57 ms no mixer. Valores são amostras de tempo de parede desta máquina. Ausência de sessões continua sendo resultado válido.
+
+O executável abriu e as abas foram reconhecidas por acessibilidade. Captura visual continuou retornando timeout. A navegação automatizada não confirmou visualmente a lista do mixer. Layout e operações físicas permanecem pendentes.
+
+Para aceitação física, o proprietário deve abrir dois aplicativos com reprodução no mesmo endpoint e anotar/restaurar os níveis originais. Conferir nome, volume numérico com Enter/Esc, mute/unmute e isolamento entre sessões e endpoints. Alterar volume pelo Windows e conferir atualização, iniciar/encerrar aplicativos, trocar rapidamente de saída, remover USB e encerrar durante operação. Conferir arraste contínuo, roda do mouse e teclado dos sliders de endpoint e rolagem em 1366×768 e DPI 100/150/200%. Validar Windows 11 x64. Windows 10 segue experimental. As escritas dos testes automatizados usam simulações.
+
 Estado em 12/11/2026 — Incrementos 1 e 2 implementados, com verificações executadas abaixo. Os casos das etapas posteriores permanecem planejados.
 
 ## Verificação do Incremento 2

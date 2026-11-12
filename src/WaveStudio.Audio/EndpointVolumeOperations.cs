@@ -62,9 +62,11 @@ public static class EndpointVolumeOperations
         var original = endpoint.ReadStereo();
         var requested = original.WithBalance(position);
         bool writeStarted = false;
+        var expected = original;
         try
         {
-            WriteChannels(endpoint, original, requested, cancellationToken, () => writeStarted = true);
+            WriteChannels(endpoint, original, requested, cancellationToken, () => writeStarted = true,
+                (channel, level) => expected = channel == 0 ? expected with { Left = level } : expected with { Right = level });
             var actual = endpoint.ReadStereo();
             if (actual.BaseLevel > original.BaseLevel + 0.00001
                 || Math.Abs(actual.Left - requested.Left) > 0.02 || Math.Abs(actual.Right - requested.Right) > 0.02)
@@ -76,6 +78,9 @@ public static class EndpointVolumeOperations
             try
             {
                 var current = endpoint.ReadStereo();
+                if (!MatchesKnownLevel(current.Left, original.Left, expected.Left)
+                    || !MatchesKnownLevel(current.Right, original.Right, expected.Right))
+                    throw new InvalidOperationException("Foi detectada alteração externa dos canais. Confira os níveis no Windows.");
                 WriteChannels(endpoint, current, original, CancellationToken.None);
                 var restored = endpoint.ReadStereo();
                 if (Math.Abs(restored.Left - original.Left) > 0.02 || Math.Abs(restored.Right - original.Right) > 0.02)
@@ -91,17 +96,22 @@ public static class EndpointVolumeOperations
     }
 
     private static void WriteChannels(IEndpointVolumeAccess endpoint, StereoLevels current, StereoLevels target,
-        CancellationToken cancellationToken, Action? startingWrite = null)
+        CancellationToken cancellationToken, Action? startingWrite = null, Action<int, double>? writingChannel = null)
     {
         // Attenuate first when moving across the center, avoiding a temporary increase of both sides.
         int first = target.Left < current.Left ? 0 : 1;
         cancellationToken.ThrowIfCancellationRequested();
         startingWrite?.Invoke();
+        writingChannel?.Invoke(first, first == 0 ? target.Left : target.Right);
         endpoint.SetChannelLevel(first, first == 0 ? target.Left : target.Right);
         cancellationToken.ThrowIfCancellationRequested();
         int second = 1 - first;
+        writingChannel?.Invoke(second, second == 0 ? target.Left : target.Right);
         endpoint.SetChannelLevel(second, second == 0 ? target.Left : target.Right);
     }
+
+    private static bool MatchesKnownLevel(double actual, double original, double expected) =>
+        Math.Abs(actual - original) <= 0.00001 || Math.Abs(actual - expected) <= 0.00001;
 
     public static bool IsAccessError(Exception error) => AudioError.IsDeviceAccessError(error)
         || error is NotSupportedException or ArgumentOutOfRangeException;

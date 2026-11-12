@@ -6,6 +6,8 @@ O Incremento 1 foi publicado no commit 60238ea após aprovação provisória do 
 
 ## Incrementos
 
+F1-I3 executada conforme NEXT_TASK.md e REVIEW.md, com mixer compilado, 77 testes aprovados e sessões reais enumeradas. O critério físico de dois aplicativos permanece pendente. Incremento 4 aguarda nova orientação. As etapas abaixo mantêm a sequência do roadmap.
+
 1. Criar `WaveStudio.slnx`, Desktop, Audio e testes conforme a arquitetura. Fixar SDK e dependências após conferir APIs e runner. Abrir janela pt-BR, enumerar endpoints reais, mostrar estados e padrões e permitir seleção independente. Critério de saída — restore/build/test bem-sucedidos e comparação manual da enumeração com o Windows.
 2. Adicionar volume/mute por endpoint e balanço condicional. Sincronizar mudanças externas, validar intervalos e erros de dispositivo. Critério — alterações verificadas no Windows e teste físico dos canais, incluindo mono e suporte ausente.
 3. Listar sessões reais do endpoint, identidade, estado e nome/processo quando disponíveis. Adicionar volumes/mute e tratar sessões criadas/encerradas durante o uso. Critério — dois aplicativos independentes e sons do sistema controlados corretamente.
