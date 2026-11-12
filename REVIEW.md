@@ -43,3 +43,24 @@ Parecer: aprovado para avançar a F1-I4, sujeito às correções abaixo e à ace
 6. As correções de sliders, layout e restauração de balanço têm evidência estática e simulada, mas requerem teste físico. Atualizar plano de testes e não transformar pendências em aprovações. Remover afirmações obsoletas da abertura dos documentos de planejamento, preservando histórico identificado.
 
 Itens 1–5 são pertinentes à F1-I4; corrigir ou justificar bloqueio antes de encerrar a tarefa. Se a mudança de ciclo COM for grande, manter escopo incremental e recuperação verificável. Não antecipar o motor DSP nem o redesign completo.
+
+
+## 12/11/2026 — Fase 1, Incremento 4
+
+Commit revisado: [b63ef63](https://github.com/Wave-Universal-Studio/main/commit/b63ef63304cb6a463565a2bbbe270d6bd1ce2325).
+Parecer: aprovado para prosseguir à F1-I5, com correções de recuperação e persistência segura. A aceitação física não está concluída.
+
+### Evidências
+- Revisão estática de AudioWatchEngine, AudioWatchWorker, AudioWatchModels, CoreAudioWatchBackend, DeviceSelection, MainForm, DevicePanel, ApplicationMixerPanel, ApplicationSessions e testes de watch/seleção.
+- Worker MTA persistente, fontes reutilizadas, callback sinalizador, coalescência, fallback, descarte ordenado e snapshots por geração. Grid reconciliada por chave e protegida por binding/geração; busca de sessão tolera falha de item não relacionado. Seleções explícitas e automáticas separadas.
+- PROJECT_STATUS.md registra 101 testes aprovados (95 regras/simulações/grid STA, 6 integrações Windows de leitura) e build sem erros/avisos. Integrações observaram zero nos picos de entrada/saída e cinco sessões em leitura pontual. A média de 0,083 ms é de consulta em uma amostra curta, não latência de áudio nem garantia de CPU. O revisor não executou testes independentemente.
+- Medidores contínuos por sessão continuam pendentes; não confundir a leitura pontual com uma funcionalidade entregue. Fala/música, USB, alteração de padrão, suspensão/retomada, escritas, DPI, estabilidade longa e Windows 11 continuam pendentes.
+
+### Correções para F1-I5
+1. AudioWatchWorker termina se escapar exceção no loop, mas Latest pode continuar contendo o último pico e status "ativa". Publicar estado de falha/indisponibilidade ou permitir recuperação segura, sem exibir snapshot antigo indefinidamente. Considerar timestamp/freshness e invalidação no retorno da suspensão. Testar falha terminal simulada e fechamento, sem reinício em loop ocupado.
+2. OnPowerModeChanged chama Recover, mas a atualização recebida usa RequestRefresh(false). Com o mesmo ID/estado/formato, DevicePanel e mixer podem conservar falhas latched de comandos após retomada ou reconexão rápida. Definir evento de recuperação distinto de refresh de metadados, invalidando gerações e erros quando realmente necessário, mesmo se ID for igual. Evitar reset de controles a cada notificação irrelevante. Manual refresh deve permitir tentar recuperar inscrição/fontes sem criar loop de catálogo. Testar com ID igual, sem escritas.
+3. Ao carregar preferências persistidas, preservar modo automático ou ID explícito ausente independentemente de existir no catálogo atual. Adicionar API de seleção validada por direção/ID sem fabricar DeviceSnapshot. Corrigir modo automático se houver padrão marcado mas inativo; avaliar fallback ativo e informar quando o padrão real não está disponível. Não converter fallback em preferência explícita. Não escrever volume durante inicialização, refresh, troca de padrão, hotplug ou recuperação.
+4. ApplicationMixerPanel.ReadAsync pode perder a tentativa imediata de atualização pós-comando se uma leitura anterior estiver ativa; polling posterior recupera, mas verificar reconciliação pronta e que erros/edição não sejam perdidos. Ajuste pequeno se necessário, sem reescrever mixer.
+5. Reavaliar viabilidade de medidor contínuo por sessão com orçamento e ciclo de vida, sem atrasar F1-I5; registrar como pendência da F1-I6 caso não implementado. Não adicionar controles fictícios. Manter testes físicos e visualização pendentes de forma explícita.
+
+Itens 1–3 devem ser resolvidos ou ter bloqueio específico registrado antes de concluir F1-I5. F1-I6 será a etapa de validação, não uma aprovação automática. A partir dela é necessário obter evidências reais de escrita e áudio ativo; o proprietário pode realizar testes guiados se Computer Use continuar indisponível. O design profissional permanece planejado após a base Alpha; não antecipar DSP ou instalar drivers.
