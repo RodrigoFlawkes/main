@@ -64,3 +64,24 @@ Parecer: aprovado para prosseguir à F1-I5, com correções de recuperação e p
 5. Reavaliar viabilidade de medidor contínuo por sessão com orçamento e ciclo de vida, sem atrasar F1-I5; registrar como pendência da F1-I6 caso não implementado. Não adicionar controles fictícios. Manter testes físicos e visualização pendentes de forma explícita.
 
 Itens 1–3 devem ser resolvidos ou ter bloqueio específico registrado antes de concluir F1-I5. F1-I6 será a etapa de validação, não uma aprovação automática. A partir dela é necessário obter evidências reais de escrita e áudio ativo; o proprietário pode realizar testes guiados se Computer Use continuar indisponível. O design profissional permanece planejado após a base Alpha; não antecipar DSP ou instalar drivers.
+
+
+## 12/11/2026 — Fase 1, Incremento 5
+
+Commit revisado: [15797ee](https://github.com/Wave-Universal-Studio/main/commit/15797eeb2b958f6a4be2d3ca885c3ed960fd5af2).
+Parecer: aprovado para F1-I6 (validação e empacotamento), não para declarar a Alpha fisicamente aceita.
+
+### Evidências
+- Revisão estática de SettingsStore, StudioSettings, WindowPlacement, MainForm.Preferences, MainForm, EndpointPreferenceRestore, EndpointVolumeSession, EndpointControls, AudioWatchWorker, Program e testes de armazenamento/restauração.
+- Configuração v1 separa seleção persistida de estado atual do Windows; arquivo futuro protegido, cópia temporária e backup, detecção de conflito, restauração explícita com confirmação e geração. Retomada e falha de worker tratadas. PROJECT_STATUS.md relata 174 testes (165 regras/simulações/arquivos/STA e 9 integrações Windows) e build sem erros/avisos. Não foram repetidos pelo revisor.
+- Execução em armazenamento isolado e reinício observados pelo Codex. Nenhum teste físico de escrita ou áudio ativo comprovado. Preferências duráveis por sessão e medidores contínuos de sessão pendentes.
+
+### Pontos para F1-I6
+1. SettingsStore.ReadOptional rejeita arquivos >1 MiB antes de obter baseline. Load marca Corrupt mas Reset/Recover reexecutam leitura que pode lançar InvalidDataException (ou baseline anterior não correspondente). Não oferecer operação que não pode concluir: classificar arquivo excessivo como protegido, bloquear escrita/reset/recuperação automática e explicar preservação/inspeção manual; tratar mudança de arquivo durante operação sem exceção não observada. Testar arquivo grande, crescimento concorrente e byte a byte preservado. Não ler arquivo arbitrariamente grande para arquivar.
+2. DrainSettingsSavesAsync captura apenas cancelamento; SettingsJson.Encode pode lançar por validação (por exemplo limite de 1000 endpoints ou janela), e exceção pode ficar em settingsTask e escapar do fechamento. Tratar falhas de validação/I/O previsíveis com mensagem; impedir encerramento travado e confirmar que não se altera arquivo válido. Validar que nenhum valor indisponível é salvo como preferência utilizável. Desabilitar controles de seleção até carga inicial; testar ações antes da carga, mudança durante confirmação e fechamento.
+3. EndpointPreferenceRestore confirma volume/mute no estado final, mas não confere explicitamente balanço final após os comandos restantes. Revalidar canais/posição final com tolerância em escala de canal adequada à quantização, tratar base zero como balanço não observável e não prometer confirmação impossível. Se houver divergência real, retornar incompleto; avisar que desmutar também pode tornar áudio audível mesmo sem aumento de volume. Não aumentar níveis durante abertura, seleção ou recuperação. Testar driver que modifica canais após comando e ausência de suporte. 
+4. Testar a aplicação em uso real com roteiro assistido; Computer Use tem falhado em captura e cliques. Não substituir testes físicos por simulação. Obter evidência do proprietário ou marcar bloqueado. Testar com volume baixo e registrar/restaurar níveis; não suspender, desconectar ou modificar configurações críticas sem ação/autorização.
+5. Medidores contínuos de sessão: avaliar orçamento e ciclo de vida; implementar se viável com escopo controlado, senão registrar pendência e condição de entrega. Preferência durável de sessão continua condicionada a identidade inequívoca, não insistir em PID/nome. Não antecipar o motor de áudio.
+6. Revisar publicação x64 Release, conteúdo do pacote, segurança/privacidade, licenças de dependências e instrução de execução. Não declarar compatibilidade Windows 11 sem ensaio; Windows 10 experimental. A Alpha pode ser distribuída para teste local com rótulo de prévia, mas aceitação plena depende das evidências físicas. Não criar instalador/driver agora.
+
+As referências adicionais do proprietário (Peace/Equalizer APO, Light Host e efeitos VST) foram registradas em docs/FUTURE_AUDIO_FEATURES.md para planejamento posterior. Não expandir F1-I6 para implementá-las. 
