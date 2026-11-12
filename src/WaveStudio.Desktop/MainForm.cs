@@ -31,9 +31,10 @@ internal sealed partial class MainForm : Form
     private bool stopping;
     private Task refreshTask = Task.CompletedTask;
 
-    public MainForm(SettingsStore? settingsStore = null)
+    public MainForm(SettingsStore? settingsStore = null, Action<string>? storageWarning = null)
     {
         store = settingsStore ?? new SettingsStore(SettingsStore.DefaultPath);
+        showStorageWarning = storageWarning ?? (message => MessageBox.Show(this, message, "Preferências locais", MessageBoxButtons.OK, MessageBoxIcon.Warning));
         Text = "Wave Studio — v0.1.0 Alpha em desenvolvimento";
         MinimumSize = new Size(600, 400);
         ClientSize = new Size(1080, 860);
@@ -85,6 +86,7 @@ internal sealed partial class MainForm : Form
         layout.Controls.Add(storageStatus, 0, 6);
         layout.SetColumnSpan(storageStatus, 2);
         Controls.Add(layout);
+        EnablePreferenceSelections(false);
         playback.DeviceSelected += device => SelectExplicit(device);
         capture.DeviceSelected += device => SelectExplicit(device);
         followPlayback.CheckedChanged += (_, _) => ChangeFollowMode(EndpointDirection.Playback, followPlayback);
@@ -152,7 +154,7 @@ internal sealed partial class MainForm : Form
 
     private void SelectExplicit(DeviceSnapshot device)
     {
-        if (recoveringPreferences) return;
+        if (!settingsLoaded || stopping || recoveringPreferences) return;
         selection.Select(device);
         bindingFollow = true;
         try
@@ -174,7 +176,7 @@ internal sealed partial class MainForm : Form
 
     private void ChangeFollowMode(EndpointDirection direction, CheckBox check)
     {
-        if (bindingFollow || recoveringPreferences) return;
+        if (!settingsLoaded || stopping || bindingFollow || recoveringPreferences) return;
         if (check.Checked) selection.FollowDefault(direction);
         else
         {

@@ -2,7 +2,44 @@
 
 Atualizado em 12/11/2026.
 
-## Estado atual — F1-I5 executada
+## Estado atual — F1-I6, checkpoint técnico com validação pendente
+
+Repositório inicialmente limpo em main, sincronizado por fast-forward até 8d0e688. Remoto confirmado como https://github.com/Wave-Universal-Studio/main.git. AGENTS.md, requisitos, arquitetura, plano, testes, status, NEXT_TASK.md, revisão F1-I5 e FUTURE_AUDIO_FEATURES.md lidos. O proprietário autorizou implementação, commit e push desta etapa. Os incrementos anteriores permaneceram como base, com regressão obrigatória.
+
+| Categoria | Resultado atual |
+| --- | --- |
+| Correções da revisão | Arquivo excessivo protegido, falhas previsíveis de gravação observadas, seleção bloqueada até a carga, valores indisponíveis tratados e balanço final confirmado após todos os comandos |
+| Medidores de sessão | Pico real por instância a 1 Hz no mixer, com silêncio/pausa/atraso/indisponibilidade e geração. Consulta média de 1,68 ms em 100 leituras com quatro sessões reais |
+| Compilado | Debug e Release x64, zero erros e zero avisos |
+| Testado automaticamente | 184 aprovados em cada configuração, zero falhas e zero ignorados, incluindo os 174 anteriores. 173 casos de regras/simulações/arquivos/STA e 11 integrações Windows |
+| Publicação local | artifacts/alpha-preview/win-x64/WaveStudio.exe, PE AMD64 0x8664, framework-dependent, requer .NET Desktop Runtime 10 x64 |
+| Execução publicada | Processo iniciado com configuração temporária própria, ativo por 600,34 s, encerramento normal confirmado e configuração criada no fechamento |
+| Recursos observados | 61 amostras. CPU equivalente a 0,187% de um núcleo incluindo início. Após 60 s, working set 63,12–72,24 MiB e handles 362–371, final 362 |
+| Automação visual | Bloqueada por pipe nativo indisponível. Inspeção visual, interação e recuperação física aguardam proprietário |
+| Aceitação física | A01–A10 de docs/ALPHA_ACCEPTANCE.md pendentes de relato. Participação solicitada durante a execução |
+| Compatibilidade | Windows 10 Pro 22H2 build 19045.6466 experimental. Windows 11 x64 prioritário, aguardando ambiente/ensaio |
+| Limitação funcional | Preferências duráveis de sessões aguardam identidade inequívoca. Amostragem de pico de sessão a 1 Hz pode perder eventos breves |
+| Próximo passo | Receber evidências do proprietário, corrigir falhas reais e obter aprovação explícita da Alpha. Fase 1 continua em validação |
+
+### Verificações e decisões da F1-I6
+
+- SettingsStore agora diferencia Oversized de Corrupt, verifica tamanho antes/depois da leitura limitada e bloqueia save/reset/recuperação automática de arquivo excessivo. Crescimento concorrente invalida baseline e preserva principal/backup, com temporário próprio removido. Modelo inválido retorna mensagem e mantém arquivo válido. DrainSettingsSavesAsync e fechamento tratam validação/I/O previsíveis.
+- Seletores e handlers aguardam a carga inicial. EndpointPreference.FromSnapshot preserva ausência de controles com erro, evita preferência utilizável de balanço em zero e recusa snapshot totalmente indisponível. Restauração confirma canais finais após unmute, usando tolerância de 2% da base esperada. Zero é informado como não observável. A prévia avisa sobre áudio audível ao desmutar.
+- Picos por sessão foram implementados com escopo moderado, aproveitando a reconciliação existente de 1 s. Objetos são criados, consultados e descartados na mesma operação MTA. Medidor emprestado e volume são descartados antes da sessão proprietária. Snapshots contêm valores e timestamp. A grid mantém chave/foco/geração e informa pausa/atraso. API e propriedade dos wrappers conferidas na tag NAudio 3.1.0. Preferências duráveis de sessão continuam condicionadas a identidade inequívoca.
+- A consulta real encontrou quatro sessões inativas, quatro picos disponíveis em zero e zero avisos de enumeração. Cem consultas completas com picos tiveram média de 1,68 ms, e dez consultas de endpoint tiveram média de 1,42 ms. O movimento com fala/música e isolamento audível permanecem pendentes. Frequência da UI de sessão é 1 Hz e de endpoint aproximadamente 10 Hz.
+- dotnet restore WaveStudio.slnx --locked-mode aprovado. A primeira execução teve três NU1900 por acesso ao NuGet; repetição --force com acesso à rede concluiu sem avisos de auditoria. Builds Debug/Release e testes nas duas configurações aprovados com 184 testes cada, usando TESTINGPLATFORM_TELEMETRY_OPTOUT=1.
+- Publicação por dotnet publish do Desktop em Release, --no-restore, --self-contained false, DebugType=None, DebugSymbols=false e IncludeSourceRevisionInInformationalVersion=false. SDK Windows x64 10.0.404 e PlatformTarget x64 geraram apphost AMD64 confirmado pelo PE. Saída isolada/ignorada em artifacts/alpha-preview/win-x64, com 14 arquivos e total de 1.673.529 bytes, incluindo documentação/avisos. O executável tem 162.304 bytes e SHA-256 7D4749DB85606830D7851BBBDE70181530BAA5A20592070B37FC5FAF94470F92. Dependências e comandos estão no roteiro de aceitação.
+- Ensaio do processo publicado com --settings-file temporário completou 600,34 s e 61 amostras, sem saída prematura. CPU acumulada de 1.125 ms, média equivalente a 0,187% de um núcleo incluindo inicialização e 0,0087% após 60 s. Working set após 60 s de 66.187.264 a 75.751.424 bytes, final 75.460.608; private bytes final 31.727.616; handles 362–371 após 60 s, final 362, e 12 threads finais. Relatório bruto ignorado em artifacts/alpha-preview/validation. A amostra cobre esta duração, host e estado inicial da janela.
+- CloseMainWindow/WaitForExit confirmaram encerramento normal do processo publicado. O arquivo temporário foi criado com schemaVersion 1, seleções automáticas independentes, janela salva e zero preferências de níveis. Consulta de eventos Application Error/.NET Runtime encontrou zero correspondências ao WaveStudio.exe no intervalo. A inspeção visual e dos erros recuperáveis apresentados na UI continua pendente.
+- Computer Use retornou pipe nativo indisponível. Repetição limitada e reinicialização do cliente falharam, e a superfície unificada confirmou indisponibilidade. A validação interativa/visual foi mantida pendente. Participação do proprietário e disponibilidade de Windows 11 foram solicitadas, aguardando resposta. O roteiro A01–A10 orienta volume baixo, registro/restauração dos níveis/padrões e testes de arquivos isolados.
+- Avisos MIT do NAudio e do .NET e textos LICENSE/THIRD-PARTY-NOTICES de System.Numerics.Tensors acompanham a pasta de publicação. Inventário em docs/THIRD_PARTY_NOTICES.md. A licença própria do produto permanece decisão do proprietário. A publicação local é uma prévia para testes. Arquivos binários, configurações pessoais e relatório bruto ficam ignorados pelo Git.
+- README, changelog, arquitetura, planos, aceitação e status foram atualizados. git diff --check aprovado. Busca por padrões comuns de credenciais e nomes sensíveis sem correspondências no conteúdo versionável. Bin/obj/artifacts ignorados, links locais válidos e arquivos novos conferidos quanto a espaços finais/conflitos. Pacote conferido com dependências/avisos, excluindo símbolos e binários de testes. AGENTS.md, REQUIREMENTS.md, NEXT_TASK.md, REVIEW.md, FUTURE_AUDIO_FEATURES.md, configurações de SDK/build e lock files conferidos contra 8d0e688 e preservados. Publicação autorizada como checkpoint técnico, com conferência da árvore e sincronização após push normal.
+
+### Handoff e bloqueios de aceitação
+
+Roteiro e comando do executável em docs/ALPHA_ACCEPTANCE.md. Os casos A01–A10 aguardam resultado aprovado/falhou/pendente por dispositivo e sistema. A aceitação está bloqueada pela ausência dessas evidências físicas/visuais e de ensaio Windows 11, com relato do proprietário pendente. Os testes automatizados e a coleta de processo compõem o checkpoint técnico. A conclusão da Fase 1 e aceitação final da Alpha exigem evidência e aprovação explícita.
+
+## Histórico — F1-I5 executada
 
 Árvore inicialmente limpa, main sincronizada por git pull --ff-only até 4e2d690. Remoto confirmado como https://github.com/Wave-Universal-Studio/main.git. AGENTS.md, requisitos, arquitetura, planos, status, NEXT_TASK.md e REVIEW.md lidos. A revisão mais recente é F1-I4 sobre b63ef63. Implementação, commit e push desta etapa autorizados pelo proprietário. F1-I6 e Fase 2 aguardam nova orientação.
 
@@ -117,7 +154,7 @@ Anotar volume e mute de cada aplicativo e do endpoint antes do teste e restaurar
 
 ## Histórico das entregas anteriores
 
-As seções seguintes preservam os registros das Fases 0 e Incrementos 1–2. O estado atual da tarefa é o da seção F1-I5 acima.
+As seções seguintes preservam os registros das Fases 0 e Incrementos 1–2. O estado atual da tarefa é o da seção F1-I6 acima.
 
 ### Etapa atual
 

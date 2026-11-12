@@ -6,6 +6,17 @@ namespace WaveStudio.Tests;
 
 public sealed class SettingsValidationTests
 {
+    [Fact]
+    public void UnavailableControlsAndSilentBalanceCannotBecomeUsableSavedValues()
+    {
+        var unavailable = new EndpointVolumeState(50, false, new(0.4, 0.4), "falha", "falha", "falha");
+        Assert.Throws<InvalidOperationException>(() => EndpointPreference.FromSnapshot("out", EndpointDirection.Playback, unavailable));
+        var silent = new EndpointVolumeState(0, false, new(0, 0), null, null, null);
+        var preference = EndpointPreference.FromSnapshot("out", EndpointDirection.Playback, silent);
+        Assert.Equal(0, preference.VolumePercent);
+        Assert.False(preference.Muted);
+        Assert.Null(preference.Balance);
+    }
     [Theory]
     [InlineData(-1)]
     [InlineData(101)]

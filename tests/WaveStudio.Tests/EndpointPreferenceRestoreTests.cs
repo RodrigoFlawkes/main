@@ -152,4 +152,42 @@ public sealed class EndpointPreferenceRestoreTests
         Assert.Null(result.Actual.VolumePercent);
         Assert.NotNull(result.Actual.VolumeError);
     }
+
+    [Theory]
+    [InlineData(0.4)]
+    [InlineData(0.001)]
+    public async Task ChannelChangeOnFinalUnmuteInvalidatesBalance(double level)
+    {
+        var state = new FakeEndpointState { Muted = true, Stereo = new(level, level) };
+        state.MuteWritten = _ => state.Stereo = new(level, 0);
+        await using var session = new EndpointVolumeSession(_ => new FakeEndpointVolume(state));
+        var plan = await session.PreviewRestoreAsync(session.Select("out"), new(null, false, 100));
+        var result = await session.RestoreAsync(plan);
+        Assert.False(result.Complete);
+        Assert.Contains("balanço final", result.Error);
+        Assert.Equal(new StereoLevels(level, 0), result.Actual.Stereo);
+    }
+
+    [Fact]
+    public async Task FinalChannelQuantizationWithinBaseRelativeToleranceIsAccepted()
+    {
+        var state = new FakeEndpointState { Muted = true };
+        state.MuteWritten = _ => state.Stereo = new(0.202, 0.398);
+        await using var session = new EndpointVolumeSession(_ => new FakeEndpointVolume(state));
+        var plan = await session.PreviewRestoreAsync(session.Select("out"), new(null, false, 50));
+        Assert.True((await session.RestoreAsync(plan)).Complete);
+    }
+
+    [Fact]
+    public async Task BalanceAtZeroBaseIsReportedAsUnobservable()
+    {
+        var state = new FakeEndpointState { Volume = 0, Stereo = new(0, 0) };
+        await using var session = new EndpointVolumeSession(_ => new FakeEndpointVolume(state));
+        var plan = await session.PreviewRestoreAsync(session.Select("out"), new(0, false, 100));
+        var result = await session.RestoreAsync(plan);
+        Assert.False(result.Complete);
+        Assert.Contains("não é observável", result.Error);
+        Assert.Equal(new StereoLevels(0, 0), result.Actual.Stereo);
+        Assert.Equal(0, result.Actual.VolumePercent);
+    }
 }

@@ -11,6 +11,19 @@ internal sealed record EndpointPreference([property: JsonRequired] string Endpoi
 {
     [JsonIgnore]
     public EndpointRestoreValues Values => new(VolumePercent, Muted, Balance);
+
+    public static EndpointPreference FromSnapshot(string endpointId, EndpointDirection direction, EndpointVolumeState state)
+    {
+        DeviceSelection.ValidatePreference(direction, endpointId);
+        var preference = new EndpointPreference(endpointId, direction,
+            state.VolumeError is null ? state.VolumePercent : null,
+            state.MuteError is null ? state.Muted : null,
+            state.BalanceError is null && state.Stereo is { BaseLevel: > 0 } stereo ? stereo.Balance : null);
+        preference.Values.Validate();
+        if (!preference.Values.HasValues)
+            throw new InvalidOperationException("Os controles estão indisponíveis. Atualize o dispositivo antes de salvar os níveis.");
+        return preference;
+    }
 }
 
 internal sealed record StudioSettings
@@ -31,6 +44,7 @@ internal sealed record StudioSettings
 internal static class SettingsJson
 {
     public const int MaximumBytes = 1024 * 1024;
+    public static bool IsValidationError(Exception error) => error is JsonException or InvalidDataException or ArgumentException or NotSupportedException;
     private static readonly JsonSerializerOptions Options = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,

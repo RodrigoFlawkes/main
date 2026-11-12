@@ -21,6 +21,7 @@ internal sealed class FakeEndpointState
     public Action? ReadingVolume;
     public Action? ChannelWritten;
     public Action? ReadingStereo;
+    public Action<bool>? MuteWritten;
 }
 
 internal sealed class FakeEndpointVolume(FakeEndpointState state) : IEndpointVolumeAccess
@@ -69,6 +70,7 @@ internal sealed class FakeEndpointVolume(FakeEndpointState state) : IEndpointVol
             state.Writes++;
             if (!state.IgnoreWrites)
                 state.Muted = value;
+            state.MuteWritten?.Invoke(value);
         }
     }
 

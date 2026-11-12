@@ -6,6 +6,7 @@ namespace WaveStudio.Desktop;
 internal sealed partial class MainForm
 {
     private readonly SettingsStore store;
+    private readonly Action<string> showStorageWarning;
     private StudioSettings settings = new();
     private readonly Label storageStatus = new() { AutoSize = true, Dock = DockStyle.Fill, MaximumSize = new Size(1000, 0) };
     private readonly Label preferencesSummary = new() { AutoSize = true, MaximumSize = new Size(800, 0) };
@@ -73,6 +74,7 @@ internal sealed partial class MainForm
             ApplySavedSelections();
             ApplyWindowPlacement();
             ShowStorageStatus(loaded.Message);
+            EnablePreferenceSelections(true);
         }
         catch (OperationCanceledException) when (stopping) { }
     }
@@ -141,6 +143,12 @@ internal sealed partial class MainForm
             lastSaveError = "A gravação das preferências foi cancelada. Confira o armazenamento antes de fechar.";
             if (!IsDisposed) ShowStorageStatus(lastSaveError);
         }
+        catch (Exception error) when (SettingsJson.IsValidationError(error) || SettingsStore.IsStorageError(error))
+        {
+            settingsSaveRequested = false;
+            lastSaveError = "Falha ao salvar preferências. A configuração válida foi preservada. " + error.Message;
+            if (!IsDisposed) ShowStorageStatus(lastSaveError);
+        }
         finally { savingSettings = false; }
     }
 
@@ -180,9 +188,7 @@ internal sealed partial class MainForm
         {
             var captured = await panel.AudioControls.ReadPreferenceAsync();
             if (stopping) return;
-            var state = captured.State;
-            settings = settings.WithEndpoint(new EndpointPreference(captured.Selection.DeviceId!, direction,
-                state.VolumePercent, state.Muted, state.Stereo?.Balance));
+            settings = settings.WithEndpoint(EndpointPreference.FromSnapshot(captured.Selection.DeviceId!, direction, captured.State));
             QueueSettingsSave();
         }
         catch (OperationCanceledException) { }
@@ -210,6 +216,8 @@ internal sealed partial class MainForm
                 + $"Balanço atual {Level(plan.Original.Stereo?.Balance)} → salvo {Level(plan.Values.Balance)}";
             if (plan.Values.VolumePercent > plan.Original.VolumePercent)
                 preview += Environment.NewLine + "A confirmação aumentará o volume do endpoint.";
+            if (plan.Values.Muted == false && plan.Original.Muted == true)
+                preview += Environment.NewLine + "A confirmação desativará o mute e poderá tornar o áudio audível.";
             if (MessageBox.Show(this, preview, "Confirmar restauração de áudio", MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
             var result = await panel.AudioControls.RestoreAsync(plan);
@@ -286,8 +294,7 @@ internal sealed partial class MainForm
         try { await preferenceTask.WaitAsync(TimeSpan.FromSeconds(5)); }
         catch (Exception error)
         {
-            MessageBox.Show(this, "A operação de preferências ficou pendente ou falhou. Confira o arquivo na próxima abertura. " + error.GetType().Name,
-                "Preferências locais", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            showStorageWarning("A operação de preferências ficou pendente ou falhou. Confira o arquivo na próxima abertura. " + error.GetType().Name);
             return;
         }
         var bounds = WindowState == FormWindowState.Normal ? Bounds : RestoreBounds;
@@ -299,8 +306,12 @@ internal sealed partial class MainForm
         }
         try { await settingsTask.WaitAsync(TimeSpan.FromSeconds(5)); }
         catch (TimeoutException) { lastSaveError = "A gravação ainda está pendente. A próxima abertura deverá conferir o arquivo de preferências."; }
+        catch (Exception error) when (SettingsJson.IsValidationError(error) || SettingsStore.IsStorageError(error) || error is OperationCanceledException)
+        {
+            lastSaveError = "Falha na gravação final. Confira a configuração preservada. " + error.GetType().Name;
+        }
         if (lastSaveError is not null)
-            MessageBox.Show(this, lastSaveError, "Preferências locais", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            showStorageWarning(lastSaveError);
     }
 
     private static void AddFallbackWarning(List<string> warnings, DeviceSnapshot? device, EndpointDirection direction, string? explicitId)

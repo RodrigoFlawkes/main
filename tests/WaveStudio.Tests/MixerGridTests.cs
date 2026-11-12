@@ -141,4 +141,32 @@ public sealed class MixerGridTests
         }
         finally { release.Set(); }
     }
+
+    [Fact]
+    public Task SessionPeaksKeepRowsAndFocusAndExposePauseStaleAndUnavailable() => OnSta(panel =>
+    {
+        long now = Stopwatch.GetTimestamp();
+        var target = panel.Selection;
+        var first = Session("a") with { Peak = PeakReading.FromScalar(0.25), PeakRecordedAt = now };
+        panel.ShowCatalog(target, Catalog(first));
+        var grid = panel.SessionGrid;
+        var row = grid.Rows[0];
+        grid.CurrentCell = row.Cells["Mute"];
+        Assert.StartsWith("25", Convert.ToString(row.Cells["Peak"].Value));
+        panel.ShowCatalog(target, Catalog(first with { Peak = PeakReading.FromScalar(0) }));
+        Assert.Same(row, grid.Rows[0]);
+        Assert.Same(row.Cells["Mute"], grid.CurrentCell);
+        Assert.Contains("silêncio", Convert.ToString(row.Cells["Peak"].Value));
+        panel.UpdatePeakCells(now, paused: true);
+        Assert.Equal("Pausado", row.Cells["Peak"].Value);
+        panel.UpdatePeakCells(now + Stopwatch.Frequency * 3, paused: false);
+        Assert.Equal("Leitura atrasada", row.Cells["Peak"].Value);
+        panel.ShowCatalog(target, Catalog(first with { Peak = PeakReading.Unavailable }));
+        Assert.Equal("Indisponível", row.Cells["Peak"].Value);
+        var old = target;
+        panel.SelectDevice(Device);
+        Pump(panel.PendingRead);
+        panel.ShowCatalog(old, Catalog(first));
+        Assert.Empty(grid.Rows.Cast<DataGridViewRow>());
+    });
 }

@@ -3,7 +3,8 @@ namespace WaveStudio.Audio;
 public enum SessionActivity { Inactive, Active, Expired }
 public sealed record SessionKey(string EndpointId, string InstanceId);
 public sealed record ApplicationSessionSnapshot(SessionKey Key, string Name, uint? ProcessId,
-    bool IsSystemSounds, SessionActivity Activity, double? VolumePercent, bool? Muted, string? Error);
+    bool IsSystemSounds, SessionActivity Activity, double? VolumePercent, bool? Muted, string? Error,
+    PeakReading? Peak = null, long PeakRecordedAt = 0);
 public sealed record ApplicationSessionCatalog(IReadOnlyList<ApplicationSessionSnapshot> Sessions, IReadOnlyList<string> Warnings);
 public sealed record ApplicationSessionBinding(EndpointSelection Selection, ApplicationSessionSnapshot Snapshot)
 {

@@ -3,7 +3,8 @@ using System.Text.Json;
 
 namespace WaveStudio.Desktop.Settings;
 
-internal enum SettingsFileState { Uninitialized, Missing, Ready, Corrupt, Unsupported, Unreadable, Conflict }
+internal enum SettingsFileState { Uninitialized, Missing, Ready, Corrupt, Unsupported, Oversized, Unreadable, Conflict }
+internal sealed class SettingsFileTooLargeException() : IOException("Configuração excede o limite de 1 MiB.");
 internal sealed record SettingsLoadResult(StudioSettings Settings, SettingsFileState State, string Message, bool CanRecoverBackup);
 internal sealed record SettingsSaveResult(bool Success, string Message);
 
@@ -72,6 +73,7 @@ internal sealed class SettingsStore
                 StudioSettings settings = new();
                 string message;
                 CanRecoverBackup = false;
+                baseline = null;
                 try
                 {
                     baseline = ReadOptional(FilePath);
@@ -79,6 +81,11 @@ internal sealed class SettingsStore
                     State = baseline is null ? SettingsFileState.Missing : SettingsFileState.Ready;
                     message = baseline is null ? "Primeira execução. Preferências locais serão salvas após suas ações."
                         : "Preferências carregadas. Os níveis atuais são consultados no Windows.";
+                }
+                catch (SettingsFileTooLargeException)
+                {
+                    State = SettingsFileState.Oversized;
+                    message = ProtectOversizedFile();
                 }
                 catch (NotSupportedException)
                 {
@@ -116,7 +123,12 @@ internal sealed class SettingsStore
     private async Task<SettingsSaveResult> WriteAsync(StudioSettings settings, bool recovery, bool useBackup, CancellationToken token)
     {
         // Copy and validate before awaiting so callers cannot change an array in an enqueued save.
-        byte[] encoded = SettingsJson.Encode(settings);
+        byte[] encoded;
+        try { encoded = SettingsJson.Encode(settings); }
+        catch (Exception error) when (SettingsJson.IsValidationError(error))
+        {
+            return new(false, "Preferências inválidas. A configuração válida foi preservada. " + error.Message);
+        }
         await gate.WaitAsync(token).ConfigureAwait(false);
         try
         {
@@ -170,6 +182,10 @@ internal sealed class SettingsStore
             return new(true, archived is null ? "Preferências salvas localmente."
                 : "Preferências recuperadas. O original inválido foi preservado em " + Path.GetFileName(archived) + ".");
         }
+        catch (SettingsFileTooLargeException)
+        {
+            return new(false, ProtectOversizedFile());
+        }
         catch (Exception error) when (IsStorageError(error))
         {
             return new(false, "Falha ao gravar preferências. Confira permissão, espaço em disco e outra instância em execução. " + error.GetType().Name);
@@ -180,6 +196,15 @@ internal sealed class SettingsStore
             try { File.Delete(temporary); }
             catch (Exception error) when (IsStorageError(error)) { /* A later explicit inspection can remove the orphan. */ }
         }
+    }
+
+    private string ProtectOversizedFile()
+    {
+        State = SettingsFileState.Oversized;
+        baseline = null;
+        CanRecoverBackup = false;
+        return "Configuração maior que 1 MiB preservada. Gravação, redefinição e recuperação automáticas bloqueadas. "
+            + "Inspecione o arquivo com o aplicativo fechado e reabra após corrigir seu tamanho.";
     }
 
     private byte[]? ReadValidBackup()
@@ -198,9 +223,13 @@ internal sealed class SettingsStore
         try
         {
             using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-            if (stream.Length > SettingsJson.MaximumBytes) throw new InvalidDataException("Configuração muito grande.");
-            var bytes = new byte[checked((int)stream.Length)];
+            long length = stream.Length;
+            if (length > SettingsJson.MaximumBytes) throw new SettingsFileTooLargeException();
+            var bytes = new byte[checked((int)length)];
             stream.ReadExactly(bytes);
+            long finalLength = stream.Length;
+            if (finalLength > SettingsJson.MaximumBytes) throw new SettingsFileTooLargeException();
+            if (finalLength != length) throw new IOException("O arquivo mudou durante a leitura.");
             return bytes;
         }
         catch (FileNotFoundException) { return null; }
@@ -211,5 +240,5 @@ internal sealed class SettingsStore
         ? left is null && right is null
         : CryptographicOperations.FixedTimeEquals(SHA256.HashData(left), SHA256.HashData(right));
     private static bool IsInvalid(Exception error) => error is JsonException or InvalidDataException or ArgumentException;
-    private static bool IsStorageError(Exception error) => error is IOException or UnauthorizedAccessException or System.Security.SecurityException;
+    internal static bool IsStorageError(Exception error) => error is IOException or UnauthorizedAccessException or System.Security.SecurityException;
 }

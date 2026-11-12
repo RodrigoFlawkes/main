@@ -69,14 +69,28 @@ public sealed class CoreAudioSessionEndpoint : IApplicationSessionEndpoint
             catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error)) { errors.Add(EndpointVolumeOperations.Describe(error)); }
             try { muted = Muted; }
             catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error)) { errors.Add(EndpointVolumeOperations.Describe(error)); }
+            PeakReading peak;
+            try
+            {
+                var meter = control.AudioMeterInformation;
+                peak = meter is null ? PeakReading.Unavailable : PeakReading.FromScalar(meter.MasterPeakValue);
+            }
+            catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error))
+            {
+                peak = new PeakReading(null, EndpointVolumeOperations.Describe(error));
+            }
             return new ApplicationSessionSnapshot(key, name, pid, system, activity, percent, muted,
-                errors.Count == 0 ? null : string.Join(" ", errors));
+                errors.Count == 0 ? null : string.Join(" ", errors), peak, Stopwatch.GetTimestamp());
         }
 
         public void Dispose()
         {
-            control.SimpleAudioVolume?.Dispose();
-            control.Dispose();
+            try
+            {
+                control.AudioMeterInformation?.Dispose();
+                control.SimpleAudioVolume?.Dispose();
+            }
+            finally { control.Dispose(); }
         }
     }
 }

@@ -1,8 +1,22 @@
 # Arquitetura do Wave Studio
 
-Decisões da Fase 0, em 12/11/2026, com atualizações até F1-I5. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). A implementação atual é descrita primeiro, seguida pelo histórico e planejamento de evolução.
+Decisões da Fase 0, em 12/11/2026, com atualizações até o checkpoint técnico F1-I6, em validação pendente. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). A implementação atual é descrita primeiro, seguida pelo histórico e planejamento de evolução.
 
-## Persistência e restauração explícita — F1-I5
+## Correções e medição da prévia — F1-I6
+
+SettingsStore distingue Oversized de Corrupt. ReadOptional verifica o tamanho antes de alocar e após ler o limite conhecido. Arquivo excessivo na carga ou em crescimento durante a gravação invalida baseline, bloqueia save/reset/recuperação e orienta inspeção manual. O principal e o backup permanecem preservados. A serialização de modelo inválido retorna falha compreensível. DrainSettingsSavesAsync e a espera no fechamento tratam falhas previsíveis de validação/I/O. Seletores e handlers aguardam settingsLoaded. O diálogo de aviso aceita injeção nos testes para verificar fechamento após erro.
+
+EndpointPreference.FromSnapshot preserva ausência de controles com erro e evita salvar balanço utilizável com base zero. Um snapshot totalmente indisponível gera mensagem antes de substituir preferências válidas. Na restauração, os canais esperados são obtidos após volume e antes do balanço. O estado final é conferido novamente depois dos demais comandos, inclusive unmute. Tolerância por canal corresponde a 2% da base esperada, preservando sensibilidade em níveis baixos. Base zero retorna resultado incompleto por balanço não observável. A prévia de unmute avisa que a confirmação pode tornar áudio audível.
+
+ApplicationSessionSnapshot acrescenta PeakReading e timestamp monotônico opcionais. CoreAudioSessionEndpoint consulta AudioSessionControl.AudioMeterInformation.MasterPeakValue na operação MTA que já enumera as sessões, copia somente valores e descarta medidor emprestado/volume antes do controle proprietário. A coleção/manager continua pertencendo ao dispositivo. Erro do medidor afeta sua leitura e preserva controles suportados da sessão. Propriedade/descarte foram conferidos na tag fixada. [Medidor NAudio 3.1.0](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/CoreAudioApi/AudioMeterInformation.cs), [controle de sessão](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/CoreAudioApi/AudioSessionControl.cs).
+
+O mixer apresenta Pico (%) · 1 s, atualizando a célula da mesma SessionKey com a geração vigente. A frequência aproveita o polling existente de 1 Hz. Aba oculta, escrita ou edição pausam a consulta periódica, e valores com mais de dois segundos indicam atraso. Silêncio, indisponibilidade e pausa têm estados próprios. Essa amostragem pode perder eventos breves. O ciclo usa wrappers locais a cada reconciliação, mantendo o descarte na mesma thread e a frequência moderada. Uma eventual animação de 10 Hz exigirá fontes persistentes por sessão e nova avaliação.
+
+A medição de 100 consultas completas do mixer observou média de 1,68 ms com quatro sessões reais e picos zero nesta máquina. Os testes STA exercitam pico, foco, pausa, atraso e geração antiga. Preferências duráveis de sessão continuam aguardando identidade inequívoca. A resposta física dos picos com áudio ativo é critério de aceitação pendente.
+
+A publicação framework-dependent gera apphost Windows AMD64 a partir do SDK Windows x64 e PlatformTarget x64, com arquitetura conferida no cabeçalho PE. Saída em artifacts/alpha-preview/win-x64, dependente de Microsoft.NETCore.App e Microsoft.WindowsDesktop.App 10 x64, com avisos dos componentes. Dados de ensaio e configurações temporárias ficam fora do conteúdo versionável. A F1-I6 mantém validação física/visual pendente. [Aceitação e publicação](ALPHA_ACCEPTANCE.md), [componentes](THIRD_PARTY_NOTICES.md).
+
+## Histórico — persistência e restauração explícita da F1-I5
 
 StudioSettings, SettingsJson, WindowPlacement e SettingsStore ficam em Desktop/Settings, com modelos e I/O independentes de WinForms e COM. MainForm.Preferences compõe esses serviços com os controles existentes. O caminho padrão é %LOCALAPPDATA%/WaveStudio/settings.json. Construtor aceita caminho injetado e o executável oferece --settings-file com caminho absoluto para execução isolada. Testes usam diretórios temporários próprios. Dependências e lock files permanecem iguais aos da F1-I4.
 

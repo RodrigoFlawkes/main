@@ -325,9 +325,52 @@ public sealed class SettingsStoreTests
         File.WriteAllBytes(directory.FilePath, bytes);
         var store = new SettingsStore(directory.FilePath);
         var loaded = await store.LoadAsync(TestContext.Current.CancellationToken);
-        Assert.Equal(SettingsFileState.Corrupt, loaded.State);
+        Assert.Equal(SettingsFileState.Oversized, loaded.State);
         Assert.True(loaded.Settings.Playback.FollowDefault);
+        Assert.False(store.CanSave);
+        Assert.False(store.CanReset);
+        Assert.False(store.CanRecoverBackup);
         Assert.False((await store.SaveAsync(new StudioSettings(), TestContext.Current.CancellationToken)).Success);
+        Assert.False((await store.ResetAsync(TestContext.Current.CancellationToken)).Success);
+        Assert.False((await store.RecoverBackupAsync(TestContext.Current.CancellationToken)).Success);
         Assert.Equal(bytes, File.ReadAllBytes(directory.FilePath));
+    }
+
+    [Fact]
+    public async Task GrowthDuringSaveProtectsOversizedPrimaryAndBackup()
+    {
+        using var directory = new TemporarySettingsDirectory();
+        var faults = new FaultWriter();
+        var store = new SettingsStore(directory.FilePath, faults);
+        await store.LoadAsync(TestContext.Current.CancellationToken);
+        await store.SaveAsync(Sample, TestContext.Current.CancellationToken);
+        await store.SaveAsync(new StudioSettings(), TestContext.Current.CancellationToken);
+        byte[] backup = File.ReadAllBytes(store.BackupPath);
+        byte[] oversized = new byte[SettingsJson.MaximumBytes + 17];
+        faults.AfterWrite = () => File.WriteAllBytes(directory.FilePath, oversized);
+        Assert.False((await store.SaveAsync(Sample, TestContext.Current.CancellationToken)).Success);
+        Assert.Equal(SettingsFileState.Oversized, store.State);
+        Assert.False((await store.ResetAsync(TestContext.Current.CancellationToken)).Success);
+        Assert.False((await store.RecoverBackupAsync(TestContext.Current.CancellationToken)).Success);
+        Assert.Equal(oversized, File.ReadAllBytes(directory.FilePath));
+        Assert.Equal(backup, File.ReadAllBytes(store.BackupPath));
+        Assert.Empty(Directory.GetFiles(directory.Path, "*.tmp"));
+        Assert.Empty(Directory.GetFiles(directory.Path, "*.corrupt-*.json"));
+        Assert.Equal(SettingsFileState.Oversized, (await store.LoadAsync(TestContext.Current.CancellationToken)).State);
+    }
+
+    [Fact]
+    public async Task InvalidInMemoryPreferencesReturnFailureAndPreserveGoodFile()
+    {
+        using var directory = new TemporarySettingsDirectory();
+        var store = new SettingsStore(directory.FilePath);
+        await store.LoadAsync(TestContext.Current.CancellationToken);
+        await store.SaveAsync(Sample, TestContext.Current.CancellationToken);
+        byte[] original = File.ReadAllBytes(directory.FilePath);
+        var excessive = Sample with { Endpoints = Enumerable.Range(0, 1001).Select(index => new EndpointPreference("out-" + index, EndpointDirection.Playback)).ToArray() };
+        Assert.False((await store.SaveAsync(excessive, TestContext.Current.CancellationToken)).Success);
+        Assert.False((await store.SaveAsync(Sample with { Window = new(0, 0, 20000, 600) }, TestContext.Current.CancellationToken)).Success);
+        Assert.Equal(original, File.ReadAllBytes(directory.FilePath));
+        Assert.True((await store.SaveAsync(Sample, TestContext.Current.CancellationToken)).Success);
     }
 }

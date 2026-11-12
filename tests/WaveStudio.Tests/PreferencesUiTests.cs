@@ -3,6 +3,7 @@ using WaveStudio.Audio;
 using WaveStudio.Desktop;
 using WaveStudio.Desktop.Settings;
 using Xunit;
+using System.Text.Json;
 
 namespace WaveStudio.Tests;
 
@@ -11,6 +12,18 @@ public sealed class PreferencesUiTests
     private sealed class TestForm : Form
     {
         protected override bool ShowWithoutActivation => true;
+    }
+
+    private sealed class TestWriter(Action beforeWrite) : ISettingsWriter
+    {
+        private readonly SettingsWriter writer = new();
+        public void WriteNew(string path, byte[] bytes, CancellationToken token)
+        {
+            beforeWrite();
+            writer.WriteNew(path, bytes, token);
+        }
+        public void Commit(string temporary, string target, bool replacing, string? backup) =>
+            writer.Commit(temporary, target, replacing, backup);
     }
 
     private static Task OnSta(Action test)
@@ -132,4 +145,63 @@ public sealed class PreferencesUiTests
         Assert.Equal(bytes, File.ReadAllBytes(directory.FilePath));
         Assert.Empty(Directory.GetFiles(directory.Path, "*.tmp"));
     });
+
+    [Fact]
+    [Trait("Category", "WindowsIntegration")]
+    public Task PredictableSaveFailureReportsWarningAndClosesPreservingValidFile() => OnSta(() =>
+    {
+        using var directory = new TemporarySettingsDirectory();
+        byte[] original = SettingsJson.Encode(new StudioSettings());
+        File.WriteAllBytes(directory.FilePath, original);
+        var warnings = new List<string>();
+        var store = new SettingsStore(directory.FilePath, new TestWriter(() => throw new JsonException("Validação simulada durante gravação.")));
+        using var form = new MainForm(store, warnings.Add) { ShowInTaskbar = false, Opacity = 0 };
+        form.Show();
+        var status = Descendants(form).OfType<Label>().Single(label => label.AccessibleName?.StartsWith("Estado do armazenamento de preferências", StringComparison.Ordinal) == true);
+        PumpUntil(() => status.Text.Length > 0 && form.StartupTask.IsCompleted);
+        form.Close();
+        PumpUntil(() => form.IsDisposed);
+        Assert.Single(warnings);
+        Assert.Contains("preservada", warnings[0]);
+        Assert.Equal(original, File.ReadAllBytes(directory.FilePath));
+    });
+
+    [Fact]
+    [Trait("Category", "WindowsIntegration")]
+    public async Task SelectionIsDisabledUntilLoadAndCloseCancelsPendingLoad()
+    {
+        using var directory = new TemporarySettingsDirectory();
+        using var release = new ManualResetEventSlim();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var store = new SettingsStore(directory.FilePath, new TestWriter(() =>
+        {
+            entered.TrySetResult();
+            if (!release.Wait(TimeSpan.FromSeconds(8))) throw new TimeoutException();
+        }));
+        await store.LoadAsync(TestContext.Current.CancellationToken);
+        var persisted = new StudioSettings { Capture = new(false, "explicit-before-load") };
+        var writing = store.SaveAsync(persisted, TestContext.Current.CancellationToken);
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            await OnSta(() =>
+            {
+                using var form = new MainForm(store) { ShowInTaskbar = false, Opacity = 0 };
+                var checks = Descendants(form).OfType<CheckBox>().ToArray();
+                Assert.All(checks, check => Assert.False(check.Enabled));
+                Assert.All(Descendants(form).OfType<DevicePanel>(), panel => Assert.False(panel.Enabled));
+                checks[0].Checked = false;
+                form.Show();
+                Application.DoEvents();
+                Assert.All(checks, check => Assert.False(check.Enabled));
+                form.Close();
+                PumpUntil(() => form.IsDisposed);
+            });
+        }
+        finally { release.Set(); }
+        Assert.True((await writing).Success);
+        var loaded = await store.LoadAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(persisted.Playback, loaded.Settings.Playback);
+        Assert.Equal(persisted.Capture, loaded.Settings.Capture);
+    }
 }

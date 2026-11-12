@@ -2,6 +2,16 @@
 
 ## Em desenvolvimento
 
+### 2026-11-12 — F1-I6, checkpoint técnico de validação e pacote x64
+
+- Sincronizado até 8d0e688 e tratados os pontos 1–3 da revisão F1-I5. Arquivo excessivo recebe estado protegido, com escrita/reset/recuperação bloqueados e preservação em crescimento concorrente.
+- Falhas previsíveis de validação/gravação são informadas e observadas no fechamento. Seleções ficam desabilitadas até a carga. Valores indisponíveis e balanço em silêncio são tratados ao salvar.
+- Restauração confirma canais finais após unmute, com tolerância de 2% do nível-base, informa balanço não observável em zero e avisa sobre áudio audível ao confirmar unmute.
+- Pico real por sessão no mixer a cada segundo, com identidade por instância, descarte dos wrappers, pausa durante edição e indicação de atraso/indisponibilidade.
+- Restore locked, builds Debug/Release com zero erros/avisos e 184 testes aprovados em cada configuração, incluindo os 174 anteriores.
+- Publicação local framework-dependent AMD64, avisos de licença, SHA-256 e roteiro ALPHA_ACCEPTANCE. Processo ensaiado por 600,34 s e encerrado normalmente, com dados de CPU/RAM/handles registrados.
+- Automação visual indisponível por falha do pipe nativo. Validação física e Windows 11 aguardam evidências do proprietário. A Alpha permanece com validação pendente.
+
 ### 2026-11-12 — F1-I5, preferências versionadas e recuperação segura
 
 - Sincronização até 4e2d690 e execução da tarefa autorizada, preservando NEXT_TASK.md, REVIEW.md e requisitos.

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Diagnostics;
 using WaveStudio.Audio;
 
 namespace WaveStudio.Desktop;
@@ -43,6 +44,7 @@ internal sealed class ApplicationMixerPanel : UserControl
         grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "App", HeaderText = "Aplicativo", ReadOnly = true, MinimumWidth = 140 });
         grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "PID", HeaderText = "PID", ReadOnly = true, MinimumWidth = 55, FillWeight = 30 });
         grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "State", HeaderText = "Estado", ReadOnly = true, MinimumWidth = 80, FillWeight = 45 });
+        grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Peak", HeaderText = "Pico (%) · 1 s", ReadOnly = true, MinimumWidth = 100, FillWeight = 45 });
         grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Volume", HeaderText = "Volume (%)", MinimumWidth = 85, FillWeight = 40 });
         grid.Columns.Add(new DataGridViewButtonColumn { Name = "Mute", HeaderText = "Mute", MinimumWidth = 110, FillWeight = 65 });
         grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Instance", HeaderText = "Instância da sessão", ReadOnly = true, MinimumWidth = 150 });
@@ -87,7 +89,11 @@ internal sealed class ApplicationMixerPanel : UserControl
         };
         grid.DataError += (_, args) => { args.ThrowException = false; message.Text = "Valor inválido. Revise a edição ou pressione Esc."; };
         refresh.Click += async (_, _) => { commandError = null; await (PendingRead = ReadAsync()); };
-        poll.Tick += async (_, _) => { if (Visible) await (PendingRead = ReadAsync()); };
+        poll.Tick += async (_, _) =>
+        {
+            UpdatePeakCells(Stopwatch.GetTimestamp(), grid.IsCurrentCellInEditMode || writing || !Visible);
+            if (Visible) await (PendingRead = ReadAsync());
+        };
     }
 
     public void SelectDevice(DeviceSnapshot? device)
@@ -184,10 +190,29 @@ internal sealed class ApplicationMixerPanel : UserControl
             }
         }
         finally { binding = false; }
+        UpdatePeakCells(Stopwatch.GetTimestamp(), paused: false);
         message.Text = catalog.Warnings.Count > 0 ? string.Join(Environment.NewLine, catalog.Warnings.Distinct())
             : catalog.Sessions.Count == 0 ? "Nenhuma sessão encontrada neste dispositivo."
-            : $"{catalog.Sessions.Count} sessão(ões). Edite o volume e confirme com Enter. Volume da sessão do aplicativo.";
+            : $"{catalog.Sessions.Count} sessão(ões). Edite o volume e confirme com Enter. Pico instantâneo consultado a cada segundo.";
         if (commandError is not null) message.Text = commandError;
+    }
+
+    internal void UpdatePeakCells(long now, bool paused)
+    {
+        foreach (var row in rows.Values)
+        {
+            if (row.Tag is not ApplicationSessionBinding bound || !bound.IsCurrent(target)) continue;
+            var snapshot = bound.Snapshot;
+            var peak = snapshot.Peak;
+            string value;
+            if (paused) value = "Pausado";
+            else if (peak?.Scalar is not double scalar) value = "Indisponível";
+            else if (snapshot.PeakRecordedAt == 0 || Stopwatch.GetElapsedTime(snapshot.PeakRecordedAt, now) > TimeSpan.FromSeconds(2))
+                value = "Leitura atrasada";
+            else value = scalar == 0 ? "0,0 (silêncio)" : (scalar * 100).ToString("F1", CultureInfo.CurrentCulture);
+            SetCell(row, "Peak", value);
+            row.Cells["Peak"].ToolTipText = peak?.Error ?? "Pico instantâneo do Windows. Consulta de 1 s pode perder eventos breves. Edição pausa a medição.";
+        }
     }
 
     private bool ValidCell(int row, int column) => row >= 0 && row < grid.Rows.Count && column >= 0 && column < grid.Columns.Count;

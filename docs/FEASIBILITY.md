@@ -50,7 +50,7 @@ Instalação do SDK e presença do runtime foram confirmadas no Windows 10 local
 | Testes | `xunit.v3` 4.0.3 como candidato | Apache-2.0. Selecionar runner/SDK de testes compatíveis com `dotnet test` ao criar o projeto e registrar versões exatas |
 | Git | 2.56.0.windows.4 instalado | Ferramenta de desenvolvimento, GPLv2, sem redistribuição planejada com o app |
 
-NAudio 3.1.0 é uma escolha conhecida para avaliação, sujeita à conferência de APIs e dependências transitivas na implementação. [Pacote e compatibilidade](https://www.nuget.org/packages/NAudio/3.1.0), [licença MIT](https://github.com/naudio/NAudio/blob/main/license.txt).
+NAudio 3.1.0 foi fixado e suas APIs utilizadas foram verificadas durante a Fase 1. A publicação local da F1-I6 contém NAudio.Core/Wasapi 3.1.0 e System.Numerics.Tensors 9.0.0. [Pacote e compatibilidade](https://www.nuget.org/packages/NAudio/3.1.0), [licença MIT](https://github.com/naudio/NAudio/blob/v3.1.0/LICENSE), [inventário de distribuição](THIRD_PARTY_NOTICES.md).
 
 O pacote xUnit candidato suporta frameworks modernos. A licença do projeto é Apache-2.0. [Pacote](https://www.nuget.org/packages/xunit.v3/4.0.3), [licença](https://github.com/xunit/xunit/blob/main/LICENSE).
 

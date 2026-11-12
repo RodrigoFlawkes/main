@@ -1,6 +1,22 @@
 # Plano de testes
 
-## F1-I5 — resultados atuais
+## F1-I6 — checkpoint técnico, validação pendente
+
+Restore locked aprovado com auditoria de dependências após repetir com acesso ao NuGet. A primeira tentativa teve NU1900 por restrição de rede. Builds Debug/Release x64 terminaram com zero erros e zero avisos. Em cada configuração, 184 testes passaram, zero falhas e zero ignorados, incluindo regressão dos 174 anteriores. São 173 casos de regras/simulações/arquivos/STA e 11 integrações Windows. Runner com TESTINGPLATFORM_TELEMETRY_OPTOUT=1.
+
+Regressões novas verificam arquivo excessivo protegido e preservado byte a byte em save/reset/recuperação, crescimento concorrente com backup mantido, modelo inválido com 1.001 endpoints/janela fora do limite, aviso e fechamento após falha previsível, seleção bloqueada antes da carga e fechamento cancelando a carga pendente. Preferências de controles com erro e balanço em silêncio são verificadas. Os testes de mudança de seleção/nível durante a prévia permanecem na regressão.
+
+Restauração verifica mudança de canais no unmute final, inclusive base baixa, quantização dentro de 2% da base e balanço não observável em zero. Picos de sessão têm testes de manutenção de linha/foco, silêncio, pausa, atraso, indisponibilidade e retorno de geração anterior. Escritas de áudio continuam em backends simulados.
+
+Integração real consultou quatro sessões, com quatro medidores disponíveis e pico zero, sem avisos de enumeração. Cem consultas do mixer com picos tiveram média de 1,68 ms. Endpoint completo teve média de 1,42 ms em dez leituras. A UI do mixer usa 1 Hz. Resposta a fala/música e picos breves exige o roteiro físico.
+
+O executável Release publicado, PE AMD64, foi iniciado com --settings-file temporário, permaneceu ativo por 600,34 s e encerrou normalmente após CloseMainWindow/WaitForExit. Configuração v1 foi criada no fechamento, com modos automáticos, janela salva e zero preferências de níveis. A coleta de 61 amostras observou CPU de 1.125 ms, equivalente a 0,187% de um núcleo no intervalo incluindo inicialização. Após 60 s, média de 0,0087% de um núcleo, working set de 66.187.264 a 75.751.424 bytes, handles de 362 a 371, terminando em 362. Working set final de 75.460.608 bytes, private bytes de 31.727.616 e 12 threads. Os números descrevem esta execução e duração.
+
+A consulta de Application Error/.NET Runtime no intervalo encontrou zero eventos correspondentes. O campo Responding retornou true nas amostras, com inspeção visual indisponível. Computer Use falhou por pipe nativo indisponível, inclusive após a recuperação limitada e pela superfície unificada. A alternância real de abas, layout, diálogos e recuperação física no processo publicado permanecem pendentes. O ensaio foi iniciado no estado padrão da janela. Os testes STA verificam o comportamento da grid separadamente.
+
+Os avisos de licença acompanham a pasta publicada, que contém o aplicativo e suas dependências de execução. Artefatos e relatório detalhado ficam ignorados. Roteiro assistido em [ALPHA_ACCEPTANCE.md](ALPHA_ACCEPTANCE.md), com casos A01–A10 aguardando relato do proprietário. Windows 10 Pro 22H2 é experimental. A compatibilidade Windows 11 x64 aguarda ambiente/ensaio. O checkpoint técnico mantém a aceitação física da Alpha pendente.
+
+## Histórico F1-I5 — resultados
 
 Restore locked aprovado, build Debug x64 com zero erros/avisos e 174 testes aprovados, zero falhas e zero ignorados. São 165 casos de regras, simulações, arquivos temporários e WinForms STA e nove integrações Windows de leitura/execução isolada. Regressão dos 101 testes anteriores incluída. Runner com TESTINGPLATFORM_TELEMETRY_OPTOUT=1.
 
