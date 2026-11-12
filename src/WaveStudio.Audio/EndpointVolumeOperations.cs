@@ -41,7 +41,9 @@ public static class EndpointVolumeOperations
             case SetEndpointVolume volume:
                 StereoLevels.ValidateLevel(volume.Percent / 100);
                 endpoint.VolumeScalar = volume.Percent / 100;
-                if (Math.Abs(endpoint.VolumeScalar - volume.Percent / 100) > 0.02)
+                double actual = endpoint.VolumeScalar;
+                StereoLevels.ValidateLevel(actual);
+                if (Math.Abs(actual - volume.Percent / 100) > 0.02)
                     throw new NotSupportedException("O driver não confirmou o volume solicitado. O controle foi desativado.");
                 break;
             case SetEndpointMute mute:

@@ -7,16 +7,18 @@ public sealed class CoreAudioWatchBackend : IAudioWatchBackend
 {
     private readonly MMDeviceEnumerator enumerator = new();
     private readonly MMDeviceNotificationClient? notifications;
+    private long recoveryRevision;
     public string? NotificationError { get; }
+    public long RecoveryRevision => Interlocked.Read(ref recoveryRevision);
 
     public CoreAudioWatchBackend(Action signal)
     {
         try
         {
             notifications = enumerator.CreateNotificationClient(useSynchronizationContext: false);
-            notifications.DeviceAdded += (_, _) => signal();
-            notifications.DeviceRemoved += (_, _) => signal();
-            notifications.DeviceStateChanged += (_, _) => signal();
+            notifications.DeviceAdded += (_, _) => SignalRecovery();
+            notifications.DeviceRemoved += (_, _) => SignalRecovery();
+            notifications.DeviceStateChanged += (_, _) => SignalRecovery();
             notifications.DefaultDeviceChanged += (_, _) => signal();
             notifications.PropertyValueChanged += (_, args) =>
             {
@@ -25,6 +27,11 @@ public sealed class CoreAudioWatchBackend : IAudioWatchBackend
                     || args.PropertyKey.Equals(PropertyKeys.PKEY_AudioEngine_DeviceFormat))
                     signal();
             };
+            void SignalRecovery()
+            {
+                Interlocked.Increment(ref recoveryRevision);
+                signal();
+            }
         }
         catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error))
         {

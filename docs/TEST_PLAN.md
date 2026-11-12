@@ -1,6 +1,36 @@
 # Plano de testes
 
-## F1-I4 — resultados atuais
+## F1-I5 — resultados atuais
+
+Restore locked aprovado, build Debug x64 com zero erros/avisos e 174 testes aprovados, zero falhas e zero ignorados. São 165 casos de regras, simulações, arquivos temporários e WinForms STA e nove integrações Windows de leitura/execução isolada. Regressão dos 101 testes anteriores incluída. Runner com TESTINGPLATFORM_TELEMETRY_OPTOUT=1.
+
+Os testes de armazenamento verificam primeira execução, round-trip, campos opcionais, limites, enum/IDs inválidos, duplicatas, ausência de schemaVersion, UTF-8/BOM, corrupção, backup válido/ausente/inválido, arquivo grande, versão incompatível preservada byte a byte em save/reset/close, recuperação explícita com arquivo original arquivado, serialização de 20 gravações, duas instâncias, lease de arquivo, modificação externa durante gravação, cancelamento, permissão negada e falha de substituição simuladas. Diretórios temporários são exclusivos e a limpeza verifica sua raiz antes da remoção.
+
+Restauração de áudio usa endpoints simulados para prévia somente de leitura, confirmação explícita, geração/ID, reescolha do mesmo alvo, suporte ausente/mono, campos opcionais, mudanças externas após prévia, pedido enfileirado cancelado, desconexão e falha parcial com estado real retornado. Configuração carregada, seleção e consulta inicial preservam a contagem de escritas em zero. O código verifica também a confirmação finita do volume retornado pelo driver.
+
+Regressões da revisão exercitam falha terminal do worker, indisponibilidade/freshness, retomada durante leitura com o mesmo ID, coalescência distinta para metadados e ciclo de vida, recuperação de falha latched na UI com serviço simulado, padrão inativo com fallback e reconciliação do mixer pedida durante leitura. Janela é ajustada a monitor disponível e testa remoção de monitor, dimensões inválidas e área útil reduzida.
+
+Integrações da janela com armazenamento isolado executam dois ciclos de abertura/fechamento preservando seleção explícita ausente e modo automático independente. Também verificam fechamento com original corrompido ou versão incompatível, preservando bytes e backup. A execução utiliza consultas Core Audio e arquivos temporários. As escritas de áudio permanecem em simulações.
+
+Amostra específica de medidores reais observou 20 snapshots em 2,21 s, picos zero em reprodução/captura, inscrição ativa e média de consulta de 0,090 ms. Quatro sessões expuseram pico zero na leitura pontual. O processo de testes completo observou delta de CPU de 46,9 ms e working set de 61.886.464 a 63.168.512 bytes. São dados desta amostra e máquina.
+
+O executável foi iniciado com --settings-file temporário. Acessibilidade reconheceu a seleção ausente, controles indisponíveis, aba Preferências locais e ações de salvar/restaurar. O teste final de primeira execução gerou JSON no fechamento normal, e o reinício confirmou Preferências carregadas pela acessibilidade. A janela foi encerrada normalmente. A captura retornou window capture timed out e o clique retornou coordinate input geometry is unavailable. A validação visual e do fluxo interativo completo permanece pendente. Integrações STA cobrem reinício, estado da janela e proteção no fechamento.
+
+### Aceitação manual da persistência
+
+1. Anotar níveis, mute, balanço e padrões existentes no Windows e nos aplicativos. Usar sinal em nível confortável e restaurar os valores originais após ensaios de escrita. Para testar armazenamento/corrupção, usar --settings-file em pasta temporária, conforme README.
+2. Escolher reprodução/captura independentemente e alternar seguir padrão. Fechar e reabrir. Conferir IDs/modos e posição/tamanho. Repetir com um ID ausente e confirmar retorno ao reconectar o mesmo dispositivo.
+3. Usar Salvar valores atuais. Conferir valores salvos e atuais separados. Alterar níveis pelo Windows e atualizar. Conferir que os salvos continuam iguais e a UI mostra os níveis novos.
+4. Solicitar Restaurar valores salvos, conferir alvo, prévia e aviso de aumento, cancelar e comparar os níveis. Depois, com autorização para escrita física e valores originais anotados, confirmar e comparar com o Windows. Repetir mute, balanço e mono/suporte ausente.
+5. Durante a prévia, alterar um nível pelo Windows ou desconectar o dispositivo. Conferir rejeição/erro e nova consulta. Em troca rápida ou reescolha do mesmo ID, solicitar nova confirmação. Conferir estado real após qualquer falha parcial.
+6. Na pasta temporária, gerar duas configurações válidas para formar backup. Com o app fechado, tornar o principal inválido, reabrir e conferir defaults em memória e original intacto. Recuperar backup por confirmação e conferir arquivo corrompido arquivado. Repetir com backup ausente/inválido e redefinição explícita.
+7. No arquivo temporário, mudar schemaVersion para uma versão futura com o app fechado. Reabrir, interagir, fechar e comparar os bytes do original. Conferir aviso e ações de gravação bloqueadas. Abrir duas instâncias do mesmo arquivo temporário e conferir conflito ao gravar a segunda após mudança pela primeira.
+8. Repetir fechamento durante gravação, retomada, atualização manual e reconexão rápida com o mesmo ID. Conferir recuperação dos controles, status de falha/atraso e ausência de picos antigos apresentados como atuais.
+9. Validar layout/teclado, botões e diálogos em 1366×768 e DPI 100/150/200%, além de Windows 11 x64. Executar a matriz física anterior para áudio ativo, sessões e consumo prolongado.
+
+Preferências duráveis de sessões e medidores contínuos de sessão permanecem pendentes, com motivos registrados na arquitetura. F1-I6 aguarda autorização para a etapa de validação.
+
+## Histórico F1-I4 — resultados
 
 Restore locked aprovado e build Debug x64 com zero erros/avisos. Suíte com 101 aprovados, zero falhas e zero ignorados, incluindo os 77 anteriores. São 95 casos de regras, simulações e grid WinForms STA e seis integrações Windows de leitura, usando TESTINGPLATFORM_TELEMETRY_OPTOUT=1.
 

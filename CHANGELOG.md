@@ -2,6 +2,16 @@
 
 ## Em desenvolvimento
 
+### 2026-11-12 — F1-I5, preferências versionadas e recuperação segura
+
+- Sincronização até 4e2d690 e execução da tarefa autorizada, preservando NEXT_TASK.md, REVIEW.md e requisitos.
+- Configuração JSON por usuário com schemaVersion 1, seleções por direção, modo automático/ID explícito ausente, janela validada e preferências opcionais de volume/mute/balanço por endpoint.
+- Salvar valores atuais, prévia e confirmação para restaurar com alvo/geração/suporte/níveis revalidados, consulta após aplicação e indicação de falha parcial.
+- Escrita fora da UI com exclusão, hash de conflito, temporário na mesma pasta, flush, substituição e backup. Corrupção e versão incompatível preservadas, recuperação/reset explícitos e originais inválidos arquivados.
+- Falha terminal e leituras antigas do worker agora exibem indisponibilidade. Retomada/manual e eventos de ciclo de vida invalidam gerações mesmo com ID igual. Metadados preservam controles. Seleção automática favorece padrão ativo e informa fallback.
+- Mixer retém pedidos de reconciliação durante uma leitura. Preferências de sessão seguem indisponíveis até comprovação de identidade durável. Medidores contínuos por sessão seguem pendentes da avaliação de ciclo de vida/custo.
+- Build com zero erros/avisos e 174 testes aprovados, incluindo os 101 anteriores. Integrações isoladas de reinício e preservação de arquivos aprovadas. Restauração física, áudio ativo, hotplug, retomada, layout/DPI e Windows 11 continuam pendentes.
+
 ### 2026-11-12 — F1-I4, picos reais e recuperação de dispositivos
 
 - Repositório sincronizado até b4a6223 e executada a tarefa autorizada de NEXT_TASK.md, preservando os documentos normativos e a revisão.

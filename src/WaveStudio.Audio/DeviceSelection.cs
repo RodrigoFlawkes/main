@@ -8,20 +8,33 @@ public sealed class DeviceSelection
 
     public void FollowDefault(EndpointDirection direction)
     {
-        if (direction == EndpointDirection.Playback) PlaybackId = null;
-        else CaptureId = null;
+        SetPreference(direction, null);
     }
 
     public void Select(DeviceSnapshot device)
     {
-        if (device.Direction == EndpointDirection.Playback)
-            PlaybackId = device.Id;
+        SetPreference(device.Direction, device.Id);
+    }
+
+    public static void ValidatePreference(EndpointDirection direction, string? id)
+    {
+        if (!Enum.IsDefined(direction)) throw new ArgumentOutOfRangeException(nameof(direction));
+        if (id is not null && (string.IsNullOrWhiteSpace(id) || id.Length > 2048 || id.Any(char.IsControl)))
+            throw new ArgumentException("Identificador de dispositivo inválido.", nameof(id));
+    }
+
+    public void SetPreference(EndpointDirection direction, string? id)
+    {
+        ValidatePreference(direction, id);
+        if (direction == EndpointDirection.Playback)
+            PlaybackId = id;
         else
-            CaptureId = device.Id;
+            CaptureId = id;
     }
 
     public DeviceSnapshot? Resolve(DeviceCatalog catalog, EndpointDirection direction)
     {
+        ValidatePreference(direction, null);
         string? id = direction == EndpointDirection.Playback ? PlaybackId : CaptureId;
         var candidates = catalog.Devices.Where(device => device.Direction == direction);
 
@@ -29,8 +42,9 @@ public sealed class DeviceSelection
         if (id is not null)
             return candidates.FirstOrDefault(device => device.Id == id);
 
-        return candidates.FirstOrDefault(device => device.IsDefaultMultimedia)
+        return candidates.FirstOrDefault(device => device.IsDefaultMultimedia && device.State == EndpointState.Active)
             ?? candidates.FirstOrDefault(device => device.State == EndpointState.Active)
+            ?? candidates.FirstOrDefault(device => device.IsDefaultMultimedia)
             ?? candidates.FirstOrDefault();
     }
 }

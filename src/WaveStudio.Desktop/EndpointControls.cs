@@ -4,7 +4,7 @@ namespace WaveStudio.Desktop;
 
 internal sealed class EndpointControls : UserControl
 {
-    private readonly EndpointVolumeSession session = new();
+    private readonly EndpointVolumeSession session;
     private readonly System.Windows.Forms.Timer poll = new() { Interval = 600 };
     private readonly TrackBar volumeSlider = new() { Minimum = 0, Maximum = 100, TickFrequency = 10, Dock = DockStyle.Fill };
     private readonly NumericUpDown volumeNumber = new() { Minimum = 0, Maximum = 100, DecimalPlaces = 1, Dock = DockStyle.Fill };
@@ -26,8 +26,9 @@ internal sealed class EndpointControls : UserControl
     private bool volumeDirty;
     private bool balanceDirty;
 
-    public EndpointControls()
+    public EndpointControls(EndpointVolumeSession? session = null)
     {
+        this.session = session ?? new EndpointVolumeSession();
         Dock = DockStyle.Fill;
         AutoSize = true;
         var layout = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, ColumnCount = 3, RowCount = 5 };
@@ -94,6 +95,50 @@ internal sealed class EndpointControls : UserControl
         message.Text = target.DeviceId is null ? "Controles indisponíveis — selecione um dispositivo ativo." : "Consultando volume do Windows…";
         poll.Enabled = target.DeviceId is not null;
         _ = ReadAsync();
+    }
+
+    internal EndpointSelection Selection => target;
+    internal bool HasLatchedFailure => volumeFailure is not null || muteFailure is not null || balanceFailure is not null;
+
+    public async Task<(EndpointSelection Selection, EndpointVolumeState State)> ReadPreferenceAsync()
+    {
+        RequireIdle();
+        var request = target;
+        var state = await session.ReadAsync(request);
+        if (stopped || request != target) throw new OperationCanceledException();
+        return (request, state);
+    }
+
+    public async Task<EndpointRestorePlan> PreviewRestoreAsync(EndpointRestoreValues values)
+    {
+        RequireIdle();
+        var request = target;
+        var plan = await session.PreviewRestoreAsync(request, values);
+        if (stopped || request != target) throw new OperationCanceledException();
+        return plan;
+    }
+
+    public async Task<EndpointRestoreResult> RestoreAsync(EndpointRestorePlan plan)
+    {
+        RequireIdle();
+        if (plan.Selection != target) throw new OperationCanceledException();
+        stateRevision++;
+        writing = true;
+        DisableEditors();
+        try
+        {
+            var result = await session.RestoreAsync(plan);
+            if (stopped || plan.Selection != target) throw new OperationCanceledException();
+            ShowSnapshot(result.Actual);
+            return result;
+        }
+        finally { writing = false; }
+    }
+
+    private void RequireIdle()
+    {
+        if (stopped || target.DeviceId is null || writing || volumeDirty || balanceDirty)
+            throw new InvalidOperationException("Conclua o ajuste atual e selecione um dispositivo disponível.");
     }
 
     private async Task ReadAsync()

@@ -1,0 +1,135 @@
+using System.Diagnostics;
+using WaveStudio.Audio;
+using WaveStudio.Desktop;
+using WaveStudio.Desktop.Settings;
+using Xunit;
+
+namespace WaveStudio.Tests;
+
+public sealed class PreferencesUiTests
+{
+    private sealed class TestForm : Form
+    {
+        protected override bool ShowWithoutActivation => true;
+    }
+
+    private static Task OnSta(Action test)
+    {
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var thread = new Thread(() =>
+        {
+            try { test(); completion.TrySetResult(); }
+            catch (Exception error) { completion.TrySetException(error); }
+        }) { IsBackground = true };
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        return completion.Task;
+    }
+
+    private static void PumpUntil(Func<bool> done)
+    {
+        var watch = Stopwatch.StartNew();
+        while (!done())
+        {
+            if (watch.Elapsed > TimeSpan.FromSeconds(8)) throw new TimeoutException("A UI não concluiu a operação.");
+            Application.DoEvents();
+            Thread.Sleep(5);
+        }
+    }
+
+    private static IEnumerable<Control> Descendants(Control parent) =>
+        parent.Controls.Cast<Control>().SelectMany(child => new[] { child }.Concat(Descendants(child)));
+
+    [Fact]
+    public Task RecoveryWithSameIdClearsLatchedFailureAndMetadataRefreshPreservesGeneration() => OnSta(() =>
+    {
+        var state = new FakeEndpointState();
+        using var host = new TestForm { ClientSize = new Size(800, 900), ShowInTaskbar = false, Opacity = 0 };
+        using var audio = new EndpointControls(new EndpointVolumeSession(_ => new FakeEndpointVolume(state)));
+        using var panel = new DevicePanel("Saída", audio);
+        host.Controls.Add(panel);
+        host.Show();
+        var device = new DeviceSnapshot("same", "Saída", EndpointDirection.Playback, EndpointState.Active, true, false, null, null);
+        var catalog = new DeviceCatalog([device], []);
+        panel.ShowDevices(catalog, EndpointDirection.Playback, device);
+        var number = Descendants(audio).OfType<NumericUpDown>().First();
+        PumpUntil(() => number.Enabled);
+        var original = audio.Selection;
+        state.IgnoreWrites = true;
+        number.Value = 20;
+        PumpUntil(() => audio.HasLatchedFailure);
+        Assert.False(number.Enabled);
+        panel.ShowDevices(catalog, EndpointDirection.Playback, device, resetControls: false);
+        Assert.Equal(original, audio.Selection);
+        Assert.True(audio.HasLatchedFailure);
+        state.IgnoreWrites = false;
+        panel.ShowDevices(catalog, EndpointDirection.Playback, device, resetControls: true);
+        PumpUntil(() => number.Enabled);
+        Assert.NotEqual(original, audio.Selection);
+        Assert.False(audio.HasLatchedFailure);
+        Assert.Equal(1, state.Writes);
+        var stopping = panel.StopAsync().AsTask();
+        PumpUntil(() => stopping.IsCompleted);
+        stopping.GetAwaiter().GetResult();
+    });
+
+    [Fact]
+    [Trait("Category", "WindowsIntegration")]
+    public async Task MainWindowReloadsAbsentPreferenceAcrossTwoStartsWithIsolatedStorage()
+    {
+        using var directory = new TemporarySettingsDirectory();
+        var settings = new StudioSettings
+        {
+            Playback = new(false, "absent-output-for-test"), Capture = new(),
+            Endpoints = [new("absent-output-for-test", EndpointDirection.Playback, 25, true, 50)],
+            Window = new(90000, 90000, 2000, 1500)
+        };
+        File.WriteAllBytes(directory.FilePath, SettingsJson.Encode(settings));
+        for (int index = 0; index < 2; index++)
+        {
+            await OnSta(() =>
+            {
+                using var form = new MainForm(new SettingsStore(directory.FilePath)) { ShowInTaskbar = false, Opacity = 0 };
+                form.Show();
+                PumpUntil(() => form.StartupTask.IsCompleted);
+                form.StartupTask.GetAwaiter().GetResult();
+                var panel = Descendants(form).OfType<DevicePanel>().First();
+                PumpUntil(() => Descendants(panel).OfType<TextBox>().Any(text => text.Text.Contains("Preferência explícita preservada")));
+                Assert.Null(panel.AudioControls.Selection.DeviceId);
+                Assert.Contains(Descendants(panel).OfType<Label>(), label => label.Text.Contains("Salvo — volume 25"));
+                Assert.False(Descendants(form).OfType<CheckBox>().First().Checked);
+                Assert.True(Descendants(form).OfType<CheckBox>().Last().Checked);
+                Assert.Contains(form.Bounds, Screen.AllScreens.Select(screen => Rectangle.Intersect(screen.WorkingArea, form.Bounds)));
+                form.Close();
+                PumpUntil(() => form.IsDisposed);
+            });
+        }
+        var loaded = await new SettingsStore(directory.FilePath).LoadAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(settings.Playback, loaded.Settings.Playback);
+        Assert.Equal(settings.Capture, loaded.Settings.Capture);
+        Assert.Equal(settings.Endpoints, loaded.Settings.Endpoints);
+        Assert.Empty(Directory.GetFiles(directory.Path, "*.tmp"));
+    }
+
+    [Theory]
+    [InlineData("{\"schemaVersion\":99,\"future\":true}")]
+    [InlineData("corrupt original")]
+    [Trait("Category", "WindowsIntegration")]
+    public Task MainWindowClosePreservesProtectedSettingsByteForByte(string original) => OnSta(() =>
+    {
+        using var directory = new TemporarySettingsDirectory();
+        File.WriteAllText(directory.FilePath, original);
+        File.WriteAllBytes(directory.FilePath + ".bak", SettingsJson.Encode(new StudioSettings()));
+        byte[] bytes = File.ReadAllBytes(directory.FilePath);
+        using var form = new MainForm(new SettingsStore(directory.FilePath)) { ShowInTaskbar = false, Opacity = 0 };
+        form.Show();
+        var status = Descendants(form).OfType<Label>().Single(label => label.AccessibleName?.StartsWith("Estado do armazenamento de preferências", StringComparison.Ordinal) == true);
+        PumpUntil(() => status.Text.Length > 0 && form.StartupTask.IsCompleted);
+        form.StartupTask.GetAwaiter().GetResult();
+        Assert.Contains("preservad", status.Text, StringComparison.OrdinalIgnoreCase);
+        form.Close();
+        PumpUntil(() => form.IsDisposed);
+        Assert.Equal(bytes, File.ReadAllBytes(directory.FilePath));
+        Assert.Empty(Directory.GetFiles(directory.Path, "*.tmp"));
+    });
+}

@@ -12,6 +12,23 @@ public sealed class EndpointVolumeSession : IAsyncDisposable
     public Task<EndpointVolumeState> ReadAsync(EndpointSelection target) => Execute(target, null);
     public Task<EndpointVolumeState> ApplyAsync(EndpointSelection target, EndpointCommand command) => Execute(target, command);
 
+    public Task<EndpointRestorePlan> PreviewRestoreAsync(EndpointSelection target, EndpointRestoreValues values) =>
+        queue.RunAsync(target, (id, token) =>
+        {
+            using var endpoint = openEndpoint(id);
+            token.ThrowIfCancellationRequested();
+            var current = EndpointVolumeOperations.Read(endpoint);
+            values.RequireSupport(current);
+            return new EndpointRestorePlan(target, values, current);
+        });
+
+    public Task<EndpointRestoreResult> RestoreAsync(EndpointRestorePlan plan) => queue.RunAsync(plan.Selection, (id, token) =>
+    {
+        using var endpoint = openEndpoint(id);
+        token.ThrowIfCancellationRequested();
+        return EndpointPreferenceRestore.Apply(endpoint, plan, token);
+    });
+
     private Task<EndpointVolumeState> Execute(EndpointSelection target, EndpointCommand? command) =>
         queue.RunAsync(target, (id, token) =>
         {

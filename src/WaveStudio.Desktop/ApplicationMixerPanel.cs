@@ -19,6 +19,7 @@ internal sealed class ApplicationMixerPanel : UserControl
     private readonly Button refresh = new() { Text = "Atualizar mixer", AutoSize = true };
     private EndpointSelection target = new(null, 0);
     private bool reading;
+    private bool readRequested;
     private bool writing;
     private long revision;
     private bool stopped;
@@ -112,25 +113,39 @@ internal sealed class ApplicationMixerPanel : UserControl
         PendingRead = ReadAsync();
     }
 
-    private async Task ReadAsync()
+    private Task ReadAsync()
     {
-        if (reading || writing || stopped || target.DeviceId is null || grid.IsCurrentCellInEditMode) return;
+        if (stopped || target.DeviceId is null || grid.IsCurrentCellInEditMode) return Task.CompletedTask;
+        readRequested = true;
+        if (!reading && !writing) PendingRead = DrainReadsAsync();
+        return PendingRead;
+    }
+
+    private async Task DrainReadsAsync()
+    {
         reading = true;
-        var request = target;
-        long requestedRevision = revision;
         try
         {
-            var catalog = await service.ReadAsync(request);
-            if (request == target && requestedRevision == revision && !writing && !stopped && !grid.IsCurrentCellInEditMode)
-                ShowCatalog(request, catalog);
-        }
-        catch (OperationCanceledException) { }
-        catch (Exception error)
-        {
-            if (request == target && requestedRevision == revision && !writing && !stopped)
+            while (readRequested && !writing && !stopped && target.DeviceId is not null && !grid.IsCurrentCellInEditMode)
             {
-                ClearRows();
-                message.Text = EndpointVolumeOperations.Describe(error);
+                readRequested = false;
+                var request = target;
+                long requestedRevision = revision;
+                try
+                {
+                    var catalog = await service.ReadAsync(request);
+                    if (request == target && requestedRevision == revision && !writing && !stopped && !grid.IsCurrentCellInEditMode)
+                        ShowCatalog(request, catalog);
+                }
+                catch (OperationCanceledException) { }
+                catch (Exception error)
+                {
+                    if (request == target && requestedRevision == revision && !writing && !stopped)
+                    {
+                        ClearRows();
+                        message.Text = EndpointVolumeOperations.Describe(error);
+                    }
+                }
             }
         }
         finally { reading = false; }

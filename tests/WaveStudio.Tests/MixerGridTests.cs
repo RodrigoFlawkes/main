@@ -23,7 +23,7 @@ public sealed class MixerGridTests
     private static ApplicationSessionCatalog Catalog(params ApplicationSessionSnapshot[] sessions) => new(sessions, []);
     private static DeviceSnapshot Device => new("out", "Saída", EndpointDirection.Playback, EndpointState.Active, true, true, null, null);
 
-    private static Task OnSta(Action<ApplicationMixerPanel> test)
+    private static Task OnSta(Action<ApplicationMixerPanel> test, Func<string, IApplicationSessionEndpoint>? openEndpoint = null)
     {
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() =>
@@ -31,7 +31,7 @@ public sealed class MixerGridTests
             try
             {
                 using var form = new TestForm { ClientSize = new Size(1000, 700), ShowInTaskbar = false, Opacity = 0 };
-                using var panel = new ApplicationMixerPanel(new ApplicationSessionService(_ => new EmptyEndpoint()));
+                using var panel = new ApplicationMixerPanel(new ApplicationSessionService(openEndpoint ?? (_ => new EmptyEndpoint())));
                 form.Controls.Add(panel);
                 form.Show();
                 _ = panel.SessionGrid.Handle;
@@ -111,4 +111,34 @@ public sealed class MixerGridTests
         panel.ShowCatalog(old, Catalog(Session("a")));
         Assert.Empty(panel.SessionGrid.Rows.Cast<DataGridViewRow>());
     });
+
+    [Fact]
+    public async Task ReconciliationRequestedDuringReadRunsImmediatelyAfterIt()
+    {
+        using var entered = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        int reads = 0;
+        try
+        {
+            await OnSta(panel =>
+            {
+                var button = panel.Controls[0].Controls.OfType<Button>().Single();
+                button.PerformClick();
+                Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
+                button.PerformClick();
+                release.Set();
+                Pump(panel.PendingRead);
+                Assert.Equal(3, reads);
+            }, _ =>
+            {
+                if (Interlocked.Increment(ref reads) == 2)
+                {
+                    entered.Set();
+                    if (!release.Wait(TimeSpan.FromSeconds(5))) throw new TimeoutException();
+                }
+                return new EmptyEndpoint();
+            });
+        }
+        finally { release.Set(); }
+    }
 }

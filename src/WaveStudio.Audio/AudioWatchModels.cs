@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace WaveStudio.Audio;
 
 public sealed record PeakReading(double? Scalar, string? Error)
@@ -10,7 +12,14 @@ public sealed record PeakReading(double? Scalar, string? Error)
 
 public sealed record AudioWatchSelection(string? PlaybackId, string? CaptureId, long Revision);
 public sealed record AudioWatchSnapshot(AudioWatchSelection Selection, PeakReading Playback, PeakReading Capture,
-    string NotificationStatus, bool RefreshRequested, double QueryMilliseconds);
+    string NotificationStatus, bool RefreshRequested, double QueryMilliseconds, bool ResetControls = false,
+    long RecordedAt = 0, bool WorkerFailed = false)
+{
+    public AudioWatchSnapshot ForDisplay(long now) => RecordedAt == 0 || Stopwatch.GetElapsedTime(RecordedAt, now) > TimeSpan.FromSeconds(2)
+        ? this with { Playback = PeakReading.Unavailable, Capture = PeakReading.Unavailable,
+            NotificationStatus = WorkerFailed ? NotificationStatus : "Leitura de áudio atrasada. Use Atualizar dispositivos para recuperar." }
+        : this;
+}
 
 public interface IAudioPeakSource : IDisposable
 {
@@ -20,6 +29,7 @@ public interface IAudioPeakSource : IDisposable
 public interface IAudioWatchBackend : IDisposable
 {
     string? NotificationError { get; }
+    long RecoveryRevision => 0;
     IAudioPeakSource OpenPeak(string endpointId);
 }
 

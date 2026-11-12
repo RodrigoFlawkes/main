@@ -22,6 +22,7 @@ public sealed class AudioWatchEngine : IDisposable
     private long retryAt;
     private string? backendError;
     private bool disposed;
+    private long recoveryRevision;
     public string? ShutdownError { get; private set; }
 
     public AudioWatchEngine(Func<Action, IAudioWatchBackend> factory) => this.factory = factory;
@@ -32,6 +33,7 @@ public sealed class AudioWatchEngine : IDisposable
         ObjectDisposedException.ThrowIf(disposed, this);
         long started = Stopwatch.GetTimestamp();
         bool refresh = restart;
+        bool resetControls = restart;
         if (restart) Reset();
         if ((backend is null || backend.NotificationError is not null) && now >= retryAt)
         {
@@ -44,6 +46,9 @@ public sealed class AudioWatchEngine : IDisposable
         if (Interlocked.Exchange(ref signaled, 0) != 0) changes.Signal(now);
         if (changes.TakeReady(now))
         {
+            long currentRevision = backend?.RecoveryRevision ?? 0;
+            resetControls |= currentRevision != recoveryRevision;
+            recoveryRevision = currentRevision;
             CloseSlot(playback);
             CloseSlot(capture);
             refresh = true;
@@ -52,7 +57,8 @@ public sealed class AudioWatchEngine : IDisposable
         var right = Read(capture, selection.CaptureId, now, metering);
         string status = backend is not null && backendError is null ? "Detecção automática de dispositivos ativa."
             : $"Detecção automática indisponível. Nova consulta a cada 5 s e atualização manual disponíveis. {backendError}";
-        return new AudioWatchSnapshot(selection, left, right, status, refresh, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+        return new AudioWatchSnapshot(selection, left, right, status, refresh, Stopwatch.GetElapsedTime(started).TotalMilliseconds,
+            resetControls, Stopwatch.GetTimestamp());
     }
 
     private PeakReading Read(MeterSlot slot, string? id, long now, bool metering)
@@ -94,6 +100,7 @@ public sealed class AudioWatchEngine : IDisposable
         try { backend?.Dispose(); }
         catch (Exception error) { ShutdownError = EndpointVolumeOperations.Describe(error); }
         backend = null;
+        recoveryRevision = 0;
         retryAt = 0;
     }
 

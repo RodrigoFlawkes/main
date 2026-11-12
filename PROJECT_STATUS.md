@@ -2,7 +2,46 @@
 
 Atualizado em 12/11/2026.
 
-## Estado atual — F1-I4 executada
+## Estado atual — F1-I5 executada
+
+Árvore inicialmente limpa, main sincronizada por git pull --ff-only até 4e2d690. Remoto confirmado como https://github.com/Wave-Universal-Studio/main.git. AGENTS.md, requisitos, arquitetura, planos, status, NEXT_TASK.md e REVIEW.md lidos. A revisão mais recente é F1-I4 sobre b63ef63. Implementação, commit e push desta etapa autorizados pelo proprietário. F1-I6 e Fase 2 aguardam nova orientação.
+
+| Categoria | Resultado atual |
+| --- | --- |
+| Implementado | JSON por usuário com schemaVersion 1, seleções/modos independentes, preferência ausente, janela validada, valores opcionais por endpoint, salvar/restaurar/reset/recuperar explícitos |
+| Proteção de dados | I/O serializado fora da UI, temporário/flush/substituição com backup, conflito entre instâncias, corrupção e versão incompatível preservadas, arquivo inválido arquivado em recuperação explícita |
+| Segurança de áudio | Carga/refresh/retorno consultam níveis atuais. Restauração exige prévia, confirmação e revalidação de ID, geração, disponibilidade, suporte e níveis, com leitura após falha parcial |
+| Revisão F1-I4 | Falha terminal/freshness do worker, retomada/ciclo de vida com mesmo ID, recuperação manual, API de preferência por ID, fallback ativo e reconciliação pendente do mixer |
+| Compilado | Debug x64, zero erros e zero avisos |
+| Testado automaticamente | 174 aprovados, zero falhas e zero ignorados. 165 casos de regras/simulações/arquivos/STA e nove integrações Windows, incluindo os 101 anteriores |
+| Integração | Dois ciclos de abertura/fechamento da janela em armazenamento isolado, seleção ausente preservada e fechamento mantendo bytes de arquivo protegido. Leituras reais de medidores e inscrições aprovadas |
+| Execução/acessibilidade | Executável com arquivo temporário iniciou. Acessibilidade reconheceu Preferências locais, seleção ausente e ações. Captura visual e clique por geometria falharam |
+| Limitações | Preferências de sessões aguardam identidade durável inequívoca. Medidores contínuos por sessão aguardam avaliação de ciclo de vida/custo na F1-I6 |
+| Testes físicos/visuais | Restauração audível, fala/música, USB/padrões/retomada, dois aplicativos, diálogos, DPI, estabilidade prolongada e Windows 11 pendentes |
+| Compatibilidade | Windows 10 Pro 22H2 experimental. Windows 11 x64 prioritário e pendente de validação |
+| Próximo passo | Revisão técnica da F1-I5 e orientação para validação da F1-I6 |
+
+### Decisões e verificações da F1-I5
+
+- Configuração padrão em %LOCALAPPDATA%/WaveStudio/settings.json. Caminho injetável e --settings-file absoluto permitem ensaios isolados. As verificações desta etapa usaram arquivos temporários próprios e consultas de áudio. Escritas de áudio automatizadas ocorreram em simulações.
+- Seleções são salvas após gesto explícito/modo. Valores de volume/mute/balanço usam Salvar valores atuais. Polling, notificações e medidores atualizam o estado atual. Posição/tamanho são salvos no fechamento com ajuste à área útil na carga. Preferências de ID ausente sobrevivem ao reinício e são exibidas como indisponíveis.
+- SettingsStore usa System.Text.Json, schemaVersion 1, validação estrita, UTF-8/BOM, limites de tamanho/estrutura/IDs/valores e defaults seguros em memória. A primeira versão aguarda versões anteriores conhecidas para justificar migração.
+- Escrita usa exclusão por handle de settings.json.lock e hash do conteúdo carregado, comparado antes de gravar e imediatamente antes de substituir. Transações locais são serializadas e pedidos da UI são coalescidos. Um conflito bloqueia sobrescrita e orienta reabrir. Temporário exclusivo na mesma pasta, Flush(true), File.Replace com backup válido e remoção do temporário próprio. Recuperação/reset arquiva original inválido antes de substituição. Falhas e cancelamento foram exercitados em diretórios temporários.
+- Versão incompatível permanece byte a byte, inclusive em save/reset/close. Corrupção aguarda recuperação/reset explícitos, com backup validado. Principal ausente com backup válido também aguarda escolha. Limite de 1 MiB protege alocação, e arquivos maiores exigem inspeção externa preservando o original.
+- EndpointRestorePlan captura prévia e geração. Confirmação mostra ID e níveis, avisa aumento e começa com Não selecionado. Serviço revalida identidade/geração, suporte e mudanças externas. Mute ligado vem primeiro e unmute por último. Falha interrompe sequência e mostra consulta real, com possível aplicação parcial. Chamadas nativas iniciadas podem terminar no alvo original.
+- Worker publica falha terminal/indisponibilidade e picos antigos expiram após dois segundos na apresentação. Recover invalida leitura pendente imediatamente. Eventos de ciclo de vida, retomada e manual invalidam gerações/erros mesmo com ID igual. Metadados preservam controles. Atualização manual solicita reconstrução e o retorno do catálogo apenas reconcilia, evitando ciclo. Mixer mantém pedido de leitura recebido durante operação anterior.
+- Identidade persistente de sessão foi avaliada. GetSessionIdentifier pode ser compartilhado por instâncias, e a camada atual identifica instâncias efêmeras/PID. Correspondência durável inequívoca permanece pendente. A UI informa indisponibilidade dessa preferência. Medição contínua por sessão segue para avaliação de fontes por instância e orçamento na F1-I6, mantendo a leitura pontual atual.
+- dotnet restore WaveStudio.slnx --locked-mode aprovado. dotnet build WaveStudio.slnx -c Debug --no-restore aprovado com zero erros e zero avisos. dotnet test --solution WaveStudio.slnx -c Debug --no-build aprovou 174 testes, com TESTINGPLATFORM_TELEMETRY_OPTOUT=1.
+- Diagnósticos de desenvolvimento corrigidos incluíram CS8602 no botão de preferência, xUnit1051 por ausência de tokens de cancelamento e CS0411 na interseção de retângulos do teste. Dois testes de status consultavam a janela antes do evento Shown, corrigidos para aguardar inicialização. Suíte final aprovada.
+- Integração específica observou 20 snapshots em 2,21 s, picos zero em ambas as direções e inscrição ativa. Consulta média de 0,090 ms, CPU do runner com delta de 46,9 ms e working set de 61.886.464 a 63.168.512 bytes. Quatro sessões reais tinham pico zero na leitura pontual. A amostra descreve esta máquina e período curto.
+- Executável iniciou com --settings-file temporário e acessibilidade reconheceu os novos controles e a preferência ausente. A captura retornou window capture timed out e o clique coordinate input geometry is unavailable. Uma tentativa inicial de janela em isolamento de processos ficou inacessível, exigindo encerramento apenas dos processos próprios de teste. A verificação final utilizou janela no desktop e arquivo temporário novo. O encerramento normal gerou JSON com modos automáticos e geometria, e o reinício exibiu Preferências carregadas por acessibilidade. A janela final foi encerrada normalmente. Validação visual e operação interativa completa continuam pendentes.
+- Produção nova em EndpointPreferenceRestore.cs, MainForm.Preferences.cs e Desktop/Settings (StudioSettings.cs, WindowPlacement.cs, SettingsStore.cs). Testes novos em SettingsStoreTests, SettingsValidationTests, EndpointPreferenceRestoreTests, RecoveryRegressionTests e PreferencesUiTests, além da regressão em MixerGridTests. Nenhum pacote novo. README, changelog, arquitetura, planos e status atualizados. git diff --check aprovado. Busca por padrões comuns de credenciais, dados sensíveis e artefatos sem correspondências no conteúdo versionável, com bin/obj ignorados e links locais válidos. AGENTS.md, docs/REQUIREMENTS.md, NEXT_TASK.md, REVIEW.md, configurações de build/SDK e lock files conferidos contra 4e2d690 e preservados. Publicação autorizada com commit descritivo e push normal, seguida de conferência da árvore limpa e sincronização com origin/main.
+
+### Testes físicos pendentes da F1-I5
+
+Anotar e restaurar os níveis originais do Windows e aplicativos. Testar salvar níveis atuais, reiniciar com seleções/modos preservados, prévia/cancelamento e restauração confirmada em hardware, incluindo mono/suporte ausente, alteração externa, troca/desconexão e falha parcial. Ensaios de corrupção/backup/versão futura/concorrência devem usar arquivo temporário via --settings-file. Conferir USB/padrões/retomada, áudio ativo e dois aplicativos, consumo prolongado, 1366×768, DPI 100/150/200% e Windows 11 x64. Procedimentos em docs/TEST_PLAN.md. A aceitação física da Alpha permanece pendente.
+
+## Histórico — F1-I4 executada
 
 Repositório limpo inicialmente, sincronizado por fetch e fast-forward até b4a6223 em main. Remoto confirmado como https://github.com/Wave-Universal-Studio/main.git. AGENTS.md, requisitos, arquitetura, plano, testes, NEXT_TASK.md e REVIEW.md foram lidos. A revisão mais recente é F1-I3. O proprietário autorizou implementação, commit e push da tarefa F1-I4. Persistência da F1-I5 aguarda nova orientação.
 
@@ -78,7 +117,7 @@ Anotar volume e mute de cada aplicativo e do endpoint antes do teste e restaurar
 
 ## Histórico das entregas anteriores
 
-As seções seguintes preservam os registros das Fases 0 e Incrementos 1–2. O estado atual da tarefa é o da seção F1-I4 acima.
+As seções seguintes preservam os registros das Fases 0 e Incrementos 1–2. O estado atual da tarefa é o da seção F1-I5 acima.
 
 ### Etapa atual
 

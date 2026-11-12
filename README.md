@@ -4,13 +4,13 @@ Aplicação desktop para gerenciamento de áudio no Windows, independente de fab
 
 ## Estado do projeto
 
-F1-I4 implementada. A aba **Dispositivos** apresenta picos reais dos endpoints de reprodução e captura, atualização automática por notificações do Windows e seleção independente com opção **Seguir padrão multimídia**. Seleções explícitas permanecem associadas ao dispositivo durante ausência e retorno. Volume, mute e balanço condicional administram os endpoints do Windows.
+F1-I5 implementada. Preferências locais em JSON preservam seleções independentes, modo **Seguir padrão multimídia**, IDs ausentes, posição/tamanho da janela e valores de endpoint salvos explicitamente. Volume, mute, balanço condicional, medidores reais, notificações de dispositivos e mixer de sessões continuam disponíveis.
 
 A aba **Mixer de aplicativos** lista sessões reais da saída selecionada, com nome/processo quando disponível, PID auxiliar, estado, volume e mute por instância. Edite Volume (%) e confirme com Enter, ou use o botão de mute. A reconciliação por chave preserva linhas, foco e edição. O controle atua na sessão do Windows.
 
-Verificação atual com 101 testes aprovados, incluindo os 77 anteriores, e build com zero erros/avisos. Leituras reais observaram picos zero nos endpoints e em cinco sessões. Resposta dos medidores à fala/música, hotplug físico, suspensão/retomada, escritas e layout permanecem pendentes. Windows 10 é experimental, e Windows 11 x64 aguarda validação.
+Verificação atual com 174 testes aprovados, incluindo os 101 anteriores, e build com zero erros/avisos. Integrações exercitam leitura Core Audio e abertura/reinício com armazenamento temporário isolado. Escritas de áudio automatizadas usam simulações. Resposta à fala/música, hotplug físico, suspensão/retomada, restauração audível, layout e Windows 11 x64 permanecem pendentes. Windows 10 é experimental.
 
-Versão v0.1.0 Alpha em desenvolvimento. Persistência JSON aguarda F1-I5 e nova orientação. Medidores individuais contínuos no mixer ficam para avaliação posterior de ciclo de vida e custo por sessão.
+Versão v0.1.0 Alpha em desenvolvimento. F1-I6 aguarda nova orientação para validação física/visual e entrega da Alpha. Preferências duráveis de sessões e medidores individuais contínuos seguem pendentes de identidade inequívoca e gerenciamento de ciclo de vida/custo.
 
 ## Documentação
 
@@ -49,6 +49,22 @@ As barras mostram pico do Windows em percentual e dBFS, com silêncio e indispon
 
 Os controles refletem alterações externas por consultas em segundo plano a cada aproximadamente 600 ms. Balanço exige dois canais de volume e formato com máscara frontal L/R confirmada. O centro iguala os canais ao maior nível atual. Extremos atenuam o lado oposto e preservam esse nível-base. Mono e mapeamento desconhecido deixam o balanço desabilitado com explicação. Erros de escrita desabilitam o controle afetado até atualizar ou selecionar novamente. O volume é o controle do endpoint do Windows.
 
-A suíte possui 95 casos de regras, simulações e grid WinForms STA e seis integrações de leitura Core Audio. O executável abriu, e a acessibilidade reconheceu barras, silêncio, seleções e detecção automática ativa. A captura de tela retornou timeout. Siga os [passos físicos dos incrementos](docs/TEST_PLAN.md).
+A suíte possui 165 casos de regras, simulações, armazenamento temporário e WinForms STA, além de nove integrações Windows de leitura/execução isolada. O executável abriu e os novos controles foram reconhecidos por acessibilidade. Captura de tela e clique por geometria continuaram indisponíveis. Siga os [passos físicos dos incrementos](docs/TEST_PLAN.md).
+
+## Preferências locais
+
+- Seleções são salvas após sua escolha. A abertura, atualização e reconexão consultam os níveis reais do Windows.
+- Em **Dispositivos**, use **Salvar valores atuais** para guardar volume, mute e balanço suportados no endpoint selecionado. Os valores salvos aparecem separados dos atuais.
+- **Restaurar valores salvos…** mostra alvo, valores atuais e salvos e pede confirmação. Um aumento de volume recebe aviso. Mudança de seleção, suporte ou níveis após a prévia exige nova validação. Falha parcial mostra o resultado consultado.
+- **Preferências locais** apresenta o arquivo e as ações de recuperação de backup e redefinição, ambas com confirmação. O arquivo padrão é `%LOCALAPPDATA%/WaveStudio/settings.json`.
+- `settings.json.bak` recebe a configuração válida anterior. Um original corrompido fica preservado até recuperação explícita e é arquivado nessa operação. Versão incompatível bloqueia gravações, incluindo o fechamento.
+- Duas instâncias usam exclusão durante escrita e detecção de conflito. Quando outra instância modifica o arquivo carregado, reabra o aplicativo para carregar essa versão.
+
+Para experimentar com arquivo isolado em uma pasta temporária, informe um caminho absoluto após `--settings-file`.
+
+```powershell
+$arquivoDeTeste = Join-Path $env:TEMP ('WaveStudio-teste-' + [guid]::NewGuid().ToString('N') + '/settings.json')
+dotnet run --project src/WaveStudio.Desktop -- --settings-file $arquivoDeTeste
+```
 
 O runner usa xUnit v3 4.0.3 e Microsoft Testing Platform 2.5.2. A variável acima desativa a telemetria do runner na sessão de PowerShell. As dependências de testes ficam no projeto de testes.

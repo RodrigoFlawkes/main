@@ -1,8 +1,48 @@
 # Arquitetura do Wave Studio
 
-Decisões da Fase 0, em 12/11/2026, com atualizações até F1-I4. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). A implementação atual é descrita primeiro, seguida pelo histórico e planejamento de evolução.
+Decisões da Fase 0, em 12/11/2026, com atualizações até F1-I5. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). A implementação atual é descrita primeiro, seguida pelo histórico e planejamento de evolução.
 
-## Medidores, notificações e recuperação — F1-I4
+## Persistência e restauração explícita — F1-I5
+
+StudioSettings, SettingsJson, WindowPlacement e SettingsStore ficam em Desktop/Settings, com modelos e I/O independentes de WinForms e COM. MainForm.Preferences compõe esses serviços com os controles existentes. O caminho padrão é %LOCALAPPDATA%/WaveStudio/settings.json. Construtor aceita caminho injetado e o executável oferece --settings-file com caminho absoluto para execução isolada. Testes usam diretórios temporários próprios. Dependências e lock files permanecem iguais aos da F1-I4.
+
+schemaVersion 1 é a primeira versão de configuração. Seleções contêm followDefault e endpointId opcional, independentes por direção. EndpointPreference guarda ID, direção e volumePercent/muted/balance opcionais. Campos ausentes expressam ausência de preferência ou suporte. WindowPlacement contém coordenadas, tamanho e maximized, com ajuste à área útil de um monitor disponível. A preferência explícita pode apontar para um ID ausente, por API validada de DeviceSelection, e sobreviver a reinício/retorno. Fallback automático favorece um endpoint ativo quando o padrão marcado está indisponível, informa essa condição e mantém modo automático.
+
+SettingsJson usa System.Text.Json com nomes camelCase, enums em texto, campos conhecidos, rejeição de duplicatas e validação de estrutura, IDs, limites e finitude. UTF-8 com ou sem BOM é aceito. Arquivo limitado a 1 MiB, até 1.000 preferências, IDs com até 2.048 caracteres e profundidade JSON 16. Tamanho de janela válido entre 100 e 16.384 antes do ajuste à área útil. schemaVersion diferente de 1 permanece protegido. Migrações serão acrescentadas quando houver versões anteriores conhecidas a migrar.
+
+```json
+{
+  "schemaVersion": 1,
+  "playback": { "followDefault": true, "endpointId": null },
+  "capture": { "followDefault": false, "endpointId": "id-do-endpoint" },
+  "window": { "x": 50, "y": 50, "width": 950, "height": 700, "maximized": false },
+  "endpoints": [
+    { "endpointId": "id-do-endpoint", "direction": "Capture", "volumePercent": 40, "muted": false, "balance": null }
+  ]
+}
+```
+
+Gravações partem de seleção explícita/mudança de modo, Salvar valores atuais ou atualização da geometria no fechamento. A UI coalesce pedidos e SettingsStore serializa o I/O com SemaphoreSlim, executando em Task.Run. Existe prazo de cancelamento de três segundos por gravação e esperas de até cinco segundos para ação de preferência e fila de gravação no fechamento, com aviso se a operação ficar pendente. Chamadas de disco já iniciadas podem terminar antes de observar cancelamento. O fechamento aguarda ações de preferência antes de salvar a janela, evitando regravar um modelo anterior à recuperação/reset.
+
+A política de duas instâncias combina FileShare.None em settings.json.lock durante cada transação com comparação SHA-256 do conteúdo carregado, inclusive imediatamente antes da substituição. Conflito preserva o arquivo atual e pede reabertura. O arquivo de lock pode permanecer vazio, com exclusão determinada pelo handle aberto. Editores externos devem operar com o aplicativo fechado. As verificações de conteúdo detectam alterações externas observáveis durante a transação.
+
+O temporário tem nome exclusivo na mesma pasta e usa FileMode.CreateNew, Flush(true) e File.Replace para substituir o principal, guardando o anterior válido em settings.json.bak. A primeira criação usa File.Move para um destino ainda ausente. Falha de substituição retorna erro, mantendo o arquivo válido. O temporário pertencente à operação é removido no finally. Interrupção de processo pode deixar um temporário órfão para inspeção explícita. O protocolo usa a substituição suportada pelo sistema de arquivos. [File.Replace](https://learn.microsoft.com/en-us/dotnet/api/system.io.file.replace?view=net-10.0), [FileStream.Flush](https://learn.microsoft.com/en-us/dotnet/api/system.io.filestream.flush?view=net-10.0).
+
+Corrupção preserva o principal e usa defaults seguros em memória. Backup é validado e oferecido por ação explícita. Recuperação/reset arquiva o original inválido com nome exclusivo e flush antes de substituir o principal, preservando o backup válido. Principal ausente com backup válido também aguarda escolha explícita. Versão incompatível bloqueia save, reset, recuperação e gravação ao fechar. Falha de leitura e conflito mantêm proteção. Configurações maiores que o limite ficam preservadas e exigem inspeção externa antes de recuperação.
+
+Salvar valores atuais faz leitura fresca no serviço do endpoint, com alvo e geração conferidos. Valores salvos aparecem separados dos atuais. Restaurar apresenta alvo/ID, valores atuais/salvos e aviso de aumento, usando confirmação com Não como padrão. EndpointVolumeSession cria EndpointRestorePlan com ID/revisão e estado original. Antes de escrever, a mesma fila reabre o alvo, verifica disponibilidade, suporte e equivalência dos níveis à prévia. Mudança de geração cancela o pedido. Mute ligado é aplicado primeiro, volume e balanço em seguida e unmute por último. Cada comando mantém confirmação e proteção de canais existentes. Erro interrompe os demais comandos e consulta o estado real, indicando possível aplicação parcial. Chamadas nativas já iniciadas podem terminar no alvo original.
+
+Preferências duráveis de sessões permanecem indisponíveis. O identificador geral de sessão pode ser compartilhado por instâncias do mesmo aplicativo, e o identificador de instância identifica a execução específica. A camada atual expõe identidade da instância, PID e metadados. Correspondência durável e inequívoca de aplicativo, endpoint, múltiplas instâncias e sons do sistema requer validação adicional. A configuração atual guarda seleções e preferências de endpoints. [Identificador de sessão](https://learn.microsoft.com/en-us/windows/win32/api/audiopolicy/nf-audiopolicy-iaudiosessioncontrol2-getsessionidentifier), [identificador de instância](https://learn.microsoft.com/en-us/windows/win32/api/audiopolicy/nf-audiopolicy-iaudiosessioncontrol2-getsessioninstanceidentifier).
+
+## Recuperação e correções da revisão F1-I4
+
+AudioWatchSnapshot recebe timestamp monotônico, estado de falha e flag de recuperação de controles. A UI invalida picos com mais de dois segundos. Recover invalida imediatamente a leitura e descarta retornos anteriores à sua época. Exceção terminal do loop publica indisponibilidade com orientação para reiniciar. Esse estado encerra o worker e permite descarte ordenado.
+
+Eventos nativos de adição/remoção/estado sinalizam revisão de recuperação atômica. Após coalescência, eles invalidam gerações e falhas latched dos controles/mixer mesmo com ID/estado/formato iguais. Notificações de metadados preservam controles existentes. Retomada e atualização manual reconstroem inscrição/fontes e solicitam recuperação. O evento de catálogo apenas solicita reconciliação, evitando realimentação de Recover. Pedidos recebidos durante consultas de catálogo ou mixer permanecem pendentes até o término da leitura ativa.
+
+Medidores contínuos por sessão continuam na avaliação da F1-I6. O wrapper permite consulta pontual, já verificada. Uma atualização contínua precisa de fontes persistentes por SessionKey, reconciliação e descarte na mesma thread e orçamento medido com várias sessões. A amostra atual de endpoints permanece curta e específica do host.
+
+## Histórico — medidores, notificações e recuperação da F1-I4
 
 AudioWatchWorker possui uma thread MTA dedicada. Nela são construídos, consultados e descartados AudioWatchEngine, CoreAudioWatchBackend, MMDeviceEnumerator, MMDeviceNotificationClient e os dois medidores selecionados. Cada MMDevice é proprietário de AudioMeterInformation e o libera no descarte. Os wrappers permanecem abertos entre ticks. A UI recebe somente AudioWatchSnapshot, PeakReading e IDs/revisões de seleção. A referência do último snapshot é publicada atomicamente.
 

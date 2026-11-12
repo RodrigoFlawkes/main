@@ -1,9 +1,11 @@
 using WaveStudio.Audio;
 using Microsoft.Win32;
+using System.Diagnostics;
+using WaveStudio.Desktop.Settings;
 
 namespace WaveStudio.Desktop;
 
-internal sealed class MainForm : Form
+internal sealed partial class MainForm : Form
 {
     private readonly CoreAudioDeviceService audio = new();
     private readonly DeviceSelection selection = new();
@@ -29,21 +31,23 @@ internal sealed class MainForm : Form
     private bool stopping;
     private Task refreshTask = Task.CompletedTask;
 
-    public MainForm()
+    public MainForm(SettingsStore? settingsStore = null)
     {
+        store = settingsStore ?? new SettingsStore(SettingsStore.DefaultPath);
         Text = "Wave Studio — v0.1.0 Alpha em desenvolvimento";
         MinimumSize = new Size(600, 400);
         ClientSize = new Size(1080, 860);
         StartPosition = FormStartPosition.CenterScreen;
         var layout = new TableLayoutPanel
         {
-            Dock = DockStyle.Fill, Padding = new Padding(20), ColumnCount = 2, RowCount = 6
+            Dock = DockStyle.Fill, Padding = new Padding(20), ColumnCount = 2, RowCount = 7
         };
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -55,7 +59,7 @@ internal sealed class MainForm : Form
         layout.SetColumnSpan(version, 2);
         var tabs = new TabControl { Dock = DockStyle.Fill };
         var devicesPage = new TabPage("Dispositivos") { AutoScroll = true };
-        var devicesLayout = new TableLayoutPanel { Dock = DockStyle.Top, Height = 700, MinimumSize = new Size(780, 700), ColumnCount = 2 };
+        var devicesLayout = new TableLayoutPanel { Dock = DockStyle.Top, Height = 820, MinimumSize = new Size(780, 820), ColumnCount = 2 };
         devicesLayout.RowCount = 2;
         devicesLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         devicesLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
@@ -70,6 +74,7 @@ internal sealed class MainForm : Form
         mixerPage.Controls.Add(mixer);
         tabs.TabPages.Add(devicesPage);
         tabs.TabPages.Add(mixerPage);
+        tabs.TabPages.Add(CreatePreferencesPage());
         layout.Controls.Add(tabs, 0, 2);
         layout.SetColumnSpan(tabs, 2);
         layout.Controls.Add(refresh, 0, 3);
@@ -77,18 +82,29 @@ internal sealed class MainForm : Form
         layout.SetColumnSpan(status, 2);
         layout.Controls.Add(watchStatus, 0, 5);
         layout.SetColumnSpan(watchStatus, 2);
+        layout.Controls.Add(storageStatus, 0, 6);
+        layout.SetColumnSpan(storageStatus, 2);
         Controls.Add(layout);
         playback.DeviceSelected += device => SelectExplicit(device);
         capture.DeviceSelected += device => SelectExplicit(device);
         followPlayback.CheckedChanged += (_, _) => ChangeFollowMode(EndpointDirection.Playback, followPlayback);
         followCapture.CheckedChanged += (_, _) => ChangeFollowMode(EndpointDirection.Capture, followCapture);
-        refresh.Click += (_, _) => RequestRefresh(true);
-        Shown += (_, _) => { RequestRefresh(true); peakTimer.Start(); };
+        refresh.Click += (_, _) => { watch.Recover(); RequestRefresh(true); };
+        playback.SavePreferenceRequested += () => RunPreferenceAction(() => SaveEndpointPreferenceAsync(EndpointDirection.Playback, playback));
+        capture.SavePreferenceRequested += () => RunPreferenceAction(() => SaveEndpointPreferenceAsync(EndpointDirection.Capture, capture));
+        playback.RestorePreferenceRequested += () => RunPreferenceAction(() => RestoreEndpointPreferenceAsync(EndpointDirection.Playback, playback));
+        capture.RestorePreferenceRequested += () => RunPreferenceAction(() => RestoreEndpointPreferenceAsync(EndpointDirection.Capture, capture));
+        Shown += async (_, _) =>
+        {
+            startupTask = InitializePreferencesAsync();
+            await startupTask;
+            if (!stopping) { RequestRefresh(true); peakTimer.Start(); }
+        };
         watch.CatalogChanged += OnCatalogChanged;
         SystemEvents.PowerModeChanged += OnPowerModeChanged;
         peakTimer.Tick += (_, _) =>
         {
-            if (watch.Latest is not { } snapshot) return;
+            if (watch.Latest?.ForDisplay(Stopwatch.GetTimestamp()) is not { } snapshot) return;
             watchStatus.Text = snapshot.NotificationStatus;
             if (snapshot.Selection != watchSelection) return;
             playback.ShowPeak(snapshot.Playback);
@@ -96,13 +112,6 @@ internal sealed class MainForm : Form
         };
         tabs.SelectedIndexChanged += (_, _) => watch.EnableMetering(tabs.SelectedTab == devicesPage && WindowState != FormWindowState.Minimized);
         Resize += (_, _) => watch.EnableMetering(tabs.SelectedTab == devicesPage && WindowState != FormWindowState.Minimized);
-        Shown += (_, _) =>
-        {
-            var area = Screen.FromControl(this).WorkingArea;
-            MinimumSize = new Size(Math.Min(600, area.Width), Math.Min(400, area.Height));
-            Size = new Size(Math.Min(Width, area.Width), Math.Min(Height, area.Height));
-            Location = new Point(area.Left + (area.Width - Width) / 2, area.Top + (area.Height - Height) / 2);
-        };
         FormClosing += async (_, args) =>
         {
             if (closing)
@@ -116,6 +125,8 @@ internal sealed class MainForm : Form
             SystemEvents.PowerModeChanged -= OnPowerModeChanged;
             Enabled = false;
             lifetime.Cancel();
+            await startupTask;
+            await SaveWindowOnCloseAsync();
             await refreshTask;
             await Task.WhenAll(playback.StopAsync().AsTask(), capture.StopAsync().AsTask(), mixer.StopAsync().AsTask(), watch.DisposeAsync().AsTask());
             closing = true;
@@ -129,18 +140,19 @@ internal sealed class MainForm : Form
         if (args.Mode == PowerModes.Resume) watch.Recover();
     }
 
-    private void OnCatalogChanged()
+    private void OnCatalogChanged(bool resetControls)
     {
         try
         {
             if (IsHandleCreated && !IsDisposed)
-                BeginInvoke(new Action(() => RequestRefresh(false)));
+                BeginInvoke(new Action(() => RequestRefresh(resetControls)));
         }
         catch (InvalidOperationException) { /* Closing may destroy the handle before dispatch. */ }
     }
 
     private void SelectExplicit(DeviceSnapshot device)
     {
+        if (recoveringPreferences) return;
         selection.Select(device);
         bindingFollow = true;
         try
@@ -156,11 +168,13 @@ internal sealed class MainForm : Form
         }
         else currentCapture = device;
         UpdateWatchSelection();
+        SaveSelectionPreferences();
+        ShowSavedPreferences();
     }
 
     private void ChangeFollowMode(EndpointDirection direction, CheckBox check)
     {
-        if (bindingFollow) return;
+        if (bindingFollow || recoveringPreferences) return;
         if (check.Checked) selection.FollowDefault(direction);
         else
         {
@@ -174,6 +188,7 @@ internal sealed class MainForm : Form
             }
         }
         RequestRefresh(true);
+        SaveSelectionPreferences();
     }
 
     private void UpdateWatchSelection()
@@ -186,28 +201,33 @@ internal sealed class MainForm : Form
 
     private void RequestRefresh(bool resetControls)
     {
-        if (stopping) return;
+        if (stopping || !settingsLoaded) return;
         refreshRequested = true;
         resetRequested |= resetControls;
-        if (!refreshing) refreshTask = DrainRefreshAsync();
+        if (!refreshing)
+        {
+            refreshing = true;
+            refreshTask = DrainRefreshAsync();
+        }
     }
 
     private async Task DrainRefreshAsync()
     {
-        while (refreshRequested && !stopping)
+        try
         {
-            refreshRequested = false;
-            bool reset = resetRequested;
-            resetRequested = false;
-            await RefreshDevicesAsync(reset);
+            while (refreshRequested && !stopping)
+            {
+                refreshRequested = false;
+                bool reset = resetRequested;
+                resetRequested = false;
+                await RefreshDevicesAsync(reset);
+            }
         }
+        finally { refreshing = false; }
     }
 
     private async Task RefreshDevicesAsync(bool resetControls)
     {
-        if (refreshing)
-            return;
-        refreshing = true;
         refresh.Enabled = false;
         playback.Enabled = false;
         capture.Enabled = false;
@@ -223,12 +243,15 @@ internal sealed class MainForm : Form
             bool playbackChanged = currentPlayback?.Id != selectedPlayback?.Id || currentPlayback?.State != selectedPlayback?.State;
             currentPlayback = selectedPlayback;
             currentCapture = selectedCapture;
-            playback.ShowDevices(catalog, EndpointDirection.Playback, selectedPlayback, resetControls);
-            capture.ShowDevices(catalog, EndpointDirection.Capture, selectedCapture, resetControls);
+            playback.ShowDevices(catalog, EndpointDirection.Playback, selectedPlayback, resetControls, selection.PlaybackId);
+            capture.ShowDevices(catalog, EndpointDirection.Capture, selectedCapture, resetControls, selection.CaptureId);
             if (resetControls || playbackChanged) mixer.SelectDevice(selectedPlayback);
             UpdateWatchSelection();
-            status.Text = catalog.Warnings.Count > 0
-                ? string.Join(Environment.NewLine, catalog.Warnings.Distinct())
+            ShowSavedPreferences();
+            var warnings = catalog.Warnings.ToList();
+            AddFallbackWarning(warnings, selectedPlayback, EndpointDirection.Playback, selection.PlaybackId);
+            AddFallbackWarning(warnings, selectedCapture, EndpointDirection.Capture, selection.CaptureId);
+            status.Text = warnings.Count > 0 ? string.Join(Environment.NewLine, warnings.Distinct())
                 : $"Consulta concluída — {catalog.Devices.Count} endpoint(s) encontrado(s).";
         }
         catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
@@ -246,12 +269,12 @@ internal sealed class MainForm : Form
         }
         finally
         {
-            refreshing = false;
             if (!IsDisposed)
             {
-                refresh.Enabled = true;
-                playback.Enabled = true;
-                capture.Enabled = true;
+                refresh.Enabled = !recoveringPreferences;
+                playback.Enabled = !recoveringPreferences;
+                capture.Enabled = !recoveringPreferences;
+                followPlayback.Enabled = followCapture.Enabled = !recoveringPreferences;
             }
         }
     }

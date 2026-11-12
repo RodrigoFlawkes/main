@@ -2,11 +2,11 @@
 
 Planejamento atualizado em 12/11/2026. Fase 1 em andamento, com incrementos verificáveis. Escopo detalhado em [REQUIREMENTS.md](REQUIREMENTS.md).
 
-Incrementos 1–3 publicados e revisados. F1-I4 implementa medidores reais de endpoints, notificações de hotplug/padrão, recuperação e correções do mixer apontadas na revisão. Restore locked, build e 101 testes aprovados no Windows 10 experimental. Aceitação física e visual permanece pendente. Persistência JSON da F1-I5 aguarda nova orientação.
+Incrementos 1–4 publicados e revisados. F1-I5 implementa configurações locais versionadas, seleção persistida, valores de endpoint salvos explicitamente, backup/recuperação e restauração de áudio por confirmação. A revisão F1-I4 foi tratada com estado de falha/freshness do worker, recuperação distinta de metadados, seleção por ID e reconciliação pendente do mixer. Build e 174 testes aprovados no Windows 10 experimental. Aceitação física e visual permanece pendente. F1-I6 aguarda nova orientação.
 
 ## Incrementos
 
-F1-I4 executada conforme NEXT_TASK.md e REVIEW.md sincronizados até b4a6223. Fontes de pico e inscrições pertencem a um worker MTA persistente, com snapshots por geração e coalescência de eventos. A leitura real observou zero nos medidores da amostra. Medidor contínuo por sessão fica para avaliação posterior, devido ao ciclo de vida adicional de wrappers e custo por instância. As etapas abaixo mantêm os critérios de aceitação do roadmap, incluindo os ensaios físicos ainda pendentes dos incrementos implementados.
+F1-I5 executada conforme NEXT_TASK.md e REVIEW.md sincronizados até 4e2d690. Configuração usa schemaVersion 1, escrita serializada/substituição com backup, proteção contra versão incompatível e corrupção e detecção de conflito entre instâncias. Integrações isoladas verificaram reinício e fechamento preservando arquivos protegidos. Preferências duráveis por sessão permanecem indisponíveis até comprovar identidade e correspondência inequívocas. Medidores contínuos de sessão exigem avaliação de orçamento/ciclo de vida na F1-I6. As etapas abaixo mantêm os critérios de aceitação, incluindo os ensaios físicos pendentes dos incrementos implementados.
 
 1. Criar `WaveStudio.slnx`, Desktop, Audio e testes conforme a arquitetura. Fixar SDK e dependências após conferir APIs e runner. Abrir janela pt-BR, enumerar endpoints reais, mostrar estados e padrões e permitir seleção independente. Critério de saída — restore/build/test bem-sucedidos e comparação manual da enumeração com o Windows.
 2. Adicionar volume/mute por endpoint e balanço condicional. Sincronizar mudanças externas, validar intervalos e erros de dispositivo. Critério — alterações verificadas no Windows e teste físico dos canais, incluindo mono e suporte ausente.
