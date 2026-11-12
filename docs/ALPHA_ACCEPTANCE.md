@@ -2,13 +2,13 @@
 
 Estado da F1-I6-MIC em 12/11/2026 — validação física pendente. Este roteiro registra evidências do proprietário e verificações técnicas. A aceitação da Fase 1 depende dos ensaios físicos e de aprovação explícita.
 
-O executável atualizado F1-I6-MIC está em `artifacts/alpha-preview/mic-build/WaveStudio.exe`. A pasta habitual `artifacts/alpha-preview/win-x64` aguarda o fechamento normal da prévia anterior pelo proprietário antes de ser substituída; não foi encerrado seu processo. Use a pasta completa da publicação atualizada. Requer .NET Desktop Runtime 10 x64, com Microsoft.NETCore.App e Microsoft.WindowsDesktop.App da linha 10. O ensaio utilizou 10.0.15 em Windows 10 Pro 22H2, build 19045.6466, experimental. Windows 11 x64 é prioritário e aguarda ensaio próprio.
+O executável atualizado F1-I6-MIC está em `artifacts/alpha-preview/win-x64/WaveStudio.exe`. O proprietário confirmou o fechamento normal da prévia anterior, e o pacote foi copiado da preparação para a pasta habitual, com conferência dos arquivos por SHA-256. Use a pasta completa da publicação atualizada. Requer .NET Desktop Runtime 10 x64, com Microsoft.NETCore.App e Microsoft.WindowsDesktop.App da linha 10. O ensaio utilizou 10.0.15 em Windows 10 Pro 22H2, build 19045.6466, experimental. Windows 11 x64 é prioritário e aguarda ensaio próprio.
 
 Na raiz do repositório, inicie com armazenamento isolado para aceitação.
 
 ```powershell
 $arquivoDeAceitacao = Join-Path $env:TEMP ('WaveStudio-aceitacao-' + [guid]::NewGuid().ToString('N') + '/settings.json')
-& './artifacts/alpha-preview/mic-build/WaveStudio.exe' --settings-file $arquivoDeAceitacao
+& './artifacts/alpha-preview/win-x64/WaveStudio.exe' --settings-file $arquivoDeAceitacao
 ```
 
 Mantenha `$arquivoDeAceitacao` para repetir o teste de reinício. A janela permite ver o caminho na aba Preferências locais.
@@ -52,7 +52,7 @@ Picos zero e custo de consulta descrevem as leituras observadas. A aceitação d
 
 ## Reprodução da publicação local
 
-Em Windows x64 com o SDK fixado, feche normalmente o executável da pasta de destino antes de publicar. Execute os comandos abaixo. O projeto define PlatformTarget x64, e o apphost desta máquina foi conferido como AMD64. Nesta etapa foi usada a pasta de preparação mic-build para preservar a janela anterior ainda aberta. Os comandos abaixo reproduzem a pasta habitual após seu fechamento.
+Em Windows x64 com o SDK fixado, feche normalmente o executável da pasta de destino antes de publicar. Execute os comandos abaixo. O projeto define PlatformTarget x64, e o apphost desta máquina foi conferido como AMD64. A pasta de preparação mic-build foi usada enquanto a janela anterior estava aberta; após o fechamento confirmado pelo proprietário, o pacote foi promovido para win-x64. Os comandos abaixo reproduzem essa pasta habitual.
 
 ```powershell
 dotnet restore WaveStudio.slnx --locked-mode

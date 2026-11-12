@@ -10,6 +10,7 @@
 - Worker MTA separado da UI, snapshots, cancelamento/geração, callbacks limitados e descarte de streams/dispositivos. APIs públicas WasapiRecorderBuilder/WasapiPlayerBuilder da versão 3.1.0, sem novas dependências.
 - Restore locked com auditoria, builds Debug/Release sem erros/avisos e 228 testes aprovados em cada configuração (184 anteriores + 44 novos). Novo executável conferido em abertura/fechamento com configuração isolada, sem gravação real.
 - Roteiro A11 e documentação atualizados. Volume/mute de captura confirmados pelo proprietário são evidências parciais; A01–A11 e Windows 11 continuam aguardando aceitação física completa.
+- Após confirmação de fechamento normal da prévia anterior, pacote F1-I6-MIC promovido para artifacts/alpha-preview/win-x64 com conferência dos 14 arquivos por SHA-256. Caminhos de execução atualizados; código e dependências preservados.
 
 ### 2026-11-12 — F1-I6, checkpoint técnico de validação e pacote x64
 

@@ -32,11 +32,11 @@ Versão v0.1.0 Alpha em desenvolvimento. Preferências duráveis de sessões agu
 
 ## Executável de teste local
 
-A publicação atualizada fica em `artifacts/alpha-preview/mic-build/WaveStudio.exe`. A substituição da pasta habitual `artifacts/alpha-preview/win-x64` aguarda o fechamento normal da prévia anterior, ainda aberta. Use a pasta completa e .NET Desktop Runtime 10 x64. Para validar com preferências isoladas, execute na raiz.
+A publicação atualizada fica em `artifacts/alpha-preview/win-x64/WaveStudio.exe`. Após o proprietário fechar normalmente a prévia anterior, o pacote F1-I6-MIC foi copiado e conferido na pasta habitual. Use a pasta completa e .NET Desktop Runtime 10 x64. Para validar com preferências isoladas, execute na raiz.
 
 ```powershell
 $arquivoDeAceitacao = Join-Path $env:TEMP ('WaveStudio-aceitacao-' + [guid]::NewGuid().ToString('N') + '/settings.json')
-& './artifacts/alpha-preview/mic-build/WaveStudio.exe' --settings-file $arquivoDeAceitacao
+& './artifacts/alpha-preview/win-x64/WaveStudio.exe' --settings-file $arquivoDeAceitacao
 ```
 
 O [roteiro de aceitação](docs/ALPHA_ACCEPTANCE.md) contém SHA-256, comando de publicação e casos a relatar como aprovado, falhou ou pendente. O diretório artifacts é ignorado pelo Git, e a distribuição atual destina-se a testes locais.
