@@ -85,3 +85,7 @@ Parecer: aprovado para F1-I6 (validação e empacotamento), não para declarar a
 6. Revisar publicação x64 Release, conteúdo do pacote, segurança/privacidade, licenças de dependências e instrução de execução. Não declarar compatibilidade Windows 11 sem ensaio; Windows 10 experimental. A Alpha pode ser distribuída para teste local com rótulo de prévia, mas aceitação plena depende das evidências físicas. Não criar instalador/driver agora.
 
 As referências adicionais do proprietário (Peace/Equalizer APO, Light Host e efeitos VST) foram registradas em docs/FUTURE_AUDIO_FEATURES.md para planejamento posterior. Não expandir F1-I6 para implementá-las. 
+
+## 12/11/2026 — checkpoint F1-I6 e teste de microfone
+
+Commit de referência: 4c05092. O roteiro de aceitação informa 184 testes em Debug/Release e executável local; a aceitação física segue pendente. O proprietário confirmou volume e mute do microfone no novo teste. A captura mostra microfone mono de um canal; manter balanço L/R desabilitado e indicar o motivo de modo claro. Não simular estéreo nem alterar driver. Foi solicitada uma forma de ouvir a própria voz; adendo limitado de teste de captura/reprodução, sem antecipar o motor inteiro. Roteiro atualizado com evidências parciais; não declarar A01–A10 aprovados nem finalizar a Alpha.

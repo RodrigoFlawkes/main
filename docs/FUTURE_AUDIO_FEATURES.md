@@ -28,3 +28,7 @@ O proprietário deseja reunir os tratamentos que usa com plugins de terceiros. P
 - Após Fase 1: concepção de design/identidade visual e componentes reutilizáveis em paralelo ao planejamento técnico, sem telas que simulem DSP. Aparência moderna própria, tema escuro, faders, knobs e gráficos acessíveis, modo simples/avançado.
 - Fase 2: motor, formato PCM, buffers, contrato de efeito modular, bypass, parâmetros e medição. Fase 3: prova externa de reprodução e captura. Fases 4–5: mixer e barramentos. Fase 6: equalização avançada, estudo de importação/AutoEQ. Fase 7: processamento vocal nativo, incluir cadeia modular e avaliar de-reverb. Fase 9: voz/pitch. Host VST3 como estudo/expansão posterior após prova e revisão de viabilidade.
 - Novos itens não são bloqueadores da Fase 1 nem autorização de instalação de software/drivers.
+
+## Adendo — teste de microfone solicitado pelo proprietário
+
+Na prévia Alpha, o proprietário confirmou volume e mute da captura e solicitou ouvir a própria voz dentro do Wave Studio. Priorizar teste local por gravação curta em memória e reprodução explícita, sem gravação em disco e sem captura automática. Monitoramento ao vivo/sidetone digital continua na Fase 2: seleção explícita de headset, nível independente baixo, desligado por padrão, stop imediato, buffers limitados, prevenção de feedback, recuperação, medição de latência. Futuramente permitir comparar sinal original/processado. Mic mono não possui balanço L/R físico; futuro pan no mixer é distinto.

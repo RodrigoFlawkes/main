@@ -30,7 +30,7 @@ Antes dos testes, use volume baixo, anote volume/mute/balanço de endpoints e ap
 
 Envie o sistema/versão, dispositivo e resultados por ID, usando aprovado, falhou ou pendente. Em falha, informe ação, mensagem e valores antes/depois. Resultados observados por acessibilidade e testes automatizados ficam registrados separadamente em PROJECT_STATUS.md e TEST_PLAN.md.
 
-O proprietário confirmou disponibilidade para testar após o executável ficar pronto. A prévia já foi disponibilizada. A primeira rodada será A01/A02 no Windows 10, registrando dispositivo selecionado, padrão e reação dos picos à reprodução/fala. Os resultados físicos aguardam relato.
+O proprietário confirmou disponibilidade para testar após o executável ficar pronto. A prévia já foi disponibilizada. A primeira rodada foi iniciada no Windows 10. Evidências parciais do proprietário abaixo; casos completos ainda aguardam confirmação.
 
 ## Evidências técnicas da F1-I6
 
@@ -82,3 +82,11 @@ SHA-256 do WaveStudio.exe local, com 162.304 bytes.
 ```
 
 Relatório detalhado do ensaio fica em artifacts/alpha-preview/validation, ignorado pelo Git. A pasta publicada é uma prévia para testes locais. A aprovação final da Alpha aguarda as evidências físicas e aprovação do proprietário.
+
+## Evidências físicas parciais do proprietário — 12/11/2026
+
+- Capturas de tela: prévia aberta, 67 endpoints, saída Alto-falantes (3- USB Audio Device), 48 kHz / 2 canais / contêiner 32 bits; entrada Microfone (3- USB Audio Device), 48 kHz / 1 canal / contêiner 32 bits. Ambos padrões multimídia; entrada também padrão de comunicações. Detecção automática ativa. A01: abertura e reconhecimento confirmados; comparação integral e seleção independente ainda precisam de relato explícito.
+- A03: proprietário confirmou funcionamento de volume e mute do microfone após novo teste. Balanço do microfone indisponível, comportamento esperado para endpoint mono; não é defeito. Demais subcasos de A03 permanecem pendentes de evidência detalhada.
+- A04/A06: abas Mixer (cinco sessões inativas, picos zero) e Preferências locais vistas nas imagens; não equivalem a isolamento audível ou persistência física completos. Proprietário relatou que somente volume/mute de microfone pareciam inicialmente falhar e depois confirmou ambos. Não inferir aprovação de todos os casos.
+- A02 e demais casos: confirmar explicitamente reação dos medidores, isolamento, reconexão, restauração e restantes conforme roteiro. Windows 11 permanece pendente.
+- Solicitação nova: teste de microfone dentro do programa para ouvir a própria voz. Adendo F1-I6-MIC prevê gravar/reproduzir trecho curto em memória para auxiliar a aceitação; monitoramento digital contínuo fica na Fase 2 com proteção contra feedback. Não confundir reprodução do teste com sidetone em tempo real.
