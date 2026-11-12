@@ -4,17 +4,17 @@ Atualizado em 12/11/2026.
 
 ## Etapa atual
 
-Fase 0 publicada no commit a3a3358 e aprovada por revisão técnica informada pelo proprietário. Fase 1, Incremento 1 implementado mediante autorização explícita. A v0.1.0 Alpha segue em desenvolvimento, com os demais incrementos pendentes. A integração global tem caminho preferido por endpoints virtuais, com escolha concreta e prova física pendentes nas Fases 2–3.
+Fase 0 publicada no commit a3a3358 e aprovada por revisão técnica informada pelo proprietário. Incremento 1 publicado no commit 60238ea após aprovação provisória e autorização de commit/push. Incremento 2 aprovado provisoriamente para publicação e revisão técnica, com commit/push autorizados. A v0.1.0 Alpha segue em desenvolvimento. A integração global tem caminho preferido por endpoints virtuais, com escolha concreta e prova física pendentes nas Fases 2–3.
 
 | Categoria | Estado real |
 | --- | --- |
-| Implementado | Solução e três projetos, UI pt-BR, enumeração real, padrões, seleção independente e informações dos endpoints |
-| Código de produto | Desktop e Audio, com snapshots independentes de COM e consultas assíncronas |
+| Implementado | Enumeração, padrões, seleção independente, informações, volume/mute e balanço condicional dos endpoints |
+| Código de produto | Desktop e Audio, snapshots independentes de COM, operações serializadas e sincronização externa por polling |
 | Compilado | Debug x64, zero erros e zero avisos |
-| Testado automaticamente | 16 aprovados, zero falhas/ignorados. 14 casos de regras/mensagens e 2 integrações Windows |
-| Execução real | 67 endpoints enumerados, zero avisos. Executável abriu e conteúdo dos controles foi confirmado por acessibilidade |
-| Testado fisicamente | Comparação com o Windows, trocas na UI, hotplug manual e escala de tela pendentes |
-| Próximo incremento | Incremento 2 aguarda autorização do proprietário |
+| Testado automaticamente | 56 aprovados, zero falhas e zero ignorados. 53 casos de regras/simulações e 3 integrações de leitura Windows, incluindo os 16 anteriores |
+| Execução real | Enumeração e leitura de volume/mute dos padrões confirmadas. UI abriu com controles lidos por acessibilidade |
+| Testado fisicamente | Escritas de volume/mute/balanço, mudanças externas, comparação com Windows, hotplug e escala de tela pendentes |
+| Próximo incremento | Aguardar revisão técnica e configuração do fluxo ChatGPT/Codex pelo GitHub antes do Incremento 3 |
 | Dependências futuras | Integração virtual/licença/assinatura e prova externa pendentes |
 | Plataforma prioritária | Windows 11 x64 ainda pendente de validação |
 
@@ -38,6 +38,8 @@ O suporte/ESU do Windows 10 local permanece desconhecido. A execução nesta má
 
 O proprietário aprovou provisoriamente o relatório, autorizou a publicação com a mensagem `feat: initialize Wave Studio desktop and audio endpoint discovery` e autorizou o início do Incremento 2 após o push. A revisão prévia à publicação conferiu os arquivos implementados, os lock files, a ausência de padrões comuns de credenciais no conteúdo versionável e a exclusão de bin/obj pelo .gitignore. Permanecem pendentes os testes físicos e visuais registrados abaixo.
 
+O commit 60238ea foi enviado a `https://github.com/Wave-Universal-Studio/main.git` e a sincronização com origin/main foi confirmada antes do início do Incremento 2. Foi usada somente no comando a identidade zzThiago e o endereço privado do GitHub já presentes no histórico.
+
 - `dotnet restore WaveStudio.slnx` falhou inicialmente por acesso ao NuGet.Config fora do sandbox. A repetição autorizada restaurou os três projetos com sucesso. O restore em `--locked-mode` passou posteriormente.
 - `dotnet build WaveStudio.slnx -c Debug --no-restore` passou com zero erros e zero avisos.
 - `dotnet test --solution WaveStudio.slnx -c Debug --no-build --output Detailed` passou com 16 testes aprovados, zero falhas e zero ignorados, usando `TESTINGPLATFORM_TELEMETRY_OPTOUT=1` na sessão.
@@ -59,7 +61,31 @@ O proprietário aprovou provisoriamente o relatório, autorizou a publicação c
 
 ## Próxima etapa
 
-Realizar os passos físicos do Incremento 1 descritos no plano de testes e revisar a implementação. O Incremento 2 aguarda autorização. Ver [arquitetura](docs/ARCHITECTURE.md), [viabilidade](docs/FEASIBILITY.md) e [testes](docs/TEST_PLAN.md).
+Realizar os passos físicos dos Incrementos 1 e 2 descritos no plano de testes. Aguardar a revisão técnica do Incremento 2 e a configuração do novo fluxo de comunicação entre ChatGPT e Codex pelo GitHub. Ver [arquitetura](docs/ARCHITECTURE.md), [viabilidade](docs/FEASIBILITY.md) e [testes](docs/TEST_PLAN.md).
+
+## Revisão para publicação do Incremento 2
+
+O proprietário autorizou o commit e o push com a mensagem `feat: implement endpoint volume mute and stereo balance controls`.
+
+- Revisados os controles, a leitura inicial, mute independente, limites de volume, validação de canais L/R, nível-base e restauração de balanço após falha parcial. A abertura e a seleção leem os valores existentes. Atualizações externas são consultadas por polling e aplicadas à UI sob proteção contra gerar comandos.
+- Confirmados ID/revisão por seleção, cancelamento de pedidos antigos e descarte de respostas anteriores. Chamadas nativas já iniciadas podem terminar no endpoint original, conforme a limitação documentada na arquitetura.
+- AGENTS.md e docs/REQUIREMENTS.md conferidos contra o commit a3a3358, com conteúdo original preservado. A arquitetura modular e os lock files foram preservados.
+- Inventário versionável e busca de padrões comuns de credenciais revisados, sem credenciais ou arquivos sensíveis encontrados. Saídas bin/obj conferidas como ignoradas pelo Git, com inclusão de fontes, testes, documentação e arquivos de lock na entrega.
+- Restore em modo locked aprovado. Build Debug x64 confirmado com zero erros e zero avisos. Os 56 testes passaram novamente, com zero falhas e zero ignorados. As integrações reais são de leitura, e as escritas foram exercitadas com simulações.
+- Pendentes os testes físicos de escrita de volume/mute em entrada e saída, balanço audível e centralização, sincronização externa na UI, troca rápida e desconexão durante operação, recuperação/restauração e avaliação visual em diferentes escalas. Registrar e restaurar os níveis anteriores em cada teste físico. Windows 11 x64 permanece pendente e Windows 10 permanece experimental.
+- `git diff --check` aprovado antes de preparar a publicação. Após o envio serão conferidos árvore de trabalho limpa e igualdade entre HEAD e origin/main.
+
+## Verificação do Incremento 2
+
+- Mesmas dependências e arquivos de lock do Incremento 1. `dotnet restore WaveStudio.slnx --locked-mode` passou.
+- `dotnet build WaveStudio.slnx -c Debug --no-restore` passou na verificação final com zero erros e zero avisos. `dotnet test --solution WaveStudio.slnx -c Debug --no-build` aprovou 56 testes, zero falhas e zero ignorados, com telemetria MTP desativada na sessão. A suíte inclui a regressão dos 16 testes anteriores.
+- O primeiro build encontrou a janela do Incremento 1 ainda aberta e falhou ao copiar a DLL de áudio, com MSB3027/MSB3021 após dez avisos de nova tentativa. A janela foi fechada normalmente e a compilação seguinte passou. Um teste novo também usava `Assert.Throws` para método que retorna Task, corrigido para `Assert.ThrowsAsync` após os diagnósticos CS0619/xUnit2014.
+- A integração de leitura observou reprodução em 100%, mute desligado e canais L/R em 1/1, com centro em 0. Captura em 100%, mute desligado e balanço indisponível por mono. Esses eram os valores existentes no host. Os testes reais fizeram consultas. Escritas foram exercitadas somente em endpoints simulados.
+- A janela do Incremento 2 abriu. A acessibilidade confirmou sliders, números e botões, com balanço da captura desabilitado e explicação. A captura visual falhou novamente com `window capture timed out`, mantendo a avaliação visual e das interações como pendente. A janela de teste foi fechada normalmente.
+- Implementados CoreAudioVolumeAccess, EndpointVolumeState/comandos, EndpointVolumeOperations, EndpointVolumeSession e EndpointControls. Testes novos em EndpointVolumeTests, EndpointVolumeSessionTests e FakeEndpointVolume, além da integração de leitura adicionada à suíte anterior.
+- Controles sincronizam por polling de aproximadamente 600 ms. ID e revisão fixam o alvo de cada comando. Trocas de seleção cancelam pedidos anteriores, e a atualização de snapshots na UI fica protegida contra gerar escritas. Balanço exige estéreo FL/FR confirmado e tenta restaurar os níveis após falha parcial.
+- A implementação recebeu aprovação provisória para publicação e revisão técnica. Windows 10 continua experimental. Windows 11 x64 e testes físicos de escrita continuam pendentes.
+- `git diff --check` passou na conferência final. Os oito arquivos novos foram verificados sem espaços finais ou marcadores de conflito, e os links locais da documentação não têm destinos ausentes. A busca por padrões comuns de credenciais no conteúdo versionável não encontrou correspondências. O índice ficou vazio e o HEAD permaneceu em 60238ea, publicado antes do início deste incremento.
 
 ## Arquivos do Incremento 1
 

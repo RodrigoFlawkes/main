@@ -1,6 +1,32 @@
 # Plano de testes
 
-Estado em 12/11/2026 — Incremento 1 implementado e verificações abaixo executadas. Os casos das etapas posteriores permanecem planejados.
+Estado em 12/11/2026 — Incrementos 1 e 2 implementados, com verificações executadas abaixo. Os casos das etapas posteriores permanecem planejados.
+
+## Verificação do Incremento 2
+
+O Incremento 1 foi publicado no commit 60238ea. O Incremento 2 recebeu aprovação provisória para publicação e revisão técnica. A suíte inclui a regressão dos 16 testes anteriores. Os testes de escrita usam endpoints simulados, preservando os níveis físicos do host. A nova integração Windows faz leitura dos controles reais e descarte dos wrappers/callbacks.
+
+Verificação final — `dotnet restore WaveStudio.slnx --locked-mode` aprovado, `dotnet build WaveStudio.slnx -c Debug --no-restore` com zero erros/avisos e `dotnet test --solution WaveStudio.slnx -c Debug --no-build` com 56 aprovados, zero falhas e zero ignorados. São 53 casos de regras/simulações e 3 integrações Windows de leitura. A execução usou `TESTINGPLATFORM_TELEMETRY_OPTOUT=1`.
+
+Casos automatizados novos cobrem 0/100% e frações, rejeição de limites/NaN/infinito, mute/unmute, centro/extremos/intermediários, repetição sem acumular atenuação, silêncio, mono, máscara ausente e multicanal, suporte parcial, driver ignorando escrita, canais acoplados, restauração após falha e cancelamento, desconexão durante balanço, alterações externas simuladas, mudança de seleção, geração antiga para o mesmo ID, comandos enfileirados cancelados, isolamento de entrada/saída e descarte.
+
+A integração real leu volume 100% e mute desligado dos endpoints padrão do host, com L/R 1/1 na reprodução e balanço desabilitado no microfone mono. A janela abriu e esses controles foram confirmados por acessibilidade. Captura de tela falhou por timeout. O layout e as operações físicas de escrita continuam pendentes.
+
+## Passos físicos do Incremento 2
+
+Antes de alterar níveis, anotar volume master, mute e níveis de cada canal dos endpoints de entrada/saída. Usar volume confortável e sinal de teste de baixa intensidade. Restaurar os valores anotados ao terminar, incluindo balanço e mute. Esses ensaios exigem ação explícita do usuário e hardware disponível.
+
+1. Abrir o app e comparar os valores com os controles do Windows, confirmando que a abertura e a seleção mantêm níveis e padrões existentes.
+2. Ajustar volume de reprodução pelo slider e pelo número. Conferir o valor no Windows. Repetir para captura quando disponível. Testar 0/100% em condições controladas, sem sinal alto ou monitoramento que possa causar feedback.
+3. Ativar/desativar mute em cada direção e conferir isolamento, valor anterior de volume e estado no Windows.
+4. Em estéreo com L/R confirmado, testar centro, esquerda, direita e posições intermediárias com sinal de canais conhecido. Conferir que o maior nível de canal preserva a base e que centralizar recupera ambos nessa base.
+5. Selecionar microfone mono e endpoint sem mapeamento L/R. Conferir balanço desabilitado com motivo e demais controles funcionando conforme suporte. Caso um driver acople canais, conferir erro e tentativa de restauração.
+6. Alterar volume/mute e canais pelo Windows. Aguardar aproximadamente um segundo e conferir atualização na UI sem oscilação ou reaplicação de valores anteriores.
+7. Trocar rapidamente de dispositivo durante uma leitura/edição e conferir que a nova seleção mostra seus próprios níveis e recebe somente ações realizadas para ela.
+8. Remover um USB durante ajuste. Conferir erro, controles desabilitados e atualização de lista. Reconectar e tentar novamente. Conferir e restaurar canais no Windows se uma operação de balanço tiver sido interrompida.
+9. Fechar durante consulta ou comando, reabrir e conferir estabilidade e níveis existentes. Avaliar escala 100/150/200% e repetir em Windows 11 x64 suportado.
+
+Registrar resultados por dispositivo/driver. As chamadas de balanço são sequenciais, e desconexão física pode impedir a restauração automática. O comportamento de modo exclusivo e o suporte de escrita por driver permanecem sujeitos a validação física.
 
 ## Resultados do Incremento 1
 

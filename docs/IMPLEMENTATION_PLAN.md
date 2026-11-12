@@ -2,7 +2,7 @@
 
 Planejamento em 12/11/2026. A implementação começa pela Fase 1, em incrementos verificáveis. Escopo detalhado em [REQUIREMENTS.md](REQUIREMENTS.md).
 
-O Incremento 1 foi implementado após aprovação da revisão técnica do commit a3a3358. Restore, build e 16 testes passaram no Windows 10 experimental. A enumeração real foi confirmada com 67 endpoints. Inicialização e conteúdo dos controles foram confirmados por acessibilidade. Comparação física com as configurações do Windows e avaliação visual das interações permanecem pendentes. O Incremento 2 aguarda autorização.
+O Incremento 1 foi publicado no commit 60238ea após aprovação provisória do proprietário. O Incremento 2 foi implementado e aprovado provisoriamente para publicação e revisão técnica, com volume/mute/balanço, sincronização externa por polling, proteção de seleção e erros de suporte. Restore/build e 56 testes passaram no Windows 10 experimental, incluindo a regressão dos 16 anteriores. Leituras reais foram confirmadas. Testes físicos de escrita e avaliação visual permanecem pendentes. O Incremento 3 aguarda revisão técnica e configuração do fluxo ChatGPT/Codex pelo GitHub.
 
 ## Incrementos
 

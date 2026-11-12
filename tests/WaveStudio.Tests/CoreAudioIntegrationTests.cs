@@ -7,6 +7,25 @@ public sealed class CoreAudioIntegrationTests(ITestOutputHelper output)
 {
     [Fact]
     [Trait("Category", "WindowsIntegration")]
+    public async Task ReadsEndpointControlsAndDisposesNativeCallbacksWithoutChangingLevels()
+    {
+        var catalog = await new CoreAudioDeviceService().QueryAsync(TestContext.Current.CancellationToken);
+        var activeDefaults = catalog.Devices.Where(device => device.State == EndpointState.Active && device.IsDefaultMultimedia);
+        foreach (var device in activeDefaults)
+        {
+            await using var session = new EndpointVolumeSession();
+            var snapshot = await session.ReadAsync(session.Select(device.Id));
+            output.WriteLine($"{device.Direction}: volume={snapshot.VolumePercent}, mute={snapshot.Muted}, L/R={snapshot.Stereo}, motivo={snapshot.BalanceError}");
+            Assert.True(snapshot.VolumePercent is not null || snapshot.VolumeError is not null);
+            Assert.True(snapshot.Muted is not null || snapshot.MuteError is not null);
+            Assert.True(snapshot.Stereo is not null || snapshot.BalanceError is not null);
+            if (snapshot.VolumePercent is double percent)
+                Assert.InRange(percent, 0, 100);
+        }
+    }
+
+    [Fact]
+    [Trait("Category", "WindowsIntegration")]
     public async Task EnumeratesRealEndpointsAndReturnsDetachedSnapshots()
     {
         var service = new CoreAudioDeviceService();

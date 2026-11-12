@@ -4,9 +4,9 @@ Aplicação desktop para gerenciamento de áudio no Windows, independente de fab
 
 ## Estado do projeto
 
-Fase 0 aprovada por revisão técnica do commit a3a3358. Fase 1, Incremento 1 implementado em 12/11/2026, com janela pt-BR, enumeração real de endpoints, identificação dos padrões, seleção independente de reprodução/captura e informações de disponibilidade e formato de mixagem.
+Fase 0 aprovada por revisão técnica do commit a3a3358. O Incremento 1 da Fase 1 foi publicado no commit 60238ea. O Incremento 2 recebeu aprovação provisória para publicação e revisão técnica, com volume do endpoint de 0 a 100%, mute independente e balanço condicional para reprodução e captura, além da enumeração e seleção independentes.
 
-Versão v0.1.0 Alpha em desenvolvimento. Os controles de volume/mute/balanço, sessões, medidores, hotplug automático e persistência permanecem nos próximos incrementos da Fase 1.
+Versão v0.1.0 Alpha em desenvolvimento. Sessões, medidores, hotplug automático e persistência permanecem nos próximos incrementos da Fase 1.
 
 ## Documentação
 
@@ -37,10 +37,12 @@ dotnet test --solution WaveStudio.slnx -c Debug --no-build
 dotnet run --project src/WaveStudio.Desktop
 ```
 
-O executável fica em `src/WaveStudio.Desktop/bin/Debug/net10.0-windows/WaveStudio.exe`. A pasta de saída contém as dependências e requer .NET Desktop Runtime 10 x64. A seleção administra a preferência da janela. As consultas ao Windows são de leitura.
+O executável fica em `src/WaveStudio.Desktop/bin/Debug/net10.0-windows/WaveStudio.exe`. A pasta de saída contém as dependências e requer .NET Desktop Runtime 10 x64. A seleção administra a preferência da janela. A abertura e a seleção leem os níveis existentes. Ajustes nos sliders, valores numéricos e botões alteram explicitamente o endpoint selecionado.
 
 As listas incluem endpoints ativos e históricos, com ativos primeiro. Clique em **Atualizar dispositivos** após conectar/remover hardware ou alterar padrões no Windows. Campos de formato descrevem o mix compartilhado do Windows e seus bits de contêiner. Fabricante e modelo comercial dependem do nome exposto pelo sistema.
 
-Foram aprovados 16 testes, sendo 14 de regras e mensagens e 2 de integração com Core Audio no Windows 10 local. Foram encontrados 67 endpoints com zero avisos de consulta. O executável abriu e os controles foram lidos por acessibilidade. A verificação visual e das interações permanece pendente devido a falhas da ferramenta de automação. Windows 10 mantém classificação experimental. Siga os [passos físicos do Incremento 1](docs/TEST_PLAN.md).
+Os controles refletem alterações externas por consultas em segundo plano a cada aproximadamente 600 ms. Balanço exige dois canais de volume e formato com máscara frontal L/R confirmada. O centro iguala os canais ao maior nível atual. Extremos atenuam o lado oposto e preservam esse nível-base. Mono e mapeamento desconhecido deixam o balanço desabilitado com explicação. Erros de escrita desabilitam o controle afetado até atualizar ou selecionar novamente. O volume é o controle do endpoint do Windows.
+
+Foram aprovados 56 testes, sendo 53 casos com simulações/regras e 3 de integração de leitura com Core Audio no Windows 10 local. Os 16 casos anteriores passaram novamente. A enumeração e a leitura de volume/mute dos padrões foram confirmadas em hardware real. A janela abriu e os controles foram lidos por acessibilidade. Operações físicas de volume/mute/balanço, comparação com o Windows, sincronização externa pela UI e avaliação visual permanecem pendentes. Windows 10 mantém classificação experimental. Siga os [passos físicos dos incrementos](docs/TEST_PLAN.md).
 
 O runner usa xUnit v3 4.0.3 e Microsoft Testing Platform 2.5.2. A variável acima desativa a telemetria do runner na sessão de PowerShell. As dependências de testes ficam no projeto de testes.

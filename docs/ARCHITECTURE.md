@@ -1,6 +1,20 @@
 # Arquitetura do Wave Studio
 
-Decisões da Fase 0, em 12/11/2026, com atualização do Incremento 1. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). A seção inicial registra a implementação atual. As demais seções descrevem a arquitetura prevista para a Alpha e sua evolução.
+Decisões da Fase 0, em 12/11/2026, com atualizações dos Incrementos 1 e 2. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). As seções iniciais registram a implementação por incremento. As demais descrevem a arquitetura prevista para a Alpha e sua evolução.
+
+## Implementação do Incremento 2
+
+`CoreAudioVolumeAccess` encapsula o endpoint e seu `AudioEndpointVolume`. Acesso master escalar e mute usam `MasterVolumeLevelScalar` e `Mute`. O formato e `Channels.Count` confirmam o mapeamento para `Channels[index].VolumeLevelScalar`. Os objetos são criados, consultados e descartados dentro de uma operação em worker MTA. `MMDevice.Dispose` descarta o wrapper de volume, que cancela seu callback nativo interno. A UI recebe `EndpointVolumeState`, sem referências COM. [NAudio 3.1.0](https://github.com/naudio/NAudio/blob/v3.1.0/src/NAudio.Wasapi/CoreAudioApi/AudioEndpointVolume.cs).
+
+`EndpointVolumeSession` serializa as leituras e escritas de cada painel. Cada seleção possui ID fixo, revisão e token de cancelamento. Trocar a seleção invalida comandos enfileirados e respostas antigas, inclusive ao selecionar novamente o mesmo ID. Uma chamada nativa já iniciada pode terminar no endpoint original. Todos os comandos usam o ID capturado. Cancelamento é conferido antes das escritas, e uma operação de balanço parcialmente aplicada tenta restaurar os canais anteriores. O encerramento aguarda a enumeração e as filas de controle, descarta os recursos de vida útil e encerra os timers.
+
+Sincronização externa utiliza polling de aproximadamente 600 ms por painel, com uma leitura por vez. A aplicação usa os valores lidos para atualizar os controles sob uma flag que impede gerar comandos. Escritas são originadas pelas ações de edição e botões. Os controles aguardam o retorno da operação e exibem a releitura do dispositivo. Uma revisão local adicional invalida respostas de leitura iniciadas antes de uma edição, inclusive se o retorno à UI ocorrer depois da escrita. Consultas e alterações de seleção usam somente leitura até uma ação explícita de edição.
+
+O balanço atual é restrito a dois canais de volume e formato de mixagem com dois canais e `ChannelMask == 3`, confirmando FL/FR. Mono, multicanal e máscara ausente/desconhecida recebem explicação. A base é `max(L, R)` dos níveis de canal lidos imediatamente antes do comando. Posição positiva atenua L e negativa atenua R. Centro mantém ambos na base. A ordem de escrita começa pela atenuação quando há troca de lado. Em silêncio total, ambos permanecem em zero. O nível master usa a semântica do Windows, com leitura posterior dos canais para refletir o balanço efetivo.
+
+Volume rejeita valores fora de 0–100 e números não finitos. Balanço rejeita valores fora de −100–100. Volume e mute têm confirmação por releitura, e o balanço confirma canais individualmente. Para acomodar quantização, a tolerância de confirmação é 0,02 no escalar. No balanço, também é rejeitada base lida superior à anterior em mais de 0,00001, admitindo apenas diferença numérica pequena. Falhas, controles ignorados pelo driver e canais acoplados geram erro e bloqueiam o controle afetado até atualização ou nova seleção. A restauração de uma atualização parcial também é conferida por leitura. Falha na restauração orienta conferir os níveis no Windows.
+
+As duas chamadas de canal e a restauração são operações sequenciais. Desconexão física ou alteração simultânea por outro aplicativo pode impedir restaurar os valores anteriores. Esses cenários exigem teste físico por driver. As escritas foram testadas com endpoints simulados. No hardware real foram verificadas leituras e descarte. O funcionamento em modo exclusivo depende do suporte do dispositivo. [IAudioEndpointVolume](https://learn.microsoft.com/en-us/windows/win32/api/endpointvolume/nn-endpointvolume-iaudioendpointvolume).
 
 ## Implementação do Incremento 1
 

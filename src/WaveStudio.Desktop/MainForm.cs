@@ -12,12 +12,15 @@ internal sealed class MainForm : Form
     private readonly Button refresh = new() { Text = "&Atualizar dispositivos", AutoSize = true };
     private readonly Label status = new() { AutoSize = true, Dock = DockStyle.Fill };
     private bool refreshing;
+    private bool closing;
+    private bool stopping;
+    private Task refreshTask = Task.CompletedTask;
 
     public MainForm()
     {
         Text = "Wave Studio — v0.1.0 Alpha em desenvolvimento";
-        MinimumSize = new Size(760, 580);
-        ClientSize = new Size(1000, 660);
+        MinimumSize = new Size(820, 760);
+        ClientSize = new Size(1080, 860);
         StartPosition = FormStartPosition.CenterScreen;
         var layout = new TableLayoutPanel
         {
@@ -44,9 +47,23 @@ internal sealed class MainForm : Form
         Controls.Add(layout);
         playback.DeviceSelected += selection.Select;
         capture.DeviceSelected += selection.Select;
-        refresh.Click += async (_, _) => await RefreshDevicesAsync();
-        Shown += async (_, _) => await RefreshDevicesAsync();
-        FormClosing += (_, _) => lifetime.Cancel();
+        refresh.Click += (_, _) => refreshTask = RefreshDevicesAsync();
+        Shown += (_, _) => refreshTask = RefreshDevicesAsync();
+        FormClosing += async (_, args) =>
+        {
+            if (closing)
+                return;
+            args.Cancel = true;
+            if (stopping)
+                return;
+            stopping = true;
+            Enabled = false;
+            lifetime.Cancel();
+            await refreshTask;
+            await Task.WhenAll(playback.StopAsync().AsTask(), capture.StopAsync().AsTask());
+            closing = true;
+            Close();
+        };
         FormClosed += (_, _) => lifetime.Dispose();
     }
 

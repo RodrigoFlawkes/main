@@ -2,6 +2,17 @@
 
 ## Em desenvolvimento
 
+### 2026-11-12 — Fase 1, Incremento 2
+
+- Publicado o Incremento 1 no commit 60238ea com a mensagem autorizada.
+- Controles de volume 0–100%, mute independente, balanço estéreo condicional e centralização para os endpoints selecionados.
+- Sincronização externa por polling em segundo plano, comandos associados a ID/revisão da seleção e cancelamento de comandos atrasados.
+- Confirmação de suporte por leitura/releitura, mensagens de indisponibilidade, descarte de COM/callbacks e encerramento assíncrono das filas.
+- Balanço com nível-base preservado, atenuação, validação de canais L/R e tentativa de restauração após atualização parcial.
+- Restore/build aprovados, build final com zero erros/avisos e 56 testes aprovados. Leituras de hardware e controles da janela conferidos por acessibilidade. Escritas físicas e revisão visual pendentes.
+
+O Incremento 2 recebeu aprovação provisória para publicação e revisão técnica, com commit/push autorizados. O Incremento 3 aguarda a revisão técnica e a configuração do fluxo de comunicação ChatGPT/Codex pelo GitHub.
+
 ### 2026-11-12 — Fase 1, Incremento 1
 
 - Solução .slnx, SDK .NET 10 fixado, projetos Desktop/Audio/Tests x64 e referências.
@@ -11,7 +22,7 @@
 - README corrigido e instruções de execução/testes atualizadas.
 - Build com zero erros/avisos, 16 testes aprovados e enumeração real de 67 endpoints. Executável iniciado e conteúdo da janela lido por acessibilidade. Avaliação visual/interativa e testes físicos adicionais pendentes.
 
-Windows 10 permanece experimental. O Incremento 2 aguarda autorização.
+Windows 10 permanece experimental. O Incremento 2 foi autorizado após a publicação desta entrega.
 
 ### 2026-11-12 — Fase 0
 

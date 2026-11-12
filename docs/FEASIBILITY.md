@@ -12,6 +12,14 @@ Os testes usam `xunit.v3` `[4.0.3]`, que resolve MTP v2 e Microsoft.Testing.Plat
 
 O xUnit inclui a extensão de telemetria MTP nos testes. A execução foi feita com `TESTINGPLATFORM_TELEMETRY_OPTOUT=1`. O README inclui a mesma configuração para os testes locais. A distribuição da aplicação contém somente sua árvore de dependências de áudio. A conferência de avisos de redistribuição continua prevista para a fase de distribuição.
 
+## Validação no Incremento 2
+
+O Incremento 1 foi publicado no commit 60238ea. A implementação do Incremento 2 usa as mesmas dependências e lock files e recebeu aprovação provisória para publicação e revisão técnica. Restore e build passaram, e 56 testes foram aprovados. A leitura real confirmou volume e mute dos endpoints padrão e balanço disponível na reprodução estéreo. O endpoint de captura mono desabilitou balanço com motivo explícito. As escritas físicas permanecem pendentes.
+
+Os setters usados são os wrappers públicos de volume master escalar, mute e canais do endpoint. A compatibilidade das assinaturas foi confirmada com NAudio.Wasapi 3.1.0 na compilação. A normalização escalar atende aos controles percentuais da interface. [Volume master](https://learn.microsoft.com/en-us/windows/win32/api/endpointvolume/nf-endpointvolume-iaudioendpointvolume-setmastervolumelevelscalar), [volume por canal](https://learn.microsoft.com/en-us/windows/win32/api/endpointvolume/nf-endpointvolume-iaudioendpointvolume-setchannelvolumelevelscalar).
+
+A disponibilidade inicial é baseada no sucesso das leituras. A primeira escrita explícita também é verificada por releitura. Isso evita testar suporte alterando níveis durante a inicialização. O suporte físico a volume/mute, canais independentes, quantização e comportamento em modo exclusivo depende do driver. Balanço multicanal permanece indisponível nesta implementação. Windows 10 continua experimental e Windows 11 x64 aguarda validação.
+
 ## Matriz de suporte e limites
 
 | Área | Alpha planejada | Condição ou limite |
