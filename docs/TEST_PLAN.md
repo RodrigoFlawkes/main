@@ -1,5 +1,17 @@
 # Plano de testes
 
+## F1-I6-METER — medidor de entrada, 13/11/2026
+
+Restore locked com auditoria aprovado. Builds Debug/Release x64 com zero erros e avisos; 248 testes aprovados em cada configuração, zero falhas/ignorados. Regressão dos 228 anteriores + 20 novos: 236 regras/simulações/arquivos/STA e 12 integrações Windows de leitura/execução isolada.
+
+MicrophoneMeterTests verifica percentuais zero/intermediário/máximo, texto e acessibilidade, indisponibilidade distinta de zero, rejeição de valores inválidos, timestamp ausente/expirado, geração/endpoint obsoleto, troca, desconexão, invalidação com mesmo ID, pausa, fechamento e falha do worker/driver. MicrophoneTestUiTests acrescenta recepção do pico com captura desligada, nível digital ainda em 20% e invalidação na recuperação. MeterVisibilityTests cobre leitura em andamento cancelada pela pausa/retomada, reutilização da fonte e uma janela real STA com worker/microfone simulados, alternando abas, minimizando/restaurando e fechando sem nova captura automática. Essa integração usa o catálogo/controles existentes em leitura, com arquivo de configuração isolado.
+
+O teste da janela detectou inicialmente medição desabilitada na primeira exibição: a seleção inicial da aba ainda não estava disponível na atualização anterior ao Show. Corrigida a atualização no Shown, após a inicialização. Suítes finais aprovadas. Os 20 casos novos não abrem streams de microfone real nem reproduzem áudio; simulações não validam fala, silêncio, ruído, qualidade ou particularidades do driver.
+
+Pacote Release AMD64 conferido com 14 arquivos, dependências/avisos e hashes em manifesto local. Executável da pasta habitual iniciou com título esperado e encerrou normalmente com configuração isolada; criou somente settings.json/lock, com zero preferências de níveis. Não foram acionados gravação ou playback, nem encerrado processo do proprietário. A inspeção visual completa e a resposta a fala/ruído são pendentes.
+
+Conferir fisicamente A12 na nova prévia: mesma entrada no Windows e Wave, fala/silêncio/ruído, estado numérico e indisponibilidade, troca de entrada, mute, desconexão, pausa/retomada e leitura durante gravação explícita. A11 teve relato inicial de zumbido sem voz no Wave/Windows e troca USB-C/C por C/A sem resolver o problema informado. O complemento remoto ed19c6e registrou sucesso posterior da gravação/reprodução após ajustes próprios não especificados. Sucesso relatado na função principal; descarte, limite, mute, troca/desconexão e recuperação continuam pendentes. Não atribuir causa. Windows 10 segue experimental; Windows 11 x64 e layout/DPI aguardam validação física.
+
 ## F1-I6-MIC — captura/reprodução curta, validação física pendente
 
 Restore locked e auditoria aprovados após repetir com acesso ao NuGet (a tentativa restrita teve três NU1900). Debug/Release x64 compilados sem erros/avisos. Em cada configuração, 228 aprovados, zero falhas/ignorados: 184 de regressão + 44 novos, totalizando 217 regras/simulações/arquivos/STA e as 11 integrações Windows de leitura/execução isolada existentes.

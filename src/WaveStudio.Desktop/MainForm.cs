@@ -10,7 +10,7 @@ internal sealed partial class MainForm : Form
     private readonly CoreAudioDeviceService audio = new();
     private readonly DeviceSelection selection = new();
     private readonly ApplicationMixerPanel mixer = new();
-    private readonly MicrophoneTestPanel microphoneTest = new();
+    private readonly MicrophoneTestPanel microphoneTest;
     private readonly CancellationTokenSource lifetime = new();
     private readonly DevicePanel playback = new("Dispositivo de reprodução / headset");
     private readonly DevicePanel capture = new("Dispositivo de captura / microfone");
@@ -19,7 +19,7 @@ internal sealed partial class MainForm : Form
     private readonly Label watchStatus = new() { AutoSize = true, Dock = DockStyle.Fill };
     private readonly CheckBox followPlayback = new() { AutoSize = true, Checked = true, Text = "Seguir padrão multimídia de reprodução" };
     private readonly CheckBox followCapture = new() { AutoSize = true, Checked = true, Text = "Seguir padrão multimídia de captura" };
-    private readonly AudioWatchWorker watch = new();
+    private readonly AudioWatchWorker watch;
     private readonly System.Windows.Forms.Timer peakTimer = new() { Interval = 100 };
     private AudioWatchSelection watchSelection = new(null, null, 0);
     private DeviceSnapshot? currentPlayback;
@@ -32,8 +32,11 @@ internal sealed partial class MainForm : Form
     private bool stopping;
     private Task refreshTask = Task.CompletedTask;
 
-    public MainForm(SettingsStore? settingsStore = null, Action<string>? storageWarning = null)
+    public MainForm(SettingsStore? settingsStore = null, Action<string>? storageWarning = null,
+        AudioWatchWorker? audioWatch = null, MicrophoneTestSession? microphoneSession = null)
     {
+        watch = audioWatch ?? new AudioWatchWorker();
+        microphoneTest = new MicrophoneTestPanel(microphoneSession);
         store = settingsStore ?? new SettingsStore(SettingsStore.DefaultPath);
         showStorageWarning = storageWarning ?? (message => MessageBox.Show(this, message, "Preferências locais", MessageBoxButtons.OK, MessageBoxIcon.Warning));
         Text = "Wave Studio — v0.1.0 Alpha em desenvolvimento";
@@ -104,20 +107,30 @@ internal sealed partial class MainForm : Form
         {
             startupTask = InitializePreferencesAsync();
             await startupTask;
-            if (!stopping) { RequestRefresh(true); peakTimer.Start(); }
+            if (!stopping) { UpdateMetering(); RequestRefresh(true); peakTimer.Start(); }
         };
         watch.CatalogChanged += OnCatalogChanged;
         SystemEvents.PowerModeChanged += OnPowerModeChanged;
         peakTimer.Tick += (_, _) =>
         {
-            if (watch.Latest?.ForDisplay(Stopwatch.GetTimestamp()) is not { } snapshot) return;
+            long now = Stopwatch.GetTimestamp();
+            var snapshot = watch.Latest?.ForDisplay(now);
+            microphoneTest.ShowInputPeak(snapshot, now);
+            if (snapshot is null) return;
             watchStatus.Text = snapshot.NotificationStatus;
             if (snapshot.Selection != watchSelection) return;
             playback.ShowPeak(snapshot.Playback);
             capture.ShowPeak(snapshot.Capture);
         };
-        tabs.SelectedIndexChanged += (_, _) => watch.EnableMetering(tabs.SelectedTab == devicesPage && WindowState != FormWindowState.Minimized);
-        Resize += (_, _) => watch.EnableMetering(tabs.SelectedTab == devicesPage && WindowState != FormWindowState.Minimized);
+        void UpdateMetering()
+        {
+            bool visible = !stopping && WindowState != FormWindowState.Minimized;
+            watch.EnableMetering(visible && (tabs.SelectedTab == devicesPage || tabs.SelectedTab == microphoneTestPage));
+            microphoneTest.EnableInputMeter(visible && tabs.SelectedTab == microphoneTestPage);
+        }
+        tabs.SelectedIndexChanged += (_, _) => UpdateMetering();
+        Resize += (_, _) => UpdateMetering();
+        UpdateMetering();
         FormClosing += async (_, args) =>
         {
             if (closing)
@@ -126,6 +139,7 @@ internal sealed partial class MainForm : Form
             if (stopping)
                 return;
             stopping = true;
+            UpdateMetering();
             _ = microphoneTest.InvalidateAsync();
             peakTimer.Stop();
             watch.CatalogChanged -= OnCatalogChanged;
@@ -206,6 +220,7 @@ internal sealed partial class MainForm : Form
         microphoneTest.SelectDevices(currentCapture, currentPlayback, invalidateTest);
         watchSelection = watch.Select(currentPlayback?.State == EndpointState.Active ? currentPlayback.Id : null,
             currentCapture?.State == EndpointState.Active ? currentCapture.Id : null);
+        microphoneTest.BindInputMeter(watchSelection);
         playback.ShowPeak(PeakReading.Unavailable);
         capture.ShowPeak(PeakReading.Unavailable);
     }

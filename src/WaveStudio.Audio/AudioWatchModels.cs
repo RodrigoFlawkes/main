@@ -5,6 +5,7 @@ namespace WaveStudio.Audio;
 public sealed record PeakReading(double? Scalar, string? Error)
 {
     public static readonly PeakReading Unavailable = new(null, "Pico indisponível");
+    public static readonly PeakReading Stale = new(null, "Leitura de pico atrasada. Aguarde uma leitura atual ou atualize os dispositivos.");
     public double? Decibels => Scalar is > 0 ? 20 * Math.Log10(Scalar.Value) : null;
     public static PeakReading FromScalar(double value) => double.IsFinite(value) && value >= 0 && value <= 1
         ? new(value, null) : new(null, "O Windows retornou um pico inválido.");
@@ -16,7 +17,7 @@ public sealed record AudioWatchSnapshot(AudioWatchSelection Selection, PeakReadi
     long RecordedAt = 0, bool WorkerFailed = false)
 {
     public AudioWatchSnapshot ForDisplay(long now) => RecordedAt == 0 || Stopwatch.GetElapsedTime(RecordedAt, now) > TimeSpan.FromSeconds(2)
-        ? this with { Playback = PeakReading.Unavailable, Capture = PeakReading.Unavailable,
+        ? this with { Playback = PeakReading.Stale, Capture = PeakReading.Stale,
             NotificationStatus = WorkerFailed ? NotificationStatus : "Leitura de áudio atrasada. Use Atualizar dispositivos para recuperar." }
         : this;
 }

@@ -16,6 +16,7 @@ internal sealed class MicrophoneTestPanel : UserControl
     private readonly Button clear = new() { Text = "&Limpar teste", AutoSize = true };
     private readonly TrackBar level = new() { Minimum = 0, Maximum = 100, Value = 20, TickFrequency = 10, Width = 270, AccessibleName = "Nível digital da reprodução do teste" };
     private readonly Label levelValue = new() { Text = "20%", AutoSize = true };
+    private readonly MicrophoneInputMeter inputMeter = new();
     private string? inputId;
     private string? outputId;
     private bool stopped;
@@ -26,6 +27,7 @@ internal sealed class MicrophoneTestPanel : UserControl
     internal Button RecordButton => record;
     internal Button PlayButton => play;
     internal TrackBar TestLevel => level;
+    internal MicrophoneInputMeter InputMeter => inputMeter;
 
     public MicrophoneTestPanel(MicrophoneTestSession? session = null)
     {
@@ -37,6 +39,7 @@ internal sealed class MicrophoneTestPanel : UserControl
         Add(new Label { Text = "Testar microfone", AutoSize = true, Font = new Font(Font, FontStyle.Bold) });
         Add(new Label { Text = "Use fones e volume baixo. A gravação dura no máximo 10 segundos e só começa ao clicar em Gravar teste.", AutoSize = true, MaximumSize = new Size(700, 0), Margin = new Padding(3, 14, 3, 14) });
         Add(devices);
+        Add(inputMeter);
         Add(new Label { Text = "Escolha entrada e saída na aba Dispositivos. Confira volume e mute do Windows antes de gravar/ouvir.", AutoSize = true, MaximumSize = new Size(700, 0), Margin = new Padding(3, 10, 3, 10) });
         var buttons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true };
         buttons.Controls.AddRange([record, stop, play, stopPlayback, clear]);
@@ -55,7 +58,7 @@ internal sealed class MicrophoneTestPanel : UserControl
         stopPlayback.Click += async (_, _) => await RunAsync(this.session.StopAsync);
         clear.Click += async (_, _) => await RunAsync(this.session.ClearAsync);
         level.ValueChanged += (_, _) => levelValue.Text = $"{level.Value}%";
-        timer.Tick += (_, _) => ShowSnapshot();
+        timer.Tick += (_, _) => { ShowSnapshot(); inputMeter.RefreshInvalidation(); };
         timer.Start();
         ShowSnapshot();
     }
@@ -71,11 +74,21 @@ internal sealed class MicrophoneTestPanel : UserControl
         outputId = nextOutput;
         inputFormat = input?.MixFormat;
         outputFormat = output?.MixFormat;
+        inputMeter.InvalidateSelection();
+        inputMeter.RefreshInvalidation();
         _ = RunAsync(() => session.SelectAsync(inputId, outputId));
     }
 
     // May be invoked directly by the notification/power callback. No WinForms access here.
-    public Task InvalidateAsync() => session.SelectAsync(null, null);
+    public Task InvalidateAsync()
+    {
+        inputMeter.InvalidateSelection();
+        return session.SelectAsync(null, null);
+    }
+
+    public void BindInputMeter(AudioWatchSelection target) => inputMeter.BindSelection(target, inputId);
+    public void EnableInputMeter(bool enabled) => inputMeter.SetMeteringEnabled(enabled);
+    public void ShowInputPeak(AudioWatchSnapshot? snapshot, long now) => inputMeter.ShowSnapshot(snapshot, now);
 
     private async Task RunAsync(Func<Task> action)
     {
@@ -114,6 +127,7 @@ internal sealed class MicrophoneTestPanel : UserControl
     public async ValueTask StopAsync()
     {
         stopped = true;
+        inputMeter.Stop();
         timer.Stop();
         await session.DisposeAsync();
         timer.Dispose();

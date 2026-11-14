@@ -1,6 +1,18 @@
 # Arquitetura do Wave Studio
 
-Decisões da Fase 0, em 12/11/2026, com atualizações até F1-I6-MIC, em validação física pendente. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). A implementação atual é descrita primeiro, seguida pelo histórico e planejamento de evolução.
+Decisões da Fase 0, com atualizações até F1-I6-METER em 13/11/2026, em validação física pendente. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). A implementação atual é descrita primeiro, seguida pelo histórico e planejamento de evolução.
+
+## Medidor de entrada na aba de teste — F1-I6-METER
+
+MainForm encaminha o pico de captura do AudioWatchWorker existente a MicrophoneInputMeter, dentro de MicrophoneTestPanel, no timer de 100 ms. A barra anterior de Dispositivos é preservada. Há somente um worker de picos e as mesmas fontes persistentes de endpoint; nenhum stream de gravação ou segundo medidor nativo foi acrescentado. A implementação CoreAudioWatchBackend/AudioMeterInformation.MasterPeakValue permanece igual.
+
+A medição fica ativa em Dispositivos e Testar microfone, pausando nas outras abas e ao minimizar. A visibilidade também é atualizada no evento Shown, após a seleção inicial da aba estar disponível. EnableMetering invalida a época do worker quando muda de estado e publica indisponibilidade imediatamente: uma leitura iniciada antes da pausa não pode reaparecer na retomada. A pausa conserva as fontes existentes na thread MTA e interrompe suas consultas de pico.
+
+MicrophoneInputMeter recebe snapshots, ID de entrada e AudioWatchSelection completo. Só apresenta leituras da seleção/revisão vinculada, com timestamp válido e idade até dois segundos. PeakReading.Stale distingue atraso de indisponibilidade e zero real. Valores inválidos são rejeitados antes de alimentar a barra 0–100%; texto numérico e descrição acessível acompanham o estado, sem depender de cor. A amplitude mostrada não é RMS nem um diagnóstico de voz, inteligibilidade ou zumbido.
+
+Seleção, desconexão/recuperação, suspensão/retomada e fechamento invalidam a apresentação. Callbacks externos apenas sinalizam uma flag atômica; atualização dos controles ocorre na UI. Novo vínculo limpa o valor antes da primeira leitura, incluindo revisões diferentes com o mesmo ID. Encerramento deixa a barra zerada/indisponível e rejeita snapshots tardios. O volume digital para ouvir a gravação segue separado, inicialmente em 20%.
+
+A UI informa que determinados drivers podem exigir captura ativa para informar nível; verificar por Gravar teste, sempre explícito. Não há ajuste automático de privacidade, ganho, mute, formato ou dispositivo padrão. O roteiro registra o relato inicial de zumbido/ausência de voz e o posterior sucesso da gravação/reprodução após ajustes próprios não especificados, separando reação do medidor e confirmação audível, sem inferir causa. Dependências, contratos de captura/reprodução e limites da F1-I6-MIC permanecem preservados.
 
 ## Diagnóstico curto de microfone — F1-I6-MIC
 

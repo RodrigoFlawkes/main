@@ -20,6 +20,7 @@ public sealed class AudioWatchWorker : IAsyncDisposable
     public event Action<bool>? CatalogChanged;
     public AudioWatchSnapshot? Latest => Volatile.Read(ref latest);
     public string? ShutdownError { get; private set; }
+    internal bool MeteringEnabled { get { lock (sync) return metering; } }
 
     public AudioWatchWorker() : this(signal => new CoreAudioWatchBackend(signal)) { }
     public AudioWatchWorker(Func<Action, IAudioWatchBackend> factory)
@@ -59,8 +60,10 @@ public sealed class AudioWatchWorker : IAsyncDisposable
     {
         lock (sync)
         {
-            if (stopping) return;
+            if (stopping || metering == enabled) return;
             metering = enabled;
+            epoch++;
+            PublishUnavailable(terminalError ?? (enabled ? "Consultando medidores…" : "Medição pausada."), terminalError is not null);
             wake.Set();
         }
     }

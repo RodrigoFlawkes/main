@@ -103,4 +103,38 @@ public sealed class MicrophoneTestUiTests
         Assert.Equal(1, backend.Capture.Disposals);
         Assert.False(panel.PlayButton.Enabled);
     });
+
+    [Fact]
+    public Task MeterReceivesExistingSnapshotWithoutStartingCaptureOrChangingTestLevel() => OnSta((panel, backend) =>
+    {
+        var target = new AudioWatchSelection("output", "input", 1);
+        panel.BindInputMeter(target);
+        panel.EnableInputMeter(true);
+        panel.ShowInputPeak(new(target, PeakReading.FromScalar(.9), PeakReading.FromScalar(.4), "ativa", false, 0,
+            RecordedAt: Stopwatch.GetTimestamp()), Stopwatch.GetTimestamp());
+        Assert.Equal(40, panel.InputMeter.PeakBar.Value);
+        Assert.Equal(20, panel.TestLevel.Value);
+        Assert.Empty(backend.Calls);
+        Assert.Equal(MicrophoneTestState.Idle, panel.Snapshot.State);
+        panel.SelectDevices(Device("other-input", EndpointDirection.Capture), Device("output", EndpointDirection.Playback));
+        Assert.Equal(0, panel.InputMeter.PeakBar.Value);
+        Assert.False(panel.InputMeter.PeakBar.Enabled);
+    });
+
+    [Fact]
+    public Task RecoveryInvalidatesMeterEvenWhenCaptureDeviceIdDoesNotChange() => OnSta((panel, backend) =>
+    {
+        var target = new AudioWatchSelection("output", "input", 1);
+        panel.BindInputMeter(target);
+        panel.EnableInputMeter(true);
+        var snapshot = new AudioWatchSnapshot(target, PeakReading.Unavailable, PeakReading.FromScalar(.6), "ativa", false, 0,
+            RecordedAt: Stopwatch.GetTimestamp());
+        panel.ShowInputPeak(snapshot, Stopwatch.GetTimestamp());
+        var invalidation = panel.InvalidateAsync();
+        Pump(() => invalidation.IsCompleted);
+        panel.ShowInputPeak(snapshot, Stopwatch.GetTimestamp());
+        Assert.Equal(0, panel.InputMeter.PeakBar.Value);
+        Assert.False(panel.InputMeter.PeakBar.Enabled);
+        Assert.Empty(backend.Calls);
+    });
 }

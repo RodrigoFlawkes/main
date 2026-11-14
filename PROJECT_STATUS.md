@@ -1,8 +1,39 @@
 # Status do Wave Studio
 
-Atualizado em 12/11/2026.
+Atualizado em 13/11/2026.
 
-## Estado atual — F1-I6-MIC implementada, aceitação física pendente
+## Estado atual — F1-I6-METER implementada, aceitação física pendente
+
+Repositório inicialmente limpo em main, sincronizado por git pull --ff-only de fcb147a até e66bb85. Remoto confirmado como https://github.com/Wave-Universal-Studio/main.git. AGENTS.md, NEXT_TASK.md, REVIEW.md, requisitos, arquitetura, planos, aceitação e status lidos. Implementação, commit e push autorizados pelo proprietário. Escopo limitado ao medidor de entrada e suas proteções; não foram repetidos incrementos anteriores nem iniciada a Fase 2.
+
+| Categoria | Resultado desta etapa |
+| --- | --- |
+| Implementado | Barra horizontal Nível de entrada do microfone na aba Testar microfone, 0–100% de pico real, texto numérico/estado acessível e explicação dos limites de amplitude |
+| Reutilização | Mesmo AudioWatchWorker e PeakReading existentes, timer de 100 ms, fontes de pico reutilizadas; barra de Dispositivos preservada |
+| Visibilidade | Medição ativa nas abas Dispositivos/Testar microfone, pausada nas demais e minimizada; ativação inicial conferida no Shown |
+| Proteções | ID/revisão completos, frescor de dois segundos, valores inválidos rejeitados e limpeza por troca/recuperação/desconexão/retomada/encerramento; pausa invalida leitura em andamento |
+| Segurança/privacidade | Sem novo worker/stream de captura, gravação automática, reprodução ou monitoramento automático; nenhum ajuste de volume/mute/ganho/formato/padrões ou privacidade do Windows |
+| Dependências | Nenhuma nova; APIs nativas e implementação CoreAudioWatchBackend preservadas, versões/SDK/lock files intactos |
+| Restore/build | Restore locked com auditoria aprovado. Debug/Release x64 sem erros e sem avisos |
+| Testes | 248 aprovados em cada configuração, zero falhas/ignorados: regressão dos 228 + 20 novos. 236 regras/simulações/arquivos/STA e 12 integrações Windows de leitura/execução isolada |
+| Natureza da evidência | Apresentação/visibilidade, geração, atraso, desconexão simulada, descarte e ausência de nova captura automática. Nenhum stream de microfone real ou playback de teste acionado na automação |
+| Publicação | Novo Release AMD64 framework-dependent em artifacts/alpha-preview/win-x64/WaveStudio.exe, requer .NET Desktop Runtime 10 x64; proprietário confirmou fechamento normal antes de substituir |
+| Evidência física | Complemento remoto ed19c6e: proprietário relatou que gravação/reprodução voltou a funcionar após ajustes próprios não especificados. Sucesso relatado da função principal A11; origem do problema anterior não determinada |
+| Pendências | A11 integral: descarte, limite, mute, troca/desconexão e recuperação. A12 comparação do medidor de fala/silêncio/ruído e comportamento durante gravação explícita; layout/DPI, demais casos completos da Alpha e Windows 11 pendentes |
+| Próximo passo | Proprietário testar a nova prévia e relatar A11/A12 por dispositivo/sistema. Windows 10 experimental; aguardar revisão técnica e aprovação física explícita da Alpha |
+
+### Verificações da F1-I6-METER
+
+- dotnet restore WaveStudio.slnx --locked-mode --force aprovado com acesso ao NuGet e auditoria, sem alterar versões. dotnet build WaveStudio.slnx -c Debug/Release --no-restore e dotnet test --solution WaveStudio.slnx -c Debug/Release --no-build aprovados, com TESTINGPLATFORM_TELEMETRY_OPTOUT=1.
+- Produção nova em MicrophoneInputMeter.cs; composição em MainForm/MicrophoneTestPanel; PeakReading.Stale e invalidação da época em EnableMetering. Nenhuma modificação no backend Core Audio nativo nem no componente de gravação/reprodução. Volume digital do teste continua inicialmente em 20%, separado da amplitude de entrada.
+- Testes novos em MicrophoneMeterTests e MeterVisibilityTests, mais dois casos em MicrophoneTestUiTests. A janela integrada utiliza worker/microfone simulados, catálogo/controles existentes em leitura e armazenamento isolado. Um teste inicialmente identificou a medição desabilitada na primeira aba antes da seleção inicial estar disponível; corrigida a atualização no Shown e aprovadas as suítes finais.
+- A barra recebe somente a seleção vigente, com timestamp/frescor conferidos; troca/recuperação limpa antes da primeira leitura nova. Callback de ciclo de vida só sinaliza flag atômica, e a UI apresenta indisponibilidade até novo vínculo. Valor zero válido não é usado para representar erro/atraso. Textos numéricos/acessíveis dispensam interpretação apenas por cor.
+- O relato inicial A11 incluiu zumbido sem voz no Wave/Windows, reação posterior no Windows e troca USB-C/C por C/A sem resolver o problema informado. No complemento ed19c6e, incorporado por fast-forward durante a conferência final, o proprietário relatou sucesso após ajustes próprios não especificados. Registrado sucesso da função principal de gravação/reprodução, preservando o histórico e os subcasos pendentes. Nenhuma causa foi atribuída ao cabo, hardware, configuração específica ou código. A amplitude não identifica fala nem substitui verificação audível. Drivers que só informem nível com captura ativa exigem conferência explícita por Gravar teste; A12 permanece pendente.
+- Publicação local gerada com DebugType=None, DebugSymbols=false e IncludeSourceRevisionInInformationalVersion=false. WaveStudio.dll com 124.928 bytes, SHA-256 068B5EBB063EC80EFBA2EF02F6C94A1EAF1100E25D7925BFB4D79EC41FEB3E76; WaveStudio.Audio.dll com 100.864 bytes, SHA-256 68350948F73E0AB14F983DFDBD6BD10C03177CEA8580AC0BEC480346830C5F5F. O apphost pode manter o hash anterior; usar a pasta completa. Manifesto em artifacts/alpha-preview/validation/meter-package-manifest.json, fora do Git.
+- Pacote conferido com 14 arquivos, PE AMD64 0x8664, dependências e quatro avisos/licenças preservados, sem símbolos, testes, configurações pessoais ou áudio. Executável publicado iniciou com título esperado e configuração isolada (PID próprio 11532), fechou normalmente por CloseMainWindow/WaitForExit e criou somente settings.json/lock, com zero preferências de níveis. Nenhuma gravação/reprodução foi acionada; nenhum processo do proprietário foi encerrado. Inspeção visual completa e resposta física continuam pendentes.
+- AGENTS.md, REQUIREMENTS.md, NEXT_TASK.md, REVIEW.md, FUTURE_AUDIO_FEATURES.md, SDK/build, lock files e backends nativos preservados em relação ao remoto, incluindo o complemento de revisão ed19c6e recebido ao final. Busca por padrões comuns de credenciais e nomes sensíveis sem ocorrências no conteúdo versionável; bin/obj/artifacts ignorados. git diff --check aprovado. Commit/push normais autorizados para esta etapa, com conferência de sincronização e árvore limpa após publicação.
+
+## Histórico — F1-I6-MIC implementada, aceitação física pendente
 
 Repositório inicialmente limpo em main, atualizado por git pull --ff-only de 4c05092 para 91552b0. Remoto confirmado como https://github.com/Wave-Universal-Studio/main.git. AGENTS.md, NEXT_TASK.md, REVIEW.md, requisitos, arquitetura, planos, aceitação, propostas futuras e status consultados. Implementação, commit e push autorizados pelo proprietário. Nenhum incremento anterior foi reimplementado; Fase 2 não iniciada.
 

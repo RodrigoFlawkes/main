@@ -1,8 +1,8 @@
 # Aceitação da prévia v0.1.0 Alpha
 
-Estado da F1-I6-MIC em 12/11/2026 — validação física pendente. Este roteiro registra evidências do proprietário e verificações técnicas. A aceitação da Fase 1 depende dos ensaios físicos e de aprovação explícita.
+Estado da F1-I6-METER em 13/11/2026 — validação física pendente. Este roteiro registra evidências do proprietário e verificações técnicas. A aceitação da Fase 1 depende dos ensaios físicos e de aprovação explícita.
 
-O executável atualizado F1-I6-MIC está em `artifacts/alpha-preview/win-x64/WaveStudio.exe`. O proprietário confirmou o fechamento normal da prévia anterior, e o pacote foi copiado da preparação para a pasta habitual, com conferência dos arquivos por SHA-256. Use a pasta completa da publicação atualizada. Requer .NET Desktop Runtime 10 x64, com Microsoft.NETCore.App e Microsoft.WindowsDesktop.App da linha 10. O ensaio utilizou 10.0.15 em Windows 10 Pro 22H2, build 19045.6466, experimental. Windows 11 x64 é prioritário e aguarda ensaio próprio.
+O executável atualizado F1-I6-METER está em `artifacts/alpha-preview/win-x64/WaveStudio.exe`. O proprietário confirmou o fechamento normal da prévia anterior antes da republicação. Use a pasta completa da publicação atualizada. Requer .NET Desktop Runtime 10 x64, com Microsoft.NETCore.App e Microsoft.WindowsDesktop.App da linha 10. O ambiente de validação usa Windows 10, experimental. Windows 11 x64 é prioritário e aguarda ensaio próprio.
 
 Na raiz do repositório, inicie com armazenamento isolado para aceitação.
 
@@ -27,7 +27,8 @@ Antes dos testes, use volume baixo, anote volume/mute/balanço de endpoints e ap
 | A08 Interface | Conferir rolagem, foco, diálogos e teclado em 1366×768 ou resolução disponível e DPI 100/150/200% | Pendente |
 | A09 Estabilidade | Observar uso prolongado, atualizar/trocar seleção e fechar durante atividade. Registrar travamento, erro ou recuperação | Pendente |
 | A10 Windows 11 | Repetir os casos no Windows 11 x64 e registrar versão/dispositivo | Pendente — proprietário dispõe somente de Windows 10 |
-| A11 Testar microfone | Com fones e volume baixo: gravar, falar, parar, ouvir explicitamente na saída selecionada, parar reprodução e limpar. Conferir limite 10 s, mono, nível digital, ausência de captura/playback automático e descarte em mudança/USB/suspensão/fechamento | Pendente — nenhuma captura/reprodução física automatizada |
+| A11 Testar microfone | Com fones e volume baixo: gravar, falar, parar, ouvir explicitamente na saída selecionada, parar reprodução e limpar. Conferir limite 10 s, mono, nível digital, ausência de captura/playback automático e descarte em mudança/USB/suspensão/fechamento | Sucesso relatado na gravação/reprodução após ajustes próprios; subcasos completos pendentes |
+| A12 Nível de entrada | Comparar a mesma entrada com o Windows: fala, silêncio/ruído, leitura numérica, zero/indisponibilidade/atraso, troca de seleção, mute, USB, minimização/retomada e leitura durante gravação explícita | Pendente — sem atribuição de causa ao problema anterior |
 
 Envie o sistema/versão, dispositivo e resultados por ID, usando aprovado, falhou ou pendente. Em falha, informe ação, mensagem e valores antes/depois. Resultados observados por acessibilidade e testes automatizados ficam registrados separadamente em PROJECT_STATUS.md e TEST_PLAN.md.
 
@@ -52,7 +53,7 @@ Picos zero e custo de consulta descrevem as leituras observadas. A aceitação d
 
 ## Reprodução da publicação local
 
-Em Windows x64 com o SDK fixado, feche normalmente o executável da pasta de destino antes de publicar. Execute os comandos abaixo. O projeto define PlatformTarget x64, e o apphost desta máquina foi conferido como AMD64. A pasta de preparação mic-build foi usada enquanto a janela anterior estava aberta; após o fechamento confirmado pelo proprietário, o pacote foi promovido para win-x64. Os comandos abaixo reproduzem essa pasta habitual.
+Em Windows x64 com o SDK fixado, feche normalmente o executável da pasta de destino antes de publicar. Execute os comandos abaixo. O projeto define PlatformTarget x64, e o apphost desta máquina foi conferido como AMD64. Os comandos reproduzem a pasta habitual, republicada na F1-I6-METER após o fechamento confirmado pelo proprietário.
 
 ```powershell
 dotnet restore WaveStudio.slnx --locked-mode
@@ -96,7 +97,7 @@ Relatório detalhado do ensaio fica em artifacts/alpha-preview/validation, ignor
 
 Restore locked com auditoria aprovado; Debug/Release sem erros/avisos, 228 testes aprovados em cada configuração (44 novos + regressão dos 184). Todos os testes novos de captura/playback são simulados. O novo pacote abriu com título esperado, fechou normalmente e criou somente configuração/lock isolados. Nenhum teste automatizado abriu o microfone real ou emitiu áudio de teste. A negociação de formatos e a qualidade audível continuam pendentes de A11. Monitoramento ao vivo e motor completo da Fase 2 não foram iniciados.
 
-O apphost WaveStudio.exe tem o mesmo SHA-256 indicado acima porque o destino WaveStudio.dll é constante. Não copie somente o EXE. O WaveStudio.dll atualizado possui 121.344 bytes e SHA-256 `2FDFA46222331D51D30BDB01AD0B512BF8D4DFF360DDA561A37FE3567C80D20E`; o manifesto local registra também a DLL de áudio e todos os arquivos da pasta completa.
+O apphost WaveStudio.exe pode manter o mesmo SHA-256 porque o destino WaveStudio.dll é constante. Não copie somente o EXE. Na F1-I6-MIC, a DLL tinha 121.344 bytes e SHA-256 `2FDFA46222331D51D30BDB01AD0B512BF8D4DFF360DDA561A37FE3567C80D20E`. A identificação da implementação atual F1-I6-METER está abaixo.
 
 ## Evidências físicas parciais do proprietário — 12/11/2026
 
@@ -109,3 +110,26 @@ O apphost WaveStudio.exe tem o mesmo SHA-256 indicado acima porque o destino Wav
 ## Adendo de diagnóstico — 13/11/2026
 
 A11 permanece pendente: proprietário relatou zumbido sem voz tanto na prévia quanto no teste do Windows; relato posterior indicou reação da entrada no Windows, mas a troca de USB-C/C por USB-C/A não resolveu o problema informado. Não houve confirmação audível de gravação correta no Wave. Comparar mesmo dispositivo, níveis/mute e condições no Windows e Wave, sem diagnosticar causa apenas pela barra. Solicitação adicional: medidor de captação visível na aba Testar microfone, com leitura real e estado de indisponibilidade, sem gravar automaticamente. Novo teste após implementação: observar fala/silêncio, troca de entrada, mute, desconexão, ausência de captura automática e comportamento durante gravação explícita; registrar limitações do driver e qualidade da gravação separadamente.
+
+## A12 — comparação do medidor na nova prévia F1-I6-METER
+
+Complemento de evidência recebido em 13/11/2026, revisão ed19c6e: o proprietário informou que o teste de áudio voltou a funcionar após ajustes próprios não especificados. Registrado sucesso relatado da função principal de gravação/reprodução A11. O histórico de zumbido acima é preservado, sem atribuir causa a cabo, driver, configuração ou código. A11 integral continua pendente dos subcasos de descarte, limite, mute, troca/desconexão e recuperação; A12 ainda aguarda ensaio na nova prévia.
+
+1. Selecione a mesma entrada no Wave e no Windows, anotando níveis/mute/padrões. Abra Testar microfone e localize Nível de entrada do microfone. A barra consulta o medidor existente; abrir a aba não inicia gravação.
+2. Observe alguns segundos sem falar, depois fale uma frase e observe o percentual. Registre a reação e o comportamento no Windows nas mesmas condições. A amplitude não confirma que o sinal contém voz nem explica um zumbido.
+3. Diferencie 0% com leitura disponível, mensagem de indisponibilidade e leitura atrasada. Se não houver reação fora de captura ativa, clique explicitamente em Gravar teste e compare durante a gravação. Registre essa limitação do dispositivo; não trate ausência de leitura como silêncio confirmado.
+4. Confira que trocar a entrada limpa o valor anterior e que uma saída diferente não muda a preferência de entrada. Teste mute, USB, minimização e retomada, restaurando os valores originais. Mixer/Preferências pausam a medição; Dispositivos e Testar microfone reutilizam o mesmo worker.
+5. Use A11 separadamente para gravar e ouvir com fones e nível digital baixo. Relate se há voz, ruído/zumbido ou ausência de áudio. Pare e limpe. Envie somente a descrição do resultado, sistema e dispositivos, sem áudio pessoal.
+
+Restore locked com auditoria aprovado. Debug/Release x64 sem erros/avisos, 248 testes aprovados em cada configuração (228 anteriores + 20 novos). Testes novos verificam apresentação, geração/frescor, pausa/retomada, fechamento e ausência de captura automática, com áudio simulado. Reação do medidor a fala/silêncio/ruído, subcasos A11, layout/DPI e Windows 11 continuam pendentes de evidência física completa. A Alpha não foi declarada aceita e a Fase 2 não foi iniciada.
+
+Pacote Release AMD64 conferido com 14 arquivos e avisos de terceiros. Executável iniciou e fechou normalmente na pasta habitual, usando configuração isolada e sem acionar gravação/reprodução. Esse ensaio comprova abertura/encerramento do processo, com aceitação física e inspeção visual completa ainda pendentes.
+
+Identificação do pacote atual, além do apphost indicado acima:
+
+| Arquivo | Bytes | SHA-256 |
+| --- | --- | --- |
+| WaveStudio.dll | 124.928 | 068B5EBB063EC80EFBA2EF02F6C94A1EAF1100E25D7925BFB4D79EC41FEB3E76 |
+| WaveStudio.Audio.dll | 100.864 | 68350948F73E0AB14F983DFDBD6BD10C03177CEA8580AC0BEC480346830C5F5F |
+
+Conteúdo e hashes completos em artifacts/alpha-preview/validation/meter-package-manifest.json, ignorado pelo Git. Distribua/use a pasta completa com as licenças existentes.

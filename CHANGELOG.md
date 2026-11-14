@@ -2,6 +2,14 @@
 
 ## Em desenvolvimento
 
+### 2026-11-13 — F1-I6-METER, pico da entrada na aba Testar microfone
+
+- Barra horizontal 0–100%, texto numérico, disponibilidade e explicação de amplitude na aba Testar microfone, preservando a barra de Dispositivos e o volume digital de reprodução separado.
+- Reutilizado AudioWatchWorker a cada 100 ms, sem segundo worker de picos ou captura automática. Medição ativa nas duas abas de áudio e pausada nas demais/minimizada.
+- Proteção por seleção/revisão, idade da leitura e invalidação em troca, recuperação e encerramento. Pausa/retomada descarta leitura pendente; zero, indisponibilidade e atraso são distintos.
+- Corrigida ativação inicial no Shown. Restore locked com auditoria, builds Debug/Release sem erros/avisos e 248 testes aprovados em cada configuração (228 anteriores + 20 novos).
+- Novo executável Release x64 na pasta habitual, com dependências/licenças e roteiro A12. Complemento remoto ed19c6e incorporado: sucesso relatado da gravação/reprodução após ajustes próprios não especificados, preservando histórico do zumbido e ausência de causa confirmada. Subcasos A11, A12 e Windows 11 pendentes. Alpha continua em validação, sem iniciar Fase 2.
+
 ### 2026-11-12 — F1-I6-MIC, teste local de microfone
 
 - Aba Testar microfone com gravação explícita de até 10 s, parada, reprodução explícita na saída selecionada, parada da reprodução e descarte. Sem monitoramento contínuo.

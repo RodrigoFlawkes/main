@@ -4,15 +4,17 @@ Aplicação desktop para gerenciamento de áudio no Windows, independente de fab
 
 ## Estado do projeto
 
-F1-I6-MIC adiciona o teste curto de microfone ao checkpoint técnico da Alpha. A prévia oferece seleção independente, volume/mute, balanço condicional, medidores reais, mixer de sessões, notificações e preferências JSON. A aceitação física da v0.1.0 Alpha permanece pendente.
+F1-I6-METER acrescenta o medidor de entrada na aba de teste ao checkpoint técnico da Alpha. A prévia oferece seleção independente, volume/mute, balanço condicional, medidores reais, mixer de sessões, notificações, teste curto de microfone e preferências JSON. A aceitação física da v0.1.0 Alpha permanece pendente.
 
 Na aba **Testar microfone**, clique em **Gravar teste**, fale e use **Parar** (limite de 10 segundos). Depois, com fones e volume baixo, clique em **Ouvir gravação**. A reprodução começa em nível digital de 20%, ajustável de 0 a 100%, sem alterar volume/mute do Windows. **Parar reprodução** interrompe a saída; **Limpar teste** apaga o trecho. Não há captura/reprodução automática nem monitoramento ao vivo. O áudio fica somente em memória e é descartado na troca/atualização de dispositivos, desconexão, suspensão ou fechamento.
 
 O teste aceita mix mono/estéreo em PCM 16 bits ou float 32 bits, de 8 a 96 kHz. WASAPI compartilhado negocia a reprodução na saída selecionada; formato incompatível, acesso negado e mute geram mensagens. Nenhum destino alternativo é escolhido pelo teste. Microfone mono continua sem balanço L/R, com explicação próxima ao controle.
 
+O grupo **Nível de entrada do microfone** mostra o pico real de amplitude, de 0 a 100%, da entrada selecionada. Ele reutiliza o medidor do Windows e não inicia gravação. Zero real, indisponibilidade e leitura atrasada têm textos distintos. O medidor não identifica voz, inteligibilidade ou zumbido; alguns drivers podem precisar de captura ativa para informar nível. Compare também durante **Gravar teste**, por sua ação explícita. A medição fica ativa em Dispositivos e Testar microfone e pausa nas outras abas ou ao minimizar.
+
 A aba **Mixer de aplicativos** lista sessões reais da saída selecionada, com nome/processo quando disponível, PID auxiliar, estado, volume/mute e pico por instância. Edite Volume (%) e confirme com Enter, ou use o botão de mute. Picos são consultados a cada segundo, com silêncio, pausa, indisponibilidade e atraso identificados. A reconciliação por chave preserva linhas, foco e edição.
 
-Verificação atual com 228 testes aprovados em Debug e Release, incluindo os 184 anteriores, e builds com zero erros/avisos. O executável atualizado abriu e fechou normalmente com armazenamento isolado, sem acionar captura/reprodução. O ensaio de dez minutos pertence ao checkpoint F1-I6 anterior. O proprietário confirmou volume/mute do microfone; os demais critérios completos e o novo A11 aguardam evidência física. Windows 10 é experimental e Windows 11 x64 continua pendente.
+Verificação atual com 248 testes aprovados em Debug e Release, incluindo os 228 anteriores, e builds com zero erros/avisos. O executável atualizado abriu e fechou normalmente com armazenamento isolado, sem acionar captura/reprodução. O ensaio de dez minutos pertence ao checkpoint F1-I6 anterior. O proprietário confirmou volume/mute e, após relato de zumbido/ausência de voz, informou sucesso da gravação/reprodução após ajustes próprios não especificados. A causa anterior não foi determinada. Subcasos A11, medidor A12 e demais critérios completos aguardam evidência física. Windows 10 é experimental e Windows 11 x64 continua pendente.
 
 Versão v0.1.0 Alpha em desenvolvimento. Preferências duráveis de sessões aguardam identidade inequívoca. A Fase 1 aguarda aprovação explícita após os testes físicos.
 
@@ -32,7 +34,7 @@ Versão v0.1.0 Alpha em desenvolvimento. Preferências duráveis de sessões agu
 
 ## Executável de teste local
 
-A publicação atualizada fica em `artifacts/alpha-preview/win-x64/WaveStudio.exe`. Após o proprietário fechar normalmente a prévia anterior, o pacote F1-I6-MIC foi copiado e conferido na pasta habitual. Use a pasta completa e .NET Desktop Runtime 10 x64. Para validar com preferências isoladas, execute na raiz.
+A publicação atualizada F1-I6-METER fica em `artifacts/alpha-preview/win-x64/WaveStudio.exe`. Use a pasta completa e .NET Desktop Runtime 10 x64. Para validar com preferências isoladas, execute na raiz.
 
 ```powershell
 $arquivoDeAceitacao = Join-Path $env:TEMP ('WaveStudio-aceitacao-' + [guid]::NewGuid().ToString('N') + '/settings.json')
@@ -63,11 +65,11 @@ O executável fica em `src/WaveStudio.Desktop/bin/Debug/net10.0-windows/WaveStud
 
 As listas incluem endpoints ativos e históricos, com ativos primeiro. Notificações reconciliam conexões, estados, padrões e propriedades relevantes. **Atualizar dispositivos** oferece consulta manual. Falha na inscrição é indicada e ativa nova consulta a cada cinco segundos. Campos de formato descrevem o mix compartilhado do Windows e seus bits de contêiner. Fabricante e modelo comercial dependem do nome exposto pelo sistema.
 
-As barras mostram pico do Windows em percentual e dBFS, com silêncio e indisponibilidade identificados. O worker consulta aproximadamente dez vezes por segundo e pausa a medição com a aba oculta ou janela minimizada. RMS, LUFS e clipping exigem medições próprias futuras. A medição atual consulta os valores publicados pelo Core Audio, com processamento local.
+As barras de Dispositivos mostram pico do Windows em percentual e dBFS. A barra de entrada em Testar microfone mostra percentual, disponibilidade e atraso. O mesmo worker consulta aproximadamente dez vezes por segundo e pausa fora das duas abas de áudio ou com a janela minimizada. RMS, LUFS e clipping exigem medições próprias futuras. A medição atual consulta os valores publicados pelo Core Audio, com processamento local.
 
 Os controles refletem alterações externas por consultas em segundo plano a cada aproximadamente 600 ms. Balanço exige dois canais de volume e formato com máscara frontal L/R confirmada. O centro iguala os canais ao maior nível atual. Extremos atenuam o lado oposto e preservam esse nível-base. Mono e mapeamento desconhecido deixam o balanço desabilitado com explicação. Erros de escrita desabilitam o controle afetado até atualizar ou selecionar novamente. O volume é o controle do endpoint do Windows.
 
-A suíte possui 217 casos de regras, simulações, armazenamento e WinForms STA e 11 integrações Windows. Captura/reprodução do teste novo e escritas automatizadas de áudio usam simulações. Nenhum teste automatizado aciona o microfone real. Siga os [passos físicos dos incrementos](docs/TEST_PLAN.md).
+A suíte possui 236 casos de regras, simulações, armazenamento e WinForms STA e 12 integrações Windows. Captura/reprodução de teste e escritas automatizadas de áudio usam simulações. Nenhum teste automatizado aciona um stream do microfone real. Siga os [passos físicos dos incrementos](docs/TEST_PLAN.md).
 
 ## Preferências locais
 
