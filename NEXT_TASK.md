@@ -12,3 +12,7 @@ Base funcional: faaac358ce6f0d873b9f4c8cc0c255c4b660bcb6 (519 testes por configu
 - A06/A07/A08: preferências, backup e recuperação apenas com arquivo temporário, reabertura, layout/DPI/rolagem/teclado conforme disponível. A10 Win11 permanece pendente se ambiente indisponível.
 
 Registrar aprovado/falhou/pendente por caso/subcaso. Não marcar aceitação completa sem evidência. Após revisão dos resultados, preparar F2-I6A (relógio WASAPI com HRESULT S_OK/S_FALSE da mesma sessão, preparação sem Start). Não autorizar F2-I6B/stream físico contínuo, driver ou F3 neste checkpoint. Plano mestre e qualidade preservados.
+
+## Retorno parcial e bloqueio atual
+
+A06: proprietário relata que salvar/fechar/reabrir não funcionou; identificar exatamente qual preferência não foi mantida (seleção, volume/mute/balanço salvo, aplicação explícita, EQ ou outra), arquivo/status, sem excluir configurações reais. Perfis completos ainda não implementados. A09/A11: descarte do clip ao fechar/reabrir confirmado como desejado, demais subcasos pendentes. A13 escuta, A04 isolamento, USB/suspensão ainda não confirmados. Não enviar novo incremento até esclarecer A06 e registrar evidências físicas relevantes. Se defeito reproduzido, tarefa curta de correção de persistência/UX antes de F2-I6A; perfil mínimo somente se justificado, não antecipar perfil completo de efeitos ainda inexistentes. Planejamento visual e estudo opcional de volume por aba em PRODUCT_MASTER_PLAN.md; nenhuma implementação agora.

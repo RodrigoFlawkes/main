@@ -36,3 +36,7 @@ Na prévia Alpha, o proprietário confirmou volume e mute da captura e solicitou
 ## Adendo — hub, reparos e apoio ao desenvolvedor
 
 Rascunho do proprietário de 14/11/2026 detalhado em [PRODUCT_HUB_PLAN.md](PRODUCT_HUB_PLAN.md). Acrescentar teste de saída junto ao seletor, presets de voz robótica/monstruosa como sugestões, isolamento de fala conforme viabilidade, diagnóstico e assistente de reparos seguro e página de apoio voluntário. Não confundir diagnóstico com atualização automática de drivers; nenhuma integração de pagamento ou driver autorizada. Organização visual futura e funcionalidades reais preservadas. Não ampliar a tarefa atual.
+
+## Estudo opcional — áudio por aba de navegador
+
+Ver [plano mestre](PRODUCT_MASTER_PLAN.md), refinamentos da validação. API tabCapture permite acesso mediante ação explícita; investigar extensão Chromium opcional e ganho por aba após F3, sem promessa de cobertura universal. Não ampliar tarefa atual. Descartar se custo/segurança/estabilidade não justificarem.

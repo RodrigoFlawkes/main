@@ -65,3 +65,7 @@ Referência visual fornecida pelo proprietário: painel de preferências com op�
 ## Consolidação
 
 [PRODUCT_MASTER_PLAN.md](PRODUCT_MASTER_PLAN.md) reúne todo o escopo. Todas as preferências de aparência, animações, wallpaper, cor, idioma e sistema ficam em Configurações (Config). Preservar funções anteriores, sem nova aba lateral.
+
+## Refinamentos de usabilidade após CHECKUP-1
+
+Ver [plano mestre](PRODUCT_MASTER_PLAN.md), refinamentos 14/11/2026: nomes amigáveis, Config/Perfis, mixer com ícones/sliders e detalhes técnicos recolhidos, gravação temporária descartada ao fechar; estudo opcional de controle por aba após F3. Não redesenhar agora.
