@@ -1,6 +1,6 @@
 # Componentes da prévia Alpha
 
-Inventário da publicação local Release x64 da F1-I6. Versões resolvidas pelos arquivos de lock e metadados dos pacotes instalados.
+Inventário da publicação local Release x64, republicada na F2-I5 com a correção de inicialização da janela. Versões resolvidas pelos arquivos de lock e metadados dos pacotes instalados; nenhuma dependência nova nesta etapa.
 
 | Componente | Versão | Licença e avisos |
 | --- | --- | --- |

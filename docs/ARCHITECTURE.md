@@ -1,5 +1,15 @@
 # Arquitetura do Wave Studio
 
+## Implementação atual — F2-I5, contrato WASAPI isolado
+
+Em 14/11/2026, a fundação incorpora WasapiPcm/TransportEndpoint/TransportRoute, probe real de mix/capacidade/períodos em MTA e WasapiClockAdapter testado com posições nativas simuladas. Os snapshots são independentes de COM. Buffer/latência efetivos permanecem desconhecidos, sem Initialize/Start novo ou conversão Windows implícita. Auditoria NAudio 3.1.0 identificou lacuna no HRESULT de precisão do clock; caminho nativo ativo continua bloqueado. [APIs, formatos e limites](WASAPI_BACKEND_PLAN.md).
+
+IsolatedTransportSession executa transporte exclusivamente simulado em worker MTA, com produtor/consumidor separados, FIR adaptativo + SPSC reais, priming contado, spans emprestados e comandos limitados. Gate definitivo por geração é invalidado antes de aguardar callbacks; AdaptiveResampler só recebe Stop/descarte após quiescência, SetTargetPpm/Process somente no produtor. Falhas ficam retidas e recuperação exige nova geração. Média temporal deriva de eventos/contadores fechados por watermark do fake; esse contrato não é atribuído ao Windows. Não há vínculo novo com Desktop/diagnóstico curto, nem stream/monitoramento físico.
+
+TransportActivityGuard prova exclusão com diagnóstico em simulação; integração futura deverá compartilhar a mesma instância entre os dois caminhos. Mute e atenuação digital inicial 0,2 são internos, com opt-in explícito; níveis Windows intactos. Detalhes, provas e próximas condições em WASAPI_BACKEND_PLAN, TEST_PLAN e PROJECT_STATUS. Prévia corrigida republicada somente pelo fluxo autorizado e fechamento seguro; A01–A12 e Windows 11 continuam pendentes. Parar após F2-I5 para revisão.
+
+## Histórico — F2-I4
+
 F2-I4 em 14/11/2026: `AdaptiveResampler` acrescenta processamento de amostras em Audio/Engine, interno e de proprietário serial. Banco FIR interpolado de 257 fases, 161 taps, cursor inteiro/Q48, mono/LR e 48→48/44,1↔48 kHz em ±500 ppm. Mapeamento/sanitização apenas do prefixo aceito, proteção por estágio, razão suavizada sem reset de fase e EOF pela trajetória. Estimador/controlador são conectados ao resampler e à SPSC em ensaios sintéticos com amostras reais em memória; nenhuma integração a dispositivos, UI de DSP ou backend contínuo.
 
 A conversão F2-I2 permanece: ChannelAdapter mono/LR explícito, NominalResampler FIR causal de 161 taps com razão fixa e NominalConversionStage, sanitização antes do histórico e proteção final. Identidade 44,1/48/96 kHz, 44,1↔48 e 96→48; demais pares recusados. SPSC recebe frames no formato de saída; ownership/reset e retorno não transacional de operações em voo continuam conforme [AUDIO_ENGINE_PLAN.md](AUDIO_ENGINE_PLAN.md). Resampling nominal não corrige drift. Metas nominais em [RESAMPLING_QUALITY.md](RESAMPLING_QUALITY.md); simulação/planos adaptativos, custo parcial e diagnóstico de UI em [CLOCK_DRIFT_SIMULATION.md](CLOCK_DRIFT_SIMULATION.md).

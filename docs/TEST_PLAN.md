@@ -1,6 +1,23 @@
 # Plano de testes
 
-## F2-I4 — resampling adaptativo de amostras
+## F2-I5 — contrato WASAPI isolado
+
+Regressão integral dos 375 anteriores mais 66 novos: 32 WasapiContractTests, 32 IsolatedTransportTests e duas consultas WindowsIntegration em WasapiProbeTests. Restore locked com auditoria de todos os pacotes; builds Debug/Release x64; suítes completas com watchdog de180 s, MTP165 s e sementes20261114/20261113. Contagens/tempos finais e hashes da republicação no PROJECT_STATUS. Testes físicos e aceite Alpha não são inferidos destes resultados.
+
+- Formatos: construtores/propriedades públicos NAudio 3.1.0, PCM16/float32, mono/LR, extensível/GUID/bits/align/bytes/extra/máscara, incompatibilidades, endpoint/geração/estado e orçamento de períodos. Mono não inventa posição; container32 não implica float.
+- Clocks: deltas/remainders inteiros acima de 2⁵³ também no QPC, overflow, timestamp/regressão/salto/estagnação, qualidade incerta/ausente, silent/error/discontinuity, outra identidade/geração, reset retido. Nenhuma leitura de clock físico ativo.
+- Sessão: preparação/início parcial, ordem/afinidade MTA, produtor/consumidor separados, priming efetivo, FIFO por hash contra referência FIR/ganho, PCM16↔float32, mono→LR, blocos irregulares/limites, silêncio com payload vazio, default mute e atenuação digital. FIR de degrau tem ringing: ganho em regime0,1 verificado separadamente de pico ≤0,12.
+- Média temporal: áreas acumuladas por eventos, mesma contagem final/tempo diferente, exemplo1184 frames, watermark obrigatório, intervalo/contador futuro recusados. Controlador chega a Tracking; clock fake+300 ppm por 5 s move alvo para−100 ppm e razão efetivamente aplicada para−97,5 ppm, sem perdas. É início do slew, não prova de convergência prolongada; testes longos da F2-I4 permanecem.
+- Falhas: drops/underruns reais→ReprimeRequired, timestamps/clock indisponível/descontinuidade, desconexão/suspensão simuladas, backend que falha, stop/cancel durante prepare, stop durante submit, antiga geração/ID, reentrada/afinidade, callbacks concorrentes versus Stop. Barreira de espera existe somente no fake de teste; callback de produção não espera.
+- Encerramento: timeout de1 s preserva recursos em uso/interlock, recuperação manual e DisposeAsync repetido após quiescência. Fila de oito comandos e256 pedidos concorrentes contra descarte completam ou rejeitam, sem tarefa aceita após encerramento. Lock de selagem existe apenas no controle. Interlock diagnóstico/transporte testado; Alpha ainda não conectada.
+- Custo: após aquecimento,100 pares de callbacks com480 frames e FIR/SPSC/codificação/hash; zero bytes alocados na thread medida. Tempos de parede sem asserção de benchmark ou alegação de deadline físico.
+- Consulta nativa: primeiro endpoint ativo de cada direção, ID/direção explícitos, mix/capacidade/períodos ou erro detached, recursos descartados em MTA. ID inexistente sem fallback e cancelamento. Buffer/latência null e StreamInitialized=false obrigatórios. Sem Initialize/Start, gravação, reprodução ou escrita de volume/padrão.
+
+Relatórios numéricos locais em artifacts/wasapi-backend e logs de prazo/STA em artifacts/clock-drift, ignorados pelo Git. Execuções direcionadas intermediárias tiveram quatro falhas por comparar pico do degrau FIR com o ganho em regime; teste passou a verificar ambos separadamente, sem mudar FIR/ganho ou esconder clipping. Ocorreram erros de compilação intermediários ao conferir assinatura Stop(long), tipo público da máscara e overload assíncrono de assert; corrigidos, sem alteração de dependências. Nenhum novo timeout do runner observado nas execuções completas desta etapa; causa histórica permanece sem comprovação.
+
+Republicação local: conferir processo do proprietário fechado, staging Release x64 framework-dependent, recursos/PE/metadados/licenças/SHA256, abrir/fechar instância própria com --settings-file isolado e promover somente arquivos conhecidos com backup. Não tocar preferências ou encerrar processo do proprietário. Roteiro físico permanece ALPHA_ACCEPTANCE A01–A12, incluindo hotfix de área útil, DPI, USB/suspensão, controles/áudio ativo, mic e medidor. Windows 11 pendente; Windows 10 experimental. Nenhuma ativação de backend nativo ou monitoramento em F2-I5.
+
+## Histórico — F2-I4, resampling adaptativo de amostras
 
 Restore locked auditado; builds Debug/Release x64 com zero erros/avisos. Suítes finais: 375 aprovados por configuração, zero falhas/ignorados (336 anteriores + 39 novos). São 356 regras/simulações/arquivos/STA/sintéticos e 19 integrações Windows de consulta/janelas; nenhum novo stream de captura/reprodução ou alteração de volume/padrão.
 

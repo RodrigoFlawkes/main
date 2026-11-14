@@ -1,5 +1,23 @@
 # Aceitação da prévia v0.1.0 Alpha
 
+## Pacote atual — republicação local autorizada na F2-I5, 14/11/2026
+
+Prévia corrigida Release x64 framework-dependent em `artifacts/alpha-preview/win-x64/WaveStudio.exe`. Incorpora o hotfix de área útil inválida da F2-I4 e mantém identidade/funcionalidades Alpha. O motor F2-I5 permanece interno e isolado; não há controle novo de monitoramento ou stream físico. 441 testes aprovados em cada configuração (375 anteriores +66 novos); zero falhas/ignorados e builds sem erros/avisos. Detalhes no status e [contrato WASAPI](WASAPI_BACKEND_PLAN.md).
+
+Não havia instância do proprietário aberta nas conferências anteriores à substituição. Pacote anterior preservado em backup local, arquivos conhecidos copiados de staging e hashes conferidos; preferências/dados existentes preservados. Instância própria visível com `--settings-file` exclusivo abriu com título oficial, respondeu e fechou normalmente com código0, salvando apenas configurações de teste. Nenhum áudio iniciado. A sondagem inicial oculta não expôs seletores; essa instância própria também recebeu fechamento normal, código0. Computer Use indisponível (native pipe ausente); não houve nova conferência visual independente. Resultados de layout/seletores continuam apoiados pelos testes STA e pelo roteiro físico, sem alegar inspeção visual realizada.
+
+| Arquivo | Bytes | SHA-256 |
+| --- | --- | --- |
+| WaveStudio.exe | 303.616 | 97D1892C98D2DC66A4B8B2F0190AAC1690CD227286B06595FA946DB25E307285 |
+| WaveStudio.dll | 505.344 | 0B3A1E5DD83C68167DB9CA9A47173E6298439B68F6E8340BFC58CF088FF95A1C |
+| WaveStudio.Audio.dll | 188.928 | D6973148456941670AC838ED799EEAA55F877F6BDA0D6D49222F3092CDA04B65 |
+
+O EXE é o apphost com o mesmo ícone/metadados; alterações gerenciadas estão nas DLLs. Use a pasta inteira com os oito arquivos de runtime, este roteiro, avisos e quatro textos em licenses. Requer .NET Desktop Runtime 10 x64; host de validação Windows 10 com runtime 10.0.15. PE conferido AMD64; produto Wave Studio e FileVersion0.1.0.0. Manifestos/hashes e prova de startup em artifacts/alpha-preview/validation/f2-i5, fora do Git. Não há release pública ou instalador.
+
+Repita A01–A12 abaixo, especialmente abrir/fechar sem exceção de área útil, posição salva/DPI/rolagem, controles Windows/áudio ativo, USB/suspensão e mic/medidor. Não é preciso mudar monitores para provocar falha. Windows 11 x64 pendente; Windows 10 experimental. Histórico parcial e relatos anteriores permanecem válidos; **Alpha não declarada aceita**. Backend físico/F2-I6 dependem de revisão, regressão e nova autorização.
+
+## Histórico — identidade e checkpoint F1-I6
+
 Atualização de identidade em 13/11/2026: logo oficial no cabeçalho, ícone incorporado e metadados oficiais. 252 testes aprovados por configuração, Debug/Release sem erros/avisos. Conferir visualmente cabeçalho proporcional, transparência, ícones de janela/taskbar/Alt+Tab em diferentes DPIs; atalhos futuros devem usar WaveStudio.exe, índice 0. Nenhum instalador ou release pública foi criado. Critérios físicos anteriores permanecem válidos.
 
 Pacote de identidade atual: WaveStudio.exe com 303.616 bytes, SHA-256 `97D1892C98D2DC66A4B8B2F0190AAC1690CD227286B06595FA946DB25E307285`; WaveStudio.dll SHA-256 `E2463B1B7871894F94DDE9FB0FC1DD7E504484CBA23FD765CCF81537D70CD941`. Identificação dos pacotes anteriores abaixo é histórica. Manifesto completo em artifacts/alpha-preview/validation/branding-package-manifest.json. Use a pasta inteira; imagens externas não são necessárias.

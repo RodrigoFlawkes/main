@@ -2,6 +2,14 @@
 
 ## Em desenvolvimento
 
+### 2026-11-14 — F2-I5, backend WASAPI isolado
+
+- Descritores completos de formato/endpoint/geração e consulta real de mix/capacidade/períodos em MTA, sem Initialize/Start ou escrita de níveis. Mono/LR PCM16/float32 coerentes; formato ambíguo/PCM32/multicanal rejeitado, sem fallback ou conversão oculta.
+- Auditoria de APIs públicas NAudio 3.1.0 e Microsoft; lacuna de S_FALSE no wrapper de clock registrada como bloqueio do caminho nativo ativo. Buffer/latência efetivos não consultáveis sem inicializar permanecem desconhecidos.
+- Adaptação de relógio por deltas inteiros/UInt128, qualidade, flags, frescor, identidade e overflow. Sessão exclusivamente simulada com worker MTA, produtor/consumidor separados, FIR/SPSC reais, priming, contadores/média temporal por eventos fechados, gate de entrega e descarte após quiescência.
+- Testes de PCM, FIR/FIFO por hash, mute/nível digital, clocks acima de 2⁵³, falhas, interlock, filas limitadas, start parcial, stop/cancel em voo, callbacks antigos e timeout/descarte seguro. Sem mudanças no Desktop, efeitos, drivers ou dependências. Resultados finais no status/plano de testes.
+- Republicação local autorizada da prévia Release x64 com hotfix de área útil já existente, recursos/licenças e armazenamento de teste isolado. A01–A12/Windows 11 e causa histórica completa do runner seguem pendentes. Nenhuma integração física, release pública, F2-I6 ou Fase 3.
+
 ### 2026-11-14 — F2-I4, resampling adaptativo de amostras e integração sintética
 
 - AdaptiveResampler interno: FIR interpolado de 257 fases/161 taps, cursor inteiro/Q48, 48→48 e 44,1↔48 mono/LR, ±500 ppm, slew 25 ppm/s, geração, parada e EOF por trajetória. Nominal/identidade/96→48 preservados.

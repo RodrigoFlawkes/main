@@ -1,6 +1,16 @@
 # Motor de áudio — fundação, conversão e relógios
 
-## F2-I4 — implementação atual, 14/11/2026
+## F2-I5 — implementação atual, 14/11/2026
+
+Consulta WASAPI real somente leitura e prova de transporte simulado com a cadeia adaptativa anterior. [WASAPI_BACKEND_PLAN](WASAPI_BACKEND_PLAN.md) registra auditoria de APIs públicas NAudio 3.1.0/Microsoft, campos do formato, canais, unidades/qualidade de clocks, evidências de capacidade versus negociação efetiva, ciclo de vida, buffers e bloqueios. Sem pacote/projeto novo ou integração na Alpha.
+
+Sessão de worker MTA, fila limitada, geração/IDs explícitos, callbacks em papéis separados, gate de entrega irreversível e quiescência antes de qualquer descarte. Stop/Reset do componente serial não competem com Process. Produtor aplica ppm; consumer só lê fila e atenua/codifica. Interlock com diagnóstico testado isoladamente, default mute/nível digital 0,2. Erros/desconexão/suspensão/cancelamento invalidam entrega, sem fallback/restart. Recuperação manual recria estimador/controlador/adaptativo/fila e contabiliza descarte/priming. Timeouts preservam recursos em uso.
+
+Contadores por eventos integram média temporal exata **somente sob o protocolo de watermark do fake**, sem extrapolar snapshots. Drops/underruns sinalizam fronteiras reais ao controlador; ReprimeRequired e qualquer falha de clock interrompem entrega imediatamente. Prova FIFO compara bytes de saída à referência FIR, incluindo priming, mono→LR e ganho digital. Clock adapta posição/frequência/QPC por deltas inteiros/UInt128 e preserva precisão acima de 2⁵³.
+
+Bloqueio concreto: wrapper GetPosition da tag fixada não distingue S_FALSE conforme contrato Microsoft; nenhum clock nativo ativo é declarado válido. BufferSize/StreamLatency exigem inicialização e permanecem null. Mix/IsFormatSupported não provam negociação/latência efetivas. F2-I6 apenas proposta após revisão, regressão Alpha e autorização; nenhuma nova captura/reprodução, EQ, driver ou Fase 3. Código/fluxos da Alpha e nominal anterior preservados. Resultados finais em PROJECT_STATUS/TEST_PLAN; testes físicos A01–A12/Windows 11 pendentes.
+
+## Histórico — F2-I4, 14/11/2026
 
 Base sincronizada de 5139c51 para e04198f, depois para bd0ab52 durante o trabalho, incorporando o complemento do incidente sem perder alterações locais. `AdaptiveResampler` processa amostras float32 de verdade, mapeia somente frames aceitos, interpola banco FIR de 257 fases e usa cursor inteiro/Q48. Mono/LR, 48→48 e 44,1↔48 kHz, ±500 ppm e slew 25 ppm/s; demais configurações recusadas. O nominal (inclusive identidade exata e 96→48) permanece intacto. Contratos, metas prévias, qualidade, integração, contadores e limites em [ADAPTIVE_RESAMPLING_QUALITY.md](ADAPTIVE_RESAMPLING_QUALITY.md).
 
