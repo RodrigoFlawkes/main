@@ -1,5 +1,11 @@
 # Motor de áudio — fundação, conversão e relógios
 
+## F2-I6A — ponte de clock e preparação nativa sem Start
+
+Interop mínimo das interfaces públicas Windows preserva HRESULTs e UINT64 no mesmo cliente inicializado, com integração ao WasapiClockAdapter existente. Fonte NAudio3.1.0/IDL Microsoft auditadas, ownership MTA/source generation e limpeza inversa. Prova explícita autorizada: shared float32/48kHz mono/LR, buffer1056, clock/frequência consultados em repouso, nenhum Start/GetBuffer de áudio, recursos liberados. S_FALSE continua incerto, zero não significa progresso e StreamLatency reportada0 não significa latência acústica0. Guard compartilhado com diagnóstico real, sem transportar amostras nem ligar fake ao hardware. [Contrato completo, testes e limites](WASAPI_BACKEND_PLAN.md); resultados finais no status.
+
+F2-I6B é apenas desenho documentado: workers/ownership por papel, buffers balanceados, priming real, interlock até quiescência, ticket/geração e checkpoint conservador verificável em lugar de watermark fake. Exige revisão/aceitação pertinente/autorização própria. Nenhuma mudança no FIR/adaptativo/SPSC, EQ/headroom, perfis ou controles Windows. Sem republicar prévia por ausência de mudança visível. A14 aprovado somente por relato geral do proprietário; demais subcasos Alpha e Windows11 pendentes.
+
 ## Adendo EQ-PREVIEW-1 — reutilização do diagnóstico curto
 
 Prova audível em 14/11/2026, independente do backend contínuo: EQ de dez bandas em Audio/Dsp aplicado pelo provider da gravação curta existente, com snapshot imutável/estados novos por play, A/B sem alterar o original e proteção/headroom explícitos. APIs públicas dos biquads NAudio já disponíveis; nenhum pacote, FIR/clock, stream de captura ou worker novo. [Contrato e teste local](EQ_PREVIEW.md). F2-I6 permanece pendente, sem liberação de monitoramento/rota global; Alpha em validação.

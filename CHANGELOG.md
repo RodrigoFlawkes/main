@@ -2,6 +2,13 @@
 
 ## Em desenvolvimento
 
+### 2026-11-14 — F2-I6A, clock e preparação WASAPI sem áudio
+
+- Ponte COM mínima auditada com PreserveSig, posição/frequência/QPC inteiros e HRESULTs originais; S_FALSE incerto, integrado ao adaptador de relógio existente sem estimador novo.
+- Preparação compartilhada com formato exato e clock da mesma sessão, consultas de capacidade/latência e descarte inverso MTA, sem Start ou buffers de áudio. Guard compartilhado com diagnóstico, cancelamento e falha parcial com recursos/lease preservados quando liberação não é confirmada.
+- Prova nativa autorizada em captura mono/saída LR48kHz, sem áudio ou alteração de níveis/padrões. Teste opt-in separado da regressão. DSP/EQ/perfis, UI e dependências preservados; sem republicar prévia ou iniciar transporte ativo.
+- Documentados ABI/ownership, evidências, limitações e desenho mínimo da futura F2-I6B. Resultados no PROJECT_STATUS; fases não declaradas aceitas.
+
 ### 2026-11-14 — EQ-PROFILE-1, ajustes e perfis locais
 
 - Persistência dos dez ganhos, entrada/preamp, ativação e perfil selecionado; edição atual independente do perfil salvo. Criação, salvamento explícito, renomeação e exclusão confirmada, com nomes simples/únicos e até 20 perfis.

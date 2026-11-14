@@ -1,11 +1,14 @@
 using System.Runtime.InteropServices;
 using WaveStudio.Audio.Dsp;
+using WaveStudio.Audio.Engine;
 
 namespace WaveStudio.Audio;
 
 // Owner-thread state machine; callbacks can only append to their bounded, generation-gated clip.
-internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<long, bool> isCurrent)
+internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<long, bool> isCurrent, TransportActivityGuard? activityGuard = null)
 {
+    private readonly TransportActivityGuard activities = activityGuard ?? new();
+    private IDisposable? activity;
     private ITestCapture? capture;
     private ITestPlayback? playback;
     private BoundedTestAudio? clip;
@@ -46,6 +49,7 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
         long epoch = Volatile.Read(ref deliveryEpoch);
         bool Current() => Valid(revision) && epoch == Volatile.Read(ref deliveryEpoch) && (requested?.Invoke() ?? true);
         if (Busy || !Current() || captureId is null) return;
+        if (!AcquireActivity()) return;
         ResetFailure();
         epoch = Interlocked.Increment(ref deliveryEpoch);
         DropClip();
@@ -72,6 +76,7 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
         bool Current() => Valid(revision) && epoch == Volatile.Read(ref deliveryEpoch) && (requested?.Invoke() ?? true);
         if (!float.IsFinite(level) || level is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(level));
         if (Busy || !Current() || clip?.Length is not > 0 || playbackId is null) return;
+        if (!AcquireActivity()) return;
         ResetFailure();
         epoch = Interlocked.Increment(ref deliveryEpoch);
         try
@@ -144,6 +149,8 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
 
     private void Finish()
     {
+        if (Busy) throw new InvalidOperationException("Término exige quiescência do diagnóstico.");
+        activity?.Dispose(); activity = null;
         Interlocked.Increment(ref deliveryEpoch);
         stopRequested = false;
         clip?.Seal();
@@ -158,6 +165,13 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
         message = clip?.Length > 0
             ? "Teste pronto em memória. Use fones e clique em Ouvir gravação. Não há reprodução automática."
             : "Nenhum áudio recebido. Confira permissões, conexão e mute do microfone.";
+    }
+    private bool AcquireActivity()
+    {
+        activity = activities.TryAcquire(AudioActivity.ShortDiagnostic);
+        if (activity is not null) return true;
+        message = "Outra operação de áudio está ativa. Aguarde o término antes de testar.";
+        return false;
     }
 
     internal void MarkDisposed()

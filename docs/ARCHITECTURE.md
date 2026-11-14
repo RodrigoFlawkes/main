@@ -1,6 +1,12 @@
 # Arquitetura do Wave Studio
 
-## Implementação atual — EQ-PROFILE-1
+## Implementação atual — F2-I6A, preparação WASAPI sem áudio
+
+Audio/Engine contém interop COM mínimo source-generated do SDK, PreserveSig e wrappers únicos próprios, sem acessar objetos internos NAudio. WasapiPreparation coordena uma operação síncrona MTA completa: endpoint explícito/ativo, mix exato validado, shared Initialize sem conversão/loopback, consultas de buffer/latência e IAudioClock do mesmo cliente, seguido de liberação inversa. Não expõe Start ou buffers PCM. WasapiClockReading preserva HRESULT/ulong e alimenta o WasapiClockAdapter existente; S_FALSE é incerto e não vira Accurate. A leitura parada é apenas evidência de preparação, não observação de drift em execução.
+
+TransportActivityGuard.Shared é usado pela sessão de diagnóstico de produção e preparação; lease só é liberado após término/descarte confirmado. Fakes recebem instâncias isoladas. Cancelamento não aborta COM bloqueado; falha de Release conserva recursos/pais e lease, sem retry em thread diferente. A prova real autorizada inicializou e fechou captura mono/saída LR48kHz sem áudio; buffers/latências são consultas, não latência fim a fim. [ABI, resultados e planejamento F2-I6B](WASAPI_BACKEND_PLAN.md). Sem mudança visível, republicação local ou transporte ativo. DSP/EQ/perfis/JSON e código de UI preservados; Alpha/Fase2 não aceitas.
+
+## Base preservada — EQ-PROFILE-1
 
 EqualizerValues/EqualizerProfile/EqualizerPreferences são snapshots imutáveis de parâmetros, com cópias nos limites e coleção limitada a20. O modelo separa ajuste atual e perfil salvo por ID estável, sem serializar DSP ou áudio. EqualizerPreviewPanel faz binding suprimido e comandos locais; MainForm.EqualizerProfiles consolida gestos/debounce de500 ms e reutiliza a fila de MainForm.Preferences/SettingsStore, com flush após operações de recuperação no fechamento. Nada foi acrescentado ao callback ou ao projeto Audio.
 

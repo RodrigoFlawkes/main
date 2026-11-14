@@ -2,15 +2,16 @@ namespace WaveStudio.Audio.Engine;
 
 internal enum TransportState { Closed, Preparing, Priming, Running, Stopping, Faulted }
 internal enum TransportFault { None, Canceled, Backend, Clock, Discontinuity, Protocol, Boundary, QuiescenceTimeout, SnapshotUnavailable }
-internal enum AudioActivity { ShortDiagnostic = 1, IsolatedTransport = 2 }
+internal enum AudioActivity { ShortDiagnostic = 1, IsolatedTransport = 2, NativePreparation = 3 }
 
-// Share this arbiter with the short diagnostic only when a future physical integration is authorized.
+// Physical diagnostic and preparation use this process-wide arbiter. Other processes need separate isolation.
 internal sealed class TransportActivityGuard
 {
+    public static TransportActivityGuard Shared { get; } = new();
     private int owner;
     public IDisposable? TryAcquire(AudioActivity activity)
     {
-        if (activity is not (AudioActivity.ShortDiagnostic or AudioActivity.IsolatedTransport)) throw new ArgumentOutOfRangeException(nameof(activity));
+        if (activity is not (AudioActivity.ShortDiagnostic or AudioActivity.IsolatedTransport or AudioActivity.NativePreparation)) throw new ArgumentOutOfRangeException(nameof(activity));
         return Interlocked.CompareExchange(ref owner, (int)activity, 0) == 0 ? new Lease(this) : null;
     }
     private sealed class Lease(TransportActivityGuard guard) : IDisposable

@@ -64,6 +64,8 @@ internal sealed class WasapiClockAdapter
         observation = new(clock, frames, (long)qpc, ClockQuality.Monotonic);
         return NativeClockResult.Valid;
     }
+    public NativeClockResult Convert(TransportEndpoint source, WasapiClockReading reading, long now100ns,
+        out ClockObservation observation, TransportPacketFlags flags = 0) => Convert(reading.ToSample(source, flags), now100ns, out observation);
     private static string ConvertIdentity(TransportEndpoint endpoint) =>
         System.Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
             System.Text.Encoding.UTF8.GetBytes($"{endpoint.Direction}:{endpoint.Id}")));

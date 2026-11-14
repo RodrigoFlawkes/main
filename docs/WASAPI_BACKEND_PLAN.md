@@ -1,4 +1,65 @@
-# Backend WASAPI isolado — F2-I5
+# Backend WASAPI — preparação sem áudio e base isolada
+
+## F2-I6A — preparação nativa, 14/11/2026
+
+Ponte mínima implementada em WasapiNativeInterfaces/NativeWasapiPreparationDevice, com coordenação em WasapiPreparation. NAudio.Core/Wasapi permanecem em3.1.0, sem dependências novas. A fonte fixada confirma que as interfaces COM do NAudio são internas e AudioClockClient.GetPosition trata−1, retornando true para S_FALSE/+1. Nenhum caminho público do wrapper expõe o HRESULT da mesma sessão. Escolhida interop mínima das interfaces públicas Windows, sem reflection, acesso privado, nova estimativa/FIR ou atualização de pacote. O bloqueio de representação do HRESULT está resolvido neste caminho; transporte ativo continua pendente.
+
+### Auditoria ABI e propriedade
+
+Conferidos o [wrapper NAudio fixado](https://github.com/naudio/NAudio/blob/0aaef29d04bec9567bdf2f669036fabecc33a2e2/src/NAudio.Wasapi/CoreAudioApi/AudioClockClient.cs), [Audioclient.idl Microsoft](https://github.com/microsoft/win32metadata/blob/main/generation/WinSDK/RecompiledIdlHeaders/um/Audioclient.idl) e [mmdeviceapi.idl Microsoft](https://github.com/microsoft/win32metadata/blob/main/generation/WinSDK/RecompiledIdlHeaders/um/mmdeviceapi.idl). A ordem abaixo sucede os três slots de IUnknown; nenhuma chamada por índice adivinhado. Assinaturas completas necessárias à ordem foram declaradas, mas métodos de início/buffers não fazem parte da interface gerenciada de preparação.
+
+| Interface / GUID | Ordem dos métodos próprios |
+| --- | --- |
+| IMMDeviceEnumerator / A95664D2-9614-4F35-A746-DE8DB63617E6 | EnumAudioEndpoints, GetDefaultAudioEndpoint, GetDevice, RegisterEndpointNotificationCallback, UnregisterEndpointNotificationCallback |
+| IMMDevice / D666063F-1587-4E43-81F1-B948E807363F | Activate, OpenPropertyStore, GetId, GetState |
+| IMMEndpoint / 1BE09788-6894-4089-8586-9A2A6C265AC5 | GetDataFlow |
+| IAudioClient / 1CB9AD4C-DBFA-4C32-B178-C2F568A703B2 | Initialize, GetBufferSize, GetStreamLatency, GetCurrentPadding, IsFormatSupported, GetMixFormat, GetDevicePeriod, Start, Stop, Reset, SetEventHandle, GetService |
+| IAudioClock / CD63314F-3FBA-4A1B-812C-EF96358728E7 | GetFrequency, GetPosition, GetCharacteristics |
+
+HRESULT→int com PreserveSig; DWORD/UINT32→uint; REFERENCE_TIME→long; UINT64→ulong; ponteiros→nint; REFIID/LPCGUID→in Guid; ID de entrada LPWStr. GetId, GetMixFormat e closest usam CoTaskMem e são liberados no mesmo owner. Não há buffer PCM emprestado ou interfaces de captura/render. GUID da classe enumeradora BCDE0395-E52F-467C-8E3D-C4579291692E; CoCreateInstance/Activate com INPROC_SERVER, parâmetros nulos. Source generation .NET10 usa **ComObjectWrapper**, wrappers únicos StrategyBasedComWrappers, referências cruas balanceadas e FinalRelease apenas da instância própria. AllowUnsafeBlocks foi habilitado somente para o código gerado pelo SDK; nenhum ponteiro/vtable manual ou implementação de biblioteca copiada. [Opções do gerador](https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.marshalling.cominterfaceoptions?view=net-10.0), [liberação de wrapper único](https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.marshalling.comobject.finalrelease?view=net-10.0).
+
+Task.Run executa uma operação síncrona inteira em MTA, sem await no owner COM. CoInitializeEx(MULTITHREADED) balanceia S_OK/S_FALSE com CoUninitialize. Identidade/direção/estado ativo são rechecados antes da ativação, antes da inicialização e depois da consulta; mix é comparado ao descritor escolhido previamente, validado e IsFormatSupported exige S_OK sem closest. Não há fallback. Initialize é shared, flags0, duração0/período0, formato nativo exato e GUID de sessão exclusivo. Sem AutoConvertPcm, SrcDefaultQuality, Loopback ou event callback. GetBufferSize é consulta de capacidade, **não** GetBuffer de áudio. [Activate](https://learn.microsoft.com/en-us/windows/win32/api/mmdeviceapi/nf-mmdeviceapi-immdevice-activate), [Initialize](https://learn.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-iaudioclient-initialize), [GetService](https://learn.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-iaudioclient-getservice).
+
+Clock obtido exclusivamente por GetService do cliente recém-inicializado. Ordem de liberação: clock→cliente/formato→endpoint/enumerador→apartamento→lease. Cancelamento é conferido entre chamadas; chamada COM em andamento não é abortável. O lease permanece enquanto essa chamada não retorna. Em falha de Release, filho e seus pais permanecem enraizados e o guard retido; não há retry cego em outra thread, force dispose ou promessa de recuperação. Uma falha assim exige revisão/reinício do processo; não foi provocada em hardware. Falhas HRESULT são reportadas com fase/código, sem ID ou conteúdo de áudio.
+
+### Semântica do relógio
+
+WasapiClockReading conserva ambos os HRESULTs e os três UINT64 integralmente. GetFrequency exige S_OK e frequência positiva. GetPosition S_OK→Accurate, S_FALSE(+1)→Uncertain; resultados negativos, positivos desconhecidos ou frequência inválida→Unavailable. Saídas de uma chamada falhada são apenas dados brutos sem validade. O overload de WasapiClockAdapter reutiliza exatamente as validações anteriores, com DeviceUnits, QPC100ns, identidade/geração e flags explícitas. Não converte posição absoluta para double nem usa Stopwatch/bytes processados como clock físico. [Precisão/S_FALSE e QPC](https://learn.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-iaudioclock-getposition), [unidades de frequência](https://learn.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-iaudioclock-getfrequency).
+
+S_OK indica o resultado da leitura, não clock em execução. A preparação permanece parada; suas observações não alimentam o estimador/drift. Zero é preservado e não inventa progresso. S_FALSE e descontinuidade/timestamp inválido continuam invalidando o adaptador ativo e exigindo nova sessão; Silent não cria erro de timestamp. Flags de pacote não vêm de IAudioClock e não são fabricadas na prova parada.
+
+### Prova autorizada sem áudio
+
+Executada uma prova explícita própria em Debug, após verificar WaveStudio.exe fechado. Nome de captura “fifine” e saída “USB Audio Device” resolveram cada um um único ID ativo da direção requerida; o ID foi fixado no pedido e revalidado, sem seguir padrão/fallback. Relatório local numeric-only em artifacts/wasapi-preparation/native-preparation.json, fora do Git. Teste marcado Explicit: regressão comum não inicializa hardware, e nova execução exige autorização, variáveis opt-in e seleção explícita.
+
+| Consulta real | Captura | Reprodução |
+| --- | --- | --- |
+| Mix exato | float32/48kHz, mono, máscara4 | float32/48kHz, LR, máscara3 |
+| Período padrão / mínimo exclusivo |100.000 /30.000 ×100ns|100.000 /30.000 ×100ns|
+| Buffer após Initialize |1.056 frames|1.056 frames|
+| StreamLatency reportada |0 ×100ns|0 ×100ns|
+| GetFrequency HRESULT / frequência |S_OK /192.000|S_OK /384.000|
+| GetPosition HRESULT / posição |S_OK /0|S_OK /0|
+| QPC100ns bruto |0|103.502.894.326|
+| Inicializado / Start / recursos liberados |sim /não /sim|sim /não /sim|
+
+1.056/48.000 equivale a22ms de capacidade alocada; isso e StreamLatency0 **não são latência fim a fim/zero latência**. Posição0/QPC0 da captura parada não comprova precisão em movimento. Nenhum Start, GetBuffer de captura/render, conteúdo gravado/reproduzido, mudança de volume/mute/padrão ou sessão mantida aberta. Sem prova de drift nativo, eventos, packets ou sincronização entre osciladores. Windows10 experimental; Windows11 pendente. A primeira tentativa encontrou EntryPointNotFound por opção ManagedObjectWrapper invertida; recursos foram limpos pelo finally. Corrigida para ComObjectWrapper e prova repetida com sucesso, sem contorno do contrato Windows.
+
+### Interlock e desenho mínimo F2-I6B — somente planejamento
+
+MicrophoneTestSession de produção e prova nativa usam TransportActivityGuard.Shared no mesmo processo. Engine mantém ShortDiagnostic desde antes da abertura até completion/descarte; Stop pendente ou exceção terminal não libera autorização prematuramente. Testes/fakes podem injetar guards isolados. Preparação usa NativePreparation e conserva lease até liberação confirmada. Não é mutex entre processos: a prova verifica ausência da prévia; uma futura arquitetura multiprocesso terá de tratar isso separadamente. Sem UI nova, republicação da prévia ou conexão do transporte fake ao hardware.
+
+Para F2-I6B, após revisão, aceitação pertinente e autorização própria:
+
+1. Workers MTA proprietários por papel, ciclo de vida/event handles definidos; GetService/Release no mesmo owner, GetBuffer/ReleaseBuffer de cada papel na mesma thread e sempre balanceados, sem atravessar await/callback emprestado. DSP/adaptativo pertence só ao produtor, consumidor à SPSC; recursos pré-alocados e sem I/O no callback.
+2. Guard compartilhado desde preparação até stop/join/quiescência. DeliveryTicket/IDs/geração imutáveis, revalidação imediatamente antes de ReleaseBuffer/submissão; invalidação primeiro e stop fora do callback. Operação já submetida não pode ser revogada.
+3. Render deve ser preparado e primado com silêncio real antes do primeiro Start; definir ordem de Start/Stop dos dois papéis e janela de autorização sem rejeitar priming necessário. Fila só entrega sinal após priming/relógios válidos e opt-in. Underrun gera silêncio/contador e interrompe/reprima segundo contrato; nenhuma mudança de volume Windows. Recalcular orçamento com buffer real1056, não assumir buffer480 ou priming1024 suficientes.
+4. Watermark do fake não existe no WASAPI. Alternativa verificável: cada owner publica ledger cumulativo com sequência e intervalo de eventos concluídos; coordenador solicita uma barreira/pausa de controle, recebe confirmação dos dois owners sem aquisições/ReleaseBuffer em voo e captura um checkpoint comum. Recusar janela sem confirmação/ledger incompatível, sem reconstruir passado por snapshots ou atrasar callback aguardando controle. Definir a relação temporal entre aquisição, submissão e checkpoint antes de conectar o controlador; custo/pausa/clock obsoleto devem ser medidos, sem inventar watermark físico.
+5. S_FALSE, flags de descontinuidade/timestamp error, mudança de frequência/identidade, QPC inválido e falta de frescor invalidam entrega imediatamente. Nova geração recria clocks/filtros e contabiliza drops/fila/priming. Nenhum fallback/restart automático. Timeout preserva recursos/lease até término confirmado, sem force dispose.
+
+O desenho não é implementação ou prova de estabilidade ativa. F2-I6B/F3 continuam pendentes; EQ/perfis, headroom, FIR/SPSC e Alpha existentes preservados.
+
+## Histórico — F2-I5
 
 Adendo CHECKUP-1: Tick não acessa mais Buffer!.Value quando o snapshot falta/falha. Interrompe entrega com SnapshotUnavailable e média null; BufferSnapshotAvailable distingue ausência e últimos contadores conhecidos. Testes injetam falha/ausência e callbacks durante Start, que permanecem barrados pelo gate. Priming/start/watermark **continuam somente fake**, não autorização para conectar WASAPI ativo. Próxima preparação F2-I6A: HRESULT preciso na mesma sessão sem Start; F2-I6B posterior: guard compartilhado com diagnóstico, ownership/quiescência e checkpoint/priming nativos, revisão/aceitação/autorização. [Check-up](GENERAL_CHECKUP.md).
 

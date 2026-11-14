@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using WaveStudio.Audio.Dsp;
+using WaveStudio.Audio.Engine;
 
 namespace WaveStudio.Audio;
 
@@ -29,12 +30,12 @@ public sealed class MicrophoneTestSession : IAsyncDisposable
         }
     }
 
-    public MicrophoneTestSession() : this(new CoreAudioMicrophoneTestBackend()) { }
-    internal MicrophoneTestSession(IMicrophoneTestBackend backend, TimeSpan? shutdownTimeout = null)
+    public MicrophoneTestSession() : this(new CoreAudioMicrophoneTestBackend(), activityGuard: TransportActivityGuard.Shared) { }
+    internal MicrophoneTestSession(IMicrophoneTestBackend backend, TimeSpan? shutdownTimeout = null, TransportActivityGuard? activityGuard = null)
     {
         this.shutdownTimeout = shutdownTimeout ?? TimeSpan.FromSeconds(3);
         if (this.shutdownTimeout <= TimeSpan.Zero || this.shutdownTimeout > TimeSpan.FromSeconds(30)) throw new ArgumentOutOfRangeException(nameof(shutdownTimeout));
-        engine = new MicrophoneTestEngine(backend, value => value == Volatile.Read(ref revision));
+        engine = new MicrophoneTestEngine(backend, value => value == Volatile.Read(ref revision), activityGuard);
         latest = engine.Snapshot;
         var thread = new Thread(Run) { IsBackground = true, Name = "Wave Studio — teste local de microfone" };
         thread.SetApartmentState(ApartmentState.MTA);
