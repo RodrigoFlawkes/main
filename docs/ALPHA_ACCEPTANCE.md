@@ -1,5 +1,9 @@
 # Aceitação da prévia v0.1.0 Alpha
 
+Atualização de identidade em 13/11/2026: logo oficial no cabeçalho, ícone incorporado e metadados oficiais. 252 testes aprovados por configuração, Debug/Release sem erros/avisos. Conferir visualmente cabeçalho proporcional, transparência, ícones de janela/taskbar/Alt+Tab em diferentes DPIs; atalhos futuros devem usar WaveStudio.exe, índice 0. Nenhum instalador ou release pública foi criado. Critérios físicos anteriores permanecem válidos.
+
+Pacote de identidade atual: WaveStudio.exe com 303.616 bytes, SHA-256 `97D1892C98D2DC66A4B8B2F0190AAC1690CD227286B06595FA946DB25E307285`; WaveStudio.dll SHA-256 `E2463B1B7871894F94DDE9FB0FC1DD7E504484CBA23FD765CCF81537D70CD941`. Identificação dos pacotes anteriores abaixo é histórica. Manifesto completo em artifacts/alpha-preview/validation/branding-package-manifest.json. Use a pasta inteira; imagens externas não são necessárias.
+
 Estado da F1-I6-METER em 13/11/2026 — validação física pendente. Este roteiro registra evidências do proprietário e verificações técnicas. A aceitação da Fase 1 depende dos ensaios físicos e de aprovação explícita.
 
 O executável atualizado F1-I6-METER está em `artifacts/alpha-preview/win-x64/WaveStudio.exe`. O proprietário confirmou o fechamento normal da prévia anterior antes da republicação. Use a pasta completa da publicação atualizada. Requer .NET Desktop Runtime 10 x64, com Microsoft.NETCore.App e Microsoft.WindowsDesktop.App da linha 10. O ambiente de validação usa Windows 10, experimental. Windows 11 x64 é prioritário e aguarda ensaio próprio.
@@ -77,7 +81,7 @@ Copy-Item -LiteralPath (Join-Path $tensors 'THIRD-PARTY-NOTICES.TXT') -Destinati
 Copy-Item -LiteralPath './docs/ALPHA_ACCEPTANCE.md', './docs/THIRD_PARTY_NOTICES.md' -Destination $destino
 ```
 
-SHA-256 do WaveStudio.exe local, com 162.304 bytes.
+SHA-256 histórico do apphost F1-I6-METER anterior à identidade visual, com 162.304 bytes.
 
 ```text
 7D4749DB85606830D7851BBBDE70181530BAA5A20592070B37FC5FAF94470F92
@@ -125,7 +129,7 @@ Restore locked com auditoria aprovado. Debug/Release x64 sem erros/avisos, 248 t
 
 Pacote Release AMD64 conferido com 14 arquivos e avisos de terceiros. Executável iniciou e fechou normalmente na pasta habitual, usando configuração isolada e sem acionar gravação/reprodução. Esse ensaio comprova abertura/encerramento do processo, com aceitação física e inspeção visual completa ainda pendentes.
 
-Identificação do pacote atual, além do apphost indicado acima:
+Identificação histórica do pacote F1-I6-METER anterior à identidade visual:
 
 | Arquivo | Bytes | SHA-256 |
 | --- | --- | --- |

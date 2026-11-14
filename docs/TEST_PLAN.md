@@ -1,5 +1,11 @@
 # Plano de testes
 
+## Identidade visual — 13/11/2026
+
+Restore locked com auditoria, Debug/Release x64 sem erros/avisos; 252 aprovados em cada configuração (248 anteriores + quatro BrandingTests), zero falhas/ignorados. Verificados SHA-256 e dimensões do original, sete quadros PNG do ICO, carregamento Windows, alfa do PNG incorporado, clones após fechamento de streams e metadados de produto/projeto/versão. Testes iniciais detectaram AssemblyTitle inadequado e fallback GDI no pedido 256; título corrigido e dimensão 256 validada no próprio quadro PNG. Suítes finais aprovadas.
+
+Extração de ícone do EXE e metadados nativos conferidos; app publicado abriu e fechou normalmente com configuração isolada, sem áudio. Pendente inspeção humana de cabeçalho, taskbar, Alt+Tab e futuros atalhos, DPI 100/150/200% e Windows 11. Ícones em cache ou atalhos fixados não foram alterados. Testes físicos anteriores da Alpha permanecem pendentes conforme roteiro.
+
 ## F1-I6-METER — medidor de entrada, 13/11/2026
 
 Restore locked com auditoria aprovado. Builds Debug/Release x64 com zero erros e avisos; 248 testes aprovados em cada configuração, zero falhas/ignorados. Regressão dos 228 anteriores + 20 novos: 236 regras/simulações/arquivos/STA e 12 integrações Windows de leitura/execução isolada.

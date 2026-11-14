@@ -2,7 +2,20 @@
 
 Atualizado em 13/11/2026.
 
-## Estado atual — F1-I6-METER implementada, aceitação física pendente
+## Estado atual — identidade visual oficial incorporada
+
+Etapa autorizada em 13/11/2026, base c28d808, main inicialmente limpa e sincronizada. AGENTS.md, NEXT_TASK.md e REVIEW.md lidos; requisitos/arquitetura preservados. F1-I6-METER já implementada e publicada, com regressão aprovada; seus testes físicos restantes continuam pendentes. Motor de áudio intacto, sem redesign completo ou Fase 2.
+
+- Logo oficial fornecida pelo proprietário: original PNG RGBA 1254 × 1254 em assets/branding/original/WaveStudio.png, preservado byte a byte (SHA-256 A97D343F27C7033BBE06447AC5AED9B20585CD97C97A7EA5A7D7E3D90BCC4E11). Derivados determinísticos sem recorte ou troca de cores, ICO com 16/24/32/48/64/128/256 px e PNGs correspondentes. Guia e geração reproduzível em assets/branding/README.md e scripts/Generate-BrandAssets.ps1. Política de execução do Windows preservada.
+- ApplicationIcon Win32 no EXE; ícone e PNG de cabeçalho incorporados à assembly, clones independentes de streams e descarte com a janela. Janela fornece o ícone ao Windows para taskbar/Alt+Tab; atalhos futuros usam EXE, índice 0. Sem arquivos externos de imagem obrigatórios. README exibe a logo relativa no GitHub.
+- Produto/título Wave Studio; descrição de gerenciamento de áudio; identificação Wave-Universal-Studio/main e URL; versão 0.1.0-alpha, assembly/arquivo 0.1.0.0. Company identifica a organização do projeto. Nenhuma razão social, licença pública da marca ou assinatura digital foi inventada.
+- Restore locked com auditoria aprovado; builds Debug/Release x64 sem erros/avisos. 252 testes aprovados em cada configuração, zero falhas/ignorados: 248 anteriores + quatro de identidade, totalizando 240 regras/simulações/STA/arquivos e 12 integrações existentes. Casos novos verificam original por SHA-256, sete quadros/dimensões do ICO, recursos independentes de streams e metadados.
+- Corrigido AssemblyTitle após teste identificar o nome de assembly no título. O carregador legado GDI pode escolher 128 px para pedido de 256; validado diretamente o quadro PNG de 256 no ICO, preservando o carregamento Windows das demais dimensões. Nenhuma resolução foi removida.
+- Executável Release republicado na pasta habitual. Extração do ícone pelo Windows e metadados nativos conferidos. Abertura/fechamento normal em configuração isolada, sem acionar áudio. EXE 303.616 bytes, SHA-256 97D1892C98D2DC66A4B8B2F0190AAC1690CD227286B06595FA946DB25E307285; WaveStudio.dll SHA-256 E2463B1B7871894F94DDE9FB0FC1DD7E504484CBA23FD765CCF81537D70CD941. Dependências/licenças preservadas; recursos não exigem arquivos adicionais na pasta de execução.
+- Preparados recursos para instalador/download/Releases/atualizações futuros, sem criar instalador, release pública ou publicação externa. Aparência final de janela/cabeçalho em DPI variados, taskbar/Alt+Tab/cache e atalhos futuros aguardam conferência visual humana. Aceitação física A11/A12 e Windows 11 continuam conforme roteiro; Alpha não declarada aceita.
+- git diff --check e conferência do índice aprovados; busca de padrões comuns de credenciais sem ocorrências. AGENTS.md, NEXT_TASK.md, REVIEW.md, REQUIREMENTS.md, áudio, SDK/build e locks preservados. PNG/ICO são recursos de fonte autorizados para versionamento; EXE/DLL, configurações e ensaios permanecem ignorados. Remoto reconferido sem divergência antes do commit/push autorizado.
+
+## Histórico — F1-I6-METER implementada, aceitação física pendente
 
 Repositório inicialmente limpo em main, sincronizado por git pull --ff-only de fcb147a até e66bb85. Remoto confirmado como https://github.com/Wave-Universal-Studio/main.git. AGENTS.md, NEXT_TASK.md, REVIEW.md, requisitos, arquitetura, planos, aceitação e status lidos. Implementação, commit e push autorizados pelo proprietário. Escopo limitado ao medidor de entrada e suas proteções; não foram repetidos incrementos anteriores nem iniciada a Fase 2.
 

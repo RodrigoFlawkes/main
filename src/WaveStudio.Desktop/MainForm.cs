@@ -31,6 +31,8 @@ internal sealed partial class MainForm : Form
     private bool closing;
     private bool stopping;
     private Task refreshTask = Task.CompletedTask;
+    private readonly Icon brandIcon = StudioBrand.CreateIcon();
+    private readonly Bitmap brandLogo = StudioBrand.CreateLogo();
 
     public MainForm(SettingsStore? settingsStore = null, Action<string>? storageWarning = null,
         AudioWatchWorker? audioWatch = null, MicrophoneTestSession? microphoneSession = null)
@@ -40,6 +42,8 @@ internal sealed partial class MainForm : Form
         store = settingsStore ?? new SettingsStore(SettingsStore.DefaultPath);
         showStorageWarning = storageWarning ?? (message => MessageBox.Show(this, message, "Preferências locais", MessageBoxButtons.OK, MessageBoxIcon.Warning));
         Text = "Wave Studio — v0.1.0 Alpha em desenvolvimento";
+        Icon = brandIcon;
+        ShowIcon = true;
         MinimumSize = new Size(600, 400);
         ClientSize = new Size(1080, 860);
         StartPosition = FormStartPosition.CenterScreen;
@@ -58,8 +62,13 @@ internal sealed partial class MainForm : Form
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         var heading = new Label { Text = "Wave Studio", AutoSize = true, Font = new Font(Font.FontFamily, 20, FontStyle.Bold) };
         var version = new Label { Text = "v0.1.0 Alpha em desenvolvimento", AutoSize = true, Margin = new Padding(3, 4, 3, 16) };
-        layout.Controls.Add(heading, 0, 0);
-        layout.SetColumnSpan(heading, 2);
+        var header = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = false };
+        header.Controls.Add(new PictureBox { Image = brandLogo, SizeMode = PictureBoxSizeMode.Zoom,
+            Size = new Size(64, 64), Margin = new Padding(0, 0, 12, 0), AccessibleName = "Logo oficial do Wave Studio", TabStop = false });
+        heading.Margin = new Padding(0, 12, 0, 0);
+        header.Controls.Add(heading);
+        layout.Controls.Add(header, 0, 0);
+        layout.SetColumnSpan(header, 2);
         layout.Controls.Add(version, 0, 1);
         layout.SetColumnSpan(version, 2);
         var tabs = new TabControl { Dock = DockStyle.Fill };
@@ -154,6 +163,12 @@ internal sealed partial class MainForm : Form
             Close();
         };
         FormClosed += (_, _) => { lifetime.Dispose(); peakTimer.Dispose(); };
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        try { base.Dispose(disposing); }
+        finally { if (disposing) { brandIcon.Dispose(); brandLogo.Dispose(); } }
     }
 
     private void OnPowerModeChanged(object? sender, PowerModeChangedEventArgs args)

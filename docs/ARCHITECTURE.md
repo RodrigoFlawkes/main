@@ -1,5 +1,7 @@
 # Arquitetura do Wave Studio
 
+Identidade oficial incorporada em 13/11/2026: assets/branding mantém original e derivados; ApplicationIcon grava o ICO no recurso Win32 do apphost. StudioBrand carrega ICO/PNG de EmbeddedResource, cria clones independentes dos streams e MainForm os descarta no Dispose. Cabeçalho usa PictureBox Zoom, preservando proporções. Não há I/O de imagem externa no runtime nem alteração no áudio. Metadados e guia em [identidade oficial](../assets/branding/README.md). Distribuição pública e instalador continuam futuros.
+
 Decisões da Fase 0, com atualizações até F1-I6-METER em 13/11/2026, em validação física pendente. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). A implementação atual é descrita primeiro, seguida pelo histórico e planejamento de evolução.
 
 ## Medidor de entrada na aba de teste — F1-I6-METER

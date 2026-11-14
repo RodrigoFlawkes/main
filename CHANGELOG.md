@@ -2,6 +2,13 @@
 
 ## Em desenvolvimento
 
+### 2026-11-13 — identidade oficial do Wave Studio
+
+- Original da logo fornecida pelo proprietário preservado em assets/branding, com transparência e SHA-256 registrado. ICO oficial com sete resoluções e PNGs derivados reproduzíveis.
+- Logo no cabeçalho e README; ícone nativo do EXE e da janela para taskbar/Alt+Tab/atalhos futuros. Recursos incorporados, sem dependência de arquivos externos de imagem.
+- Metadados oficiais de produto, descrição, projeto e versão Alpha, guia de identidade e preparação para distribuição futura, sem release pública ou instalador.
+- Restore locked, builds Debug/Release sem erros/avisos e 252 testes aprovados por configuração. Executável x64 republicado e iniciado/fechado normalmente. Áudio e F1-I6-METER preservados; conferência visual do shell/DPI e aceitação física continuam pendentes.
+
 ### 2026-11-13 — F1-I6-METER, pico da entrada na aba Testar microfone
 
 - Barra horizontal 0–100%, texto numérico, disponibilidade e explicação de amplitude na aba Testar microfone, preservando a barra de Dispositivos e o volume digital de reprodução separado.

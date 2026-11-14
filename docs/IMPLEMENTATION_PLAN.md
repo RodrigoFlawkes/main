@@ -1,5 +1,7 @@
 # Plano da v0.1.0 Alpha
 
+Identidade oficial aplicada em 13/11/2026 após a entrega técnica F1-I6-METER: original preservado, ICO multirresolução, recursos incorporados, cabeçalho/README e metadados. Regressão atual de 252 testes por configuração. Distribuição pública, instalador, redesign completo e Fase 2 continuam fora desta etapa. Guia em [assets/branding](../assets/branding/README.md).
+
 Planejamento atualizado em 13/11/2026. Fase 1 em andamento, com incrementos verificáveis. Escopo detalhado em [REQUIREMENTS.md](REQUIREMENTS.md).
 
 Incrementos 1–5 publicados e revisados. F1-I6 fornece checkpoint técnico com correções da revisão F1-I5, picos por sessão a 1 Hz, publicação Release x64 e roteiro de aceitação. F1-I6-MIC acrescentou captura curta em memória e reprodução explícita. O adendo F1-I6-METER apresenta o pico real da entrada também na aba de teste, reutilizando o worker existente. Builds Debug/Release com zero erros/avisos e 248 testes aprovados em cada configuração, incluindo os 228 anteriores. Aceitação física/visual, A11/A12 e Windows 11 permanecem pendentes. A Fase 1 continua em validação.

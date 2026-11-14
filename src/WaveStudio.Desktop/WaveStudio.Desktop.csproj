@@ -4,9 +4,23 @@
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>WaveStudio</AssemblyName>
     <Version>0.1.0-alpha</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <Product>Wave Studio</Product>
+    <Title>Wave Studio</Title>
+    <AssemblyTitle>Wave Studio</AssemblyTitle>
+    <Description>Wave Studio — gerenciamento de áudio para Windows, independente de fabricante.</Description>
+    <Company>Wave-Universal-Studio</Company>
+    <RepositoryUrl>https://github.com/Wave-Universal-Studio/main</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/Wave-Universal-Studio/main</PackageProjectUrl>
+    <ApplicationIcon>../../assets/branding/icons/WaveStudio.ico</ApplicationIcon>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
   </PropertyGroup>
   <ItemGroup>
+    <AssemblyMetadata Include="ProjectIdentifier" Value="Wave-Universal-Studio/main" />
+    <EmbeddedResource Include="../../assets/branding/icons/WaveStudio.ico" LogicalName="WaveStudio.Brand.Icon" />
+    <EmbeddedResource Include="../../assets/branding/icons/WaveStudio-256.png" LogicalName="WaveStudio.Brand.Logo" />
     <ProjectReference Include="../WaveStudio.Audio/WaveStudio.Audio.csproj" />
   </ItemGroup>
 </Project>
