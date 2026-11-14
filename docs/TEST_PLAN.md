@@ -1,6 +1,20 @@
 # Plano de testes
 
-## F2-I2 — canais e resampling nominal
+## F2-I3 — relógios independentes e estabilidade
+
+Em 14/11/2026: restore locked auditado, builds Debug/Release x64 com zero erros/avisos; suítes finais com 336 aprovados por configuração (313 anteriores + 23 novos), zero falhas/ignorados. São 324 regras/simulações/arquivos/STA/sintéticos e 12 integrações Windows existentes. Nenhum novo teste abre streams ou altera configurações de áudio.
+
+- ClockDriftTests: 22 casos; identidade/geração, timestamp repetido/invertido/futuro/obsoleto, qualidade, posição regressiva/salto extremo, referência comum, offsets próximos de long.MaxValue, descontinuidade/reset, orientação de razão, waiting, slew/limites, anti-windup e falha persistente. Simulação inclui 18 pares ligados/desligados × 900 s, três pares de taxas e ±50/100/300 ppm, jitter, offsets comuns/independentes, determinismo, drift fora do orçamento, pausa/reinício, 41 observações inválidas e recuperação. Contadores priming/perdas/descarte/recuperação separados; invariantes inteiras e fila limitada verificados.
+- NominalPartialConsumptionTests: um caso com duas capacidades de saída (512/um frame), mesmo hash/contagem das amostras e zero alocação recorrente. 55.559 contra 27.395.275 frames oferecidos/remapeados para 8.192 consumidos: custo redundante documentado, sem alterar o FIR nominal.
+- PreferencesUiTests: seis casos existentes preservados; coletor de avisos em formulários invisíveis com asserções, fases/thread/timestamp do caso intermitente, prazo externo à STA e Join limitado. Caso de falha de gravação continua exigindo aviso. Watchdog de processo próprio disponível; ramificação de encerramento não foi acionada neste ensaio. Nenhum teste desabilitado ou aviso real de produção removido.
+
+Tentativas limitadas: seis casos isolados aprovados, regressão inicial de 313 aprovada e quatro execuções ampliadas de 336 aprovadas (Debug/Release, sementes 20261113/20261114), sem runner incompleto ou encerramento forçado. Duas tentativas intermediárias dos 18 casos de relógio falharam na meta de convergência antes da correção da observação de ocupação; corrigida por média temporal, sem relaxar critérios. Não atribuir essas falhas à intermitência de UI. Causa do bloqueio histórico não comprovada; hipótese modal/DoEvents/teardown registrada, sem stack gerenciado disponível ou alteração de produção por suposição.
+
+Comando reproduzível com watchdog e diagnóstico, após restore/build: `& ([scriptblock]::Create((Get-Content -Raw -Encoding UTF8 scripts/Test-WithWatchdog.ps1))) -RepositoryRoot (Get-Location).Path -Configuration Release -Seed 20261113`. Limite externo 90 s, interno 80 s; logs em artifacts/clock-drift, ignorados. Não altera ExecutionPolicy, não instala ferramenta e não eleva o Windows. [Protocolo completo, métricas e limitações](CLOCK_DRIFT_SIMULATION.md).
+
+Pendentes: revisão F2-I3, causa da intermitência histórica, resampler adaptativo de amostras e regressão espectral de transições, backend real, A01–A12, latência acústica e Windows 11. Windows 10 experimental. Preservada a prévia existente; nenhum novo controle foi integrado à UI. Não iniciar integração física até revisão/evidência Alpha, nem avançar a F2-I4 nesta etapa.
+
+## Histórico F2-I2 — canais e resampling nominal
 
 Restore locked com NuGetAudit=true/Mode=all aprovado; builds Debug/Release x64 com zero erros/avisos. Suíte completa: 313 aprovados por configuração (283 anteriores + 30 novos), zero falhas/ignorados; 301 regras/simulações/arquivos/STA/sintéticos e 12 integrações Windows existentes. Nenhum teste novo abre áudio físico ou escreve volumes.
 

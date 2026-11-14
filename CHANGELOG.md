@@ -2,6 +2,15 @@
 
 ## Em desenvolvimento
 
+### 2026-11-14 — F2-I3, relógios independentes e estabilidade de testes
+
+- Tipos internos de relógio/observação, estimador por deltas em referência comum e controlador de razão saída/entrada com feed-forward, PI, anti-windup, ±500 ppm e slew limitado. IDs/gerações, unidades, tempo/posição inválidos, frescor e descontinuidade verificados.
+- Simulação determinística realmente executada de eventos independentes: 18 pares ligados/desligados de 900 s, 48→48, 44,1↔48 e ±50/100/300 ppm, jitter, offsets, contabilidade Q32 e fila limitada. Zero perdas com controle nos cenários regulares; convergência 21,8–76,7 s. Saturação, perdas, priming e recuperação explícitos nas falhas, sem transformar amostras ou abrir hardware.
+- Corrigida observação instantânea de ocupação no modelo após falha da meta de convergência: média temporal remove alias de blocos/cadência, preservando critérios e ganhos. Ensaios de consumo parcial nominal quantificam remapeamento redundante, sem alterar o FIR aprovado.
+- Coletor de avisos com asserções, fases de ciclo de vida e deadline fora da STA em testes de preferências; watchdog externo restrito ao runner próprio. Bloqueio anterior não reproduzido nas tentativas limitadas; causa permanece hipótese, sem mudança de UI/armazenamento em produção.
+- Restore locked auditado, builds Debug/Release x64 sem erros/avisos, 336 testes aprovados por configuração (313 anteriores + 23 novos). Repetições e resultados completos no status/protocolo; zero alocação na thread medida dos novos ensaios estáveis.
+- Alpha, marca, executável publicado, dependências e áudio existentes preservados. Integração física continua bloqueada por revisão/A01–A12 e Windows 11. Planejado resampler adaptativo real antes de backend; sem F2-I4, EQ, redesign, driver ou release pública nesta etapa.
+
 ### 2026-11-13 — F2-I2, adaptação de canais e resampling nominal
 
 - Políticas explícitas de preservação, duplicação mono→L/R e média 0,5L+0,5R; layouts desconhecidos, multicanal, buffers inválidos e sobreposição recusados. Não finitos sanitizados antes do histórico; proteção final independente.

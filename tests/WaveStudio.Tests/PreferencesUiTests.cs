@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace WaveStudio.Tests;
 
-public sealed class PreferencesUiTests
+public sealed class PreferencesUiTests(ITestOutputHelper output)
 {
     private sealed class TestForm : Form
     {
@@ -26,7 +26,7 @@ public sealed class PreferencesUiTests
             writer.Commit(temporary, target, replacing, backup);
     }
 
-    private static Task OnSta(Action test)
+    private static async Task OnSta(Action test)
     {
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() =>
@@ -36,7 +36,10 @@ public sealed class PreferencesUiTests
         }) { IsBackground = true };
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
-        return completion.Task;
+        // PumpUntil cannot time out while DoEvents is inside a modal callback.
+        // This deadline runs outside the STA; the process watchdog remains the last resort.
+        await completion.Task.WaitAsync(TimeSpan.FromSeconds(20), TestContext.Current.CancellationToken);
+        Assert.True(thread.Join(TimeSpan.FromSeconds(2)), "A thread STA não terminou após o teste.");
     }
 
     private static void PumpUntil(Func<bool> done)
@@ -100,22 +103,37 @@ public sealed class PreferencesUiTests
         File.WriteAllBytes(directory.FilePath, SettingsJson.Encode(settings));
         for (int index = 0; index < 2; index++)
         {
+            var warnings = new List<string>();
             await OnSta(() =>
             {
-                using var form = new MainForm(new SettingsStore(directory.FilePath)) { ShowInTaskbar = false, Opacity = 0 };
+                void Phase(string phase) => output.WriteLine($"abertura={index}; fase={phase}; thread={Environment.CurrentManagedThreadId}; {DateTimeOffset.UtcNow:O}");
+                Phase("construção");
+                using var form = new MainForm(new SettingsStore(directory.FilePath), warning =>
+                {
+                    warnings.Add(warning);
+                    Phase("aviso: " + warning);
+                }) { ShowInTaskbar = false, Opacity = 0 };
+                form.FormClosed += (_, _) => Phase("FormClosed");
+                form.Disposed += (_, _) => Phase("Disposed");
+                Phase("Show");
                 form.Show();
                 PumpUntil(() => form.StartupTask.IsCompleted);
                 form.StartupTask.GetAwaiter().GetResult();
+                Phase("startup concluído");
                 var panel = Descendants(form).OfType<DevicePanel>().First();
                 PumpUntil(() => Descendants(panel).OfType<TextBox>().Any(text => text.Text.Contains("Preferência explícita preservada")));
+                Phase("refresh concluído");
                 Assert.Null(panel.AudioControls.Selection.DeviceId);
                 Assert.Contains(Descendants(panel).OfType<Label>(), label => label.Text.Contains("Salvo — volume 25"));
                 Assert.False(Descendants(form).OfType<CheckBox>().First().Checked);
                 Assert.True(Descendants(form).OfType<CheckBox>().Last().Checked);
                 Assert.Contains(form.Bounds, Screen.AllScreens.Select(screen => Rectangle.Intersect(screen.WorkingArea, form.Bounds)));
+                Phase("Close");
                 form.Close();
                 PumpUntil(() => form.IsDisposed);
+                Phase("fechamento concluído");
             });
+            Assert.Empty(warnings);
         }
         var loaded = await new SettingsStore(directory.FilePath).LoadAsync(TestContext.Current.CancellationToken);
         Assert.Equal(settings.Playback, loaded.Settings.Playback);
@@ -134,7 +152,8 @@ public sealed class PreferencesUiTests
         File.WriteAllText(directory.FilePath, original);
         File.WriteAllBytes(directory.FilePath + ".bak", SettingsJson.Encode(new StudioSettings()));
         byte[] bytes = File.ReadAllBytes(directory.FilePath);
-        using var form = new MainForm(new SettingsStore(directory.FilePath)) { ShowInTaskbar = false, Opacity = 0 };
+        var warnings = new List<string>();
+        using var form = new MainForm(new SettingsStore(directory.FilePath), warnings.Add) { ShowInTaskbar = false, Opacity = 0 };
         form.Show();
         var status = Descendants(form).OfType<Label>().Single(label => label.AccessibleName?.StartsWith("Estado do armazenamento de preferências", StringComparison.Ordinal) == true);
         PumpUntil(() => status.Text.Length > 0 && form.StartupTask.IsCompleted);
@@ -144,6 +163,7 @@ public sealed class PreferencesUiTests
         PumpUntil(() => form.IsDisposed);
         Assert.Equal(bytes, File.ReadAllBytes(directory.FilePath));
         Assert.Empty(Directory.GetFiles(directory.Path, "*.tmp"));
+        Assert.Empty(warnings);
     });
 
     [Fact]
@@ -186,7 +206,8 @@ public sealed class PreferencesUiTests
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             await OnSta(() =>
             {
-                using var form = new MainForm(store) { ShowInTaskbar = false, Opacity = 0 };
+                var warnings = new List<string>();
+                using var form = new MainForm(store, warnings.Add) { ShowInTaskbar = false, Opacity = 0 };
                 var checks = Descendants(form).OfType<CheckBox>().ToArray();
                 Assert.All(checks, check => Assert.False(check.Enabled));
                 Assert.All(Descendants(form).OfType<DevicePanel>(), panel => Assert.False(panel.Enabled));
@@ -196,6 +217,7 @@ public sealed class PreferencesUiTests
                 Assert.All(checks, check => Assert.False(check.Enabled));
                 form.Close();
                 PumpUntil(() => form.IsDisposed);
+                Assert.Empty(warnings);
             });
         }
         finally { release.Set(); }

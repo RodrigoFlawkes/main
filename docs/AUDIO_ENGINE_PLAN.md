@@ -1,6 +1,18 @@
-# Motor de áudio — fundação e conversão nominal
+# Motor de áudio — fundação, conversão e relógios
 
-## F2-I2 — implementação atual, 13/11/2026
+## F2-I3 — implementação atual, 14/11/2026
+
+Base sincronizada de c206d8c para e9c045f. Dois arquivos de produção internos, AudioClock.cs e ClockRatioController.cs, acrescentam descritor/observações, estimador de razão e controle limitado. Simulação determinística usada de verdade por ClockDriftTests, com eventos independentes, contabilidade de frames e fila limitada. Nenhuma integração com amostras, FIR nominal, UI ou hardware. [Contratos, metas prévias, método e resultados](CLOCK_DRIFT_SIMULATION.md).
+
+- Estimativa por deltas de posição/tempo em referência comum; IDs/gerações, unidades, qualidade, idade, regressão, saltos e descontinuidade verificados. Janela ≥1 s, filtro alpha 0,2. Controle a cada 100 ms com feed-forward + PI de ocupação média temporal, limites ±500 ppm e slew 25 ppm/s. Falha persistente requer reset/repriming explícito; sem dados suficientes mantém nominal. Posição nativa desconhecida não é presumida como frame.
+- Dezoito pares ligados/desligados de 900 s: 48→48, 44,1→48 e 48→44,1, ±50/100/300 ppm, jitter e offsets. Zero perdas com controle; sem ele, 1.181–12.176 frames perdidos. Convergência 21,8–76,7 s; maior erro final 3,006 ppm. Fora de orçamento e timestamps inválidos geram falha/contadores; pausa/geração nova recuperam sem apagar perdas anteriores. São simulações de contagem, não resampling adaptativo de áudio ou relógios físicos sincronizados.
+- Corrigida amostragem da ocupação no simulador: a leitura instantânea a cada 100 ms aliava os blocos de 5 ms. Média ponderada pelo tempo remove esse erro de observação, mantendo os ganhos e metas originais. Backend futuro terá de cumprir esse contrato, inclusive informar falhas reais de fronteira do intervalo.
+- Medido custo da etapa nominal com consumo parcial; destino de um frame provocou ~493 vezes mais frames remapeados que destino de 512, sem diferença de amostras/contagem. FIR/contrato nominal preservados. Planejado prefixo necessário/cache com ownership e contadores de proteção por estágio, sem contabilizar sufixo reoferecido como nova entrada aceita.
+- Teste STA de preferências recebe coletor de avisos com asserções, logs de ciclo de vida, prazo fora de DoEvents e Join. Watchdog externo restringe eventual encerramento à árvore recém-criada do runner. Nenhum bloqueio reproduzido nesta etapa; causa modal permanece hipótese, sem alteração de produção. Revisão e regressão física continuam bloqueando integração.
+
+Restore locked auditado e builds Debug/Release x64 sem erros/avisos. 336 testes por configuração (313 anteriores + 23 novos: 324 regras/simulações/arquivos/STA/sintéticos e 12 integrações Windows existentes), todos aprovados nas execuções finais. Repetições limitadas e sementes no status. Nenhum teste novo abriu stream físico. Prévia publicada/identidade/áudio da Alpha preservados. F2-I4 proposto: aplicar razão variável a amostras em resampler validado, antes de backend WASAPI. Parar após F2-I3; sem EQ, Fase 3, driver ou redesign.
+
+## Histórico F2-I2 — 13/11/2026
 
 Base sincronizada de b875bec para 2e286cf. `ChannelAdapter`, `NominalResampler` e `NominalConversionStage` são internos, independentes da UI e realmente exercitados com sinais sintéticos. A trajetória testada é `float32 → canais → FIR nominal → proteção → SyntheticAudioPipeline/SPSC na taxa de saída → memória`. O pipeline original continua exigindo formatos iguais em suas duas extremidades; a conversão ocorre antes dele, sem alterar os fluxos Alpha.
 
