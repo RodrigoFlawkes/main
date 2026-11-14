@@ -2,7 +2,35 @@
 
 Atualizado em 14/11/2026.
 
-## Estado atual — CHECKUP-1, encerramento e recursos
+## Estado atual — EQ-PROFILE-1, ajustes e perfis do EQ da prévia
+
+Implementação, testes, commit/push e republicação local autorizados pelo proprietário. Árvore inicialmente limpa em faaac35, sincronizada por fast-forward com origin/main em d4f5f47; remoto Wave-Universal-Studio/main confirmado. Lidos AGENTS, NEXT_TASK, REVIEW, requisitos, arquitetura/status e documentação pertinente. Normativos, tarefa/revisão e plano mestre preservados.
+
+Implementados modelos imutáveis de ajustes/perfis com cópias independentes e IDs estáveis. Até20 perfis; nomes normalizados de1 a48 caracteres, únicos sem distinguir maiúsculas; Padrão reservado. Dez bandas −15/+15 dB em passos de1 e entrada/preamp −30/0 em passos de0,1. Ajustes atuais e ativação persistem separados do perfil salvo: edição não o sobrescreve. UI simples com Criar perfil, Salvar alterações, Renomear, Excluir confirmado e aviso ao substituir ajustes diferentes. Padrão neutro/desligado; reset existente conserva ativação. Exclusão mantém ajustes atuais.
+
+JSON v2, migração explícita v1→v2 somente em memória na abertura, preservando seleções, níveis, janela e defaults históricos de coordenadas. Próximo save grava2 e mantém original no backup; recuperação de backups1/2, futuro/conflito/corrupção e limites existentes preservados. SettingsStore não reescrito. Gestos consolidados, debounce500 ms, fila existente e flush ao fechar após aguardar recuperação/reset. Falhas informadas, retry explícito possível; arquivo protegido permanece protegido. Binding inicial não salva nem inicia áudio. Controles aguardam carga e ficam congelados durante atividade/fechamento; formato não suportado preserva parâmetros sem habilitar EQ.
+
+Clipe continua vazio após reiniciar, nível digital de teste20%; ativação salva não autoriza captura/playback. Nenhuma escrita de volume/mute/padrão Windows. Audio/DSP/headroom/FIR/clocks/backend/COM e dependências/locks preservados. Biblioteca Audio publicada mantém exatamente o SHA-256 do CHECKUP-1. Sem novos efeitos globais, drivers, redesign, instalador ou release pública.
+
+38 testes novos (31 modelos/JSON/armazenamento e7 UI, incluindo4 integrações de janela/arquivos). Cobrem migração sem escrita inicial, roundtrip, cópias/CRUD, limites/JSON estrito, backup1/2, futuro/conflito, falha de save/retry, arraste/flush, duas aberturas e rascunho distinto, ausência de áudio/clipe,20% e congelamento. Testes anteriores de versão futura passaram de2 para3, pois2 é agora suportada; nenhuma asserção removida. Casos novos inicialmente identificaram aceitação de propriedade calculada ignorada e defaults v1 de janela incompatíveis com parâmetros obrigatórios; corrigidos por método não serializável e migração explícita dos defaults, respectivamente.
+
+Primeira regressão Debug556/557: fixture MeterVisibility excedeu prazo no fechamento, também reproduzido isoladamente. Reutilizado loop STA assíncrono de PreferencesUiTests, sem modificar produção de medição;2 direcionados aprovados. Regressão seguinte encerrou após489 aprovados, com exceção de layout em continuação de MicrophoneTestPanel.RunAsync na thread pool. Fixture de microfone sem loop real convertida para o mesmo helper existente;17 testes direcionados passaram. Prazos e assertivas preservados. Não atribuir essas correções à causa histórica completa de intermitência. Resultados finais abaixo substituem essas execuções intermediárias.
+
+Verificações: restore locked auditado (`dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all`), builds Debug/Release x64 --no-restore com 0 erros/avisos. Regressões finais: **557 aprovados em Debug e 557 em Release**, 0 falhas/ignorados, 69,248 s/41,027 s; watchdog sem kill, pipes completos. Executadas com scripts/Test-WithWatchdog.ps1, seeds 20261114/20261113, TimeoutSeconds180 (MTP165), sem alteração do script ou ExecutionPolicy. Logs finais: artifacts/clock-drift/Debug-20261114-8a29790fd40d45f09a6af5c1b4fcdb35 e Release-20261113-204664cbb37f4f4da5f14d391d40689d.
+
+Publicação Release x64 framework-dependent em staging-eq-profile-1-20261114, sem símbolos; PE AMD64, produto Wave Studio/FileVersion0.1.0.0 e marca incorporada preservados. Instância própria com settings exclusivo abriu visível, respondeu e fechou normalmente com código 0, gravando JSON2, sem áudio; não houve inspeção visual independente. Requer .NET Desktop Runtime10 x64. Executar a pasta completa em `artifacts/alpha-preview/win-x64/WaveStudio.exe`, ou pela fonte `dotnet run --project src/WaveStudio.Desktop`. Artefatos locais/validação ficam fora do Git.
+
+| Arquivo | Bytes | SHA-256 |
+| --- | --- | --- |
+| WaveStudio.exe |303.616|97D1892C98D2DC66A4B8B2F0190AAC1690CD227286B06595FA946DB25E307285|
+| WaveStudio.dll |537.088|0FB4BAE8316643969977BC3FEFCD2051C2C6DEB2B9C5BD681801B2E82CDBB7BF|
+| WaveStudio.Audio.dll |200.704|CCD1FB262E646F89BE6F83327E211C5D272A8729475460010FA8FA47ABABCB85|
+
+Pacote promovido após confirmar ausência de WaveStudio.exe aberto, sem forçar fechamento: 16 arquivos conhecidos (8 runtime, 4 documentos, 4 licenças), hashes de destino iguais ao staging. Backup anterior em artifacts/alpha-preview/backup-before-eq-profile-1-1f79f89b483c4d899ab0666b513ea422; manifesto e startup em artifacts/alpha-preview/validation/eq-profile-1. Preferências/arquivos desconhecidos preservados. Conteúdo versionável restrito a código, testes e documentação da tarefa; sem credenciais ou artefatos de compilação encontrados. `git diff --check` sem erros. Commit/push autorizados desta etapa, sem antecipar a seguinte.
+
+Pendências físicas: **A14** no [roteiro Alpha](docs/ALPHA_ACCEPTANCE.md), fechar/reabrir com o mesmo arquivo, valores/ativação/rascunho/perfil, confirmar trocas/exclusão, clipe vazio e nível20%, congelamento e layout/DPI. Proprietário já relatou diferença audível original/EQ, sem aprovação dos demais subcasos A13. A01–A13 restantes, USB/retomada e Windows11x64 pendentes; Windows10 experimental. Não executados novos testes físicos de áudio pelo agente. Alpha/Fase2 não aceitas. Após publicação, parar para revisão; F2-I6A continua próxima etapa autorizável, não iniciada.
+
+## Histórico — CHECKUP-1, encerramento e recursos
 
 14/11/2026: execução, testes, commit/push e republicação local autorizados. Main inicialmente limpa em af2ba4b, sincronizada por fast-forward para645921d; remoto Wave-Universal-Studio/main confirmado. AGENTS/NEXT_TASK/REVIEW/GENERAL_CHECKUP, requisitos, arquitetura/status e trechos pertinentes lidos. Preservados normativos/tarefa/revisão e plano mestre; não implementados novos efeitos, backend/COM/clock, drivers, monitoramento ou redesign.
 

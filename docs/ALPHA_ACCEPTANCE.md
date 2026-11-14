@@ -1,5 +1,11 @@
 # Aceitação da prévia v0.1.0 Alpha
 
+## EQ-PROFILE-1 — teste manual A14 pendente
+
+Pacote local atualizado com persistência de ajustes/perfis, sem alterar áudio/headroom ou iniciar captura/playback automaticamente. Resultados técnicos e hashes atuais no PROJECT_STATUS; pacotes abaixo são históricos. A diferença audível original/EQ foi relatada pelo proprietário, sem aprovação automática dos demais subcasos A13.
+
+**A14 — mesmo arquivo de preferências em duas aberturas:** na aba Testar microfone, ative EQ, ajuste 1 kHz em −9 dB e entrada/preamp em −3 dB. Crie “Voz”. Mude a banda para −6 dB sem salvar alterações no perfil. Feche normalmente e reabra usando o mesmo `--settings-file` (ou o mesmo padrão). Confira ativação, valores atuais −6/−3, perfil “Voz” e indicação de ajustes diferentes, nível digital de teste em 20% e gravação vazia; nenhum áudio deve iniciar. Escolha Padrão, recuse a troca e confira preservação; depois confirme e confira neutralidade/EQ desligado. Aplique “Voz”: deve recuperar −9/−3. Teste Salvar alterações, renomear, nomes duplicados, exclusão recusada/confirmada e reinício. Durante gravação/play/stop, confirme perfis e EQ bloqueados; a gravação só começa por ação própria, com fones e volume baixo. Conferir layout/rolagem/DPI. Relatar cada subcaso; nada disso foi ensaiado fisicamente pelo agente. Testes automatizados usam arquivos e backend isolados.
+
 ## CHECKUP-1 — prévia corrigida, validação de encerramento pendente
 
 Pacote local atualizado na pasta habitual, com backup/hashes/startup no PROJECT_STATUS. Preserva EQ e A01–A13. Conferir fechamento normal após testar mic/EQ, durante parada e após troca/USB/suspensão por ação própria, em nível baixo. Se houver status de encerramento pendente, não presumir que o hardware parou: aguarde e tente fechar novamente; não forçar encerramento durante este roteiro. Recursos ativos não são descartados à força. A falha de parada não foi provocada em hardware pelo agente; testes de falha/timeout são simulados. Nenhuma aceitação automática da Alpha/Fase 2 ou Windows 11, sem novo monitoramento.

@@ -28,11 +28,12 @@ internal sealed record EndpointPreference([property: JsonRequired] string Endpoi
 
 internal sealed record StudioSettings
 {
-    public int SchemaVersion { get; init; } = 1;
+    public int SchemaVersion { get; init; } = 2;
     public SelectionPreference Playback { get; init; } = new();
     public SelectionPreference Capture { get; init; } = new();
     public WindowPlacement? Window { get; init; }
     public EndpointPreference[] Endpoints { get; init; } = [];
+    [JsonRequired] public EqualizerPreferences Equalizer { get; init; } = new();
 
     public StudioSettings WithEndpoint(EndpointPreference preference) => this with
     {
@@ -51,8 +52,10 @@ internal static class SettingsJson
         WriteIndented = true,
         MaxDepth = 16,
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+        RespectRequiredConstructorParameters = true,
         Converters = { new JsonStringEnumConverter<EndpointDirection>(allowIntegerValues: false) }
     };
+    private static readonly JsonSerializerOptions LegacyWindowOptions = new(Options) { RespectRequiredConstructorParameters = false };
 
     public static StudioSettings Decode(byte[] bytes)
     {
@@ -64,8 +67,33 @@ internal static class SettingsJson
         if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("schemaVersion", out var version)
             || version.ValueKind != JsonValueKind.Number || !version.TryGetInt32(out int number))
             throw new InvalidDataException("A configuração precisa informar schemaVersion.");
-        if (number != 1) throw new NotSupportedException("Versão de configuração incompatível. Arquivo preservado.");
+        if (number is not (1 or 2)) throw new NotSupportedException("Versão de configuração incompatível. Arquivo preservado.");
         CheckDuplicateProperties(root);
+        if (number == 1)
+        {
+            if (root.TryGetProperty("equalizer", out _)) throw new InvalidDataException("Campos de EQ exigem a versão 2.");
+            // Explicit in-memory v1 -> v2 migration. Original bytes/baseline remain owned by SettingsStore.
+            using var migrated = new MemoryStream();
+            using (var writer = new Utf8JsonWriter(migrated))
+            {
+                writer.WriteStartObject();
+                foreach (var property in root.EnumerateObject())
+                {
+                    if (property.Name == "schemaVersion") writer.WriteNumber("schemaVersion", 2);
+                    else if (property.Name == "window" && property.Value.ValueKind == JsonValueKind.Object)
+                    {
+                        // v1 allowed omitted X/Y to mean zero; materialize those legacy defaults explicitly.
+                        writer.WritePropertyName("window");
+                        JsonSerializer.Serialize(writer, property.Value.Deserialize<WindowPlacement>(LegacyWindowOptions), Options);
+                    }
+                    else property.WriteTo(writer);
+                }
+                writer.WritePropertyName("equalizer");
+                JsonSerializer.Serialize(writer, new EqualizerPreferences(), Options);
+                writer.WriteEndObject();
+            }
+            payload = migrated.ToArray();
+        }
         var settings = JsonSerializer.Deserialize<StudioSettings>(payload.Span, Options)
             ?? throw new InvalidDataException("Configuração vazia.");
         Validate(settings);
@@ -82,7 +110,8 @@ internal static class SettingsJson
 
     public static void Validate(StudioSettings settings)
     {
-        if (settings.SchemaVersion != 1) throw new InvalidDataException("Versão inválida para gravação.");
+        if (settings.SchemaVersion != 2) throw new InvalidDataException("Versão inválida para gravação.");
+        if (settings.Equalizer is null) throw new InvalidDataException("Ajustes do equalizador ausentes.");
         ValidateSelection(settings.Playback);
         ValidateSelection(settings.Capture);
         if (settings.Endpoints is null || settings.Endpoints.Length > 1000)

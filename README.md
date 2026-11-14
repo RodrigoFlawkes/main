@@ -22,7 +22,7 @@
 > [!IMPORTANT]
 > **Projeto em desenvolvimento — Alpha experimental.** A prévia local já oferece controles reais do Windows, teste de microfone e equalização de uma gravação curta. O processamento global, microfone virtual, mesa digital completa e demais efeitos continuam em desenvolvimento. Não há instalador ou release pública nesta etapa.
 
-**CHECKUP-1:** corrigidos cleanup com erro, cancelamento pré-Start e encerramento pendente. Falhas/timeout de parada preservam recursos em uso e permitem nova tentativa de fechar, com diagnóstico não modal. Funcionalidades/EQ existentes preservados. [Causas, testes e limites](docs/GENERAL_CHECKUP.md); [resultados e pacote atual](PROJECT_STATUS.md). Nenhum backend contínuo ou efeito global novo.
+**EQ-PROFILE-1:** ajustes do EQ lembrados entre aberturas e perfis personalizados com criação, salvamento explícito, renomeação e exclusão confirmada. O clipe continua temporário e nenhum áudio inicia automaticamente. [Como usar os perfis](docs/EQ_PREVIEW.md); [verificações e pacote atual](PROJECT_STATUS.md). Correções de encerramento CHECKUP-1 preservadas; nenhum efeito global novo.
 
 ## Sobre o Wave Studio
 
@@ -43,7 +43,7 @@ Três princípios orientam o desenvolvimento:
 | Mixer de aplicativos | Sessões reais do Windows, volume/mute individual e pico por instância |
 | Medidores | Nível real de entrada e saída; distinção de silêncio, indisponibilidade e atraso |
 | Teste de microfone | Gravação de até 10 segundos em memória, reprodução explícita, stop e limpeza |
-| Equalizador de prévia | Dez bandas reais, preamp, bypass, reset e comparação original/processado |
+| Equalizador de prévia | Dez bandas reais, preamp, bypass, reset, comparação original/processado e perfis personalizados locais |
 | Preferências | Seleções, valores de endpoint salvos explicitamente, backup, restauração e posição da janela |
 | Conexão e recuperação | Notificações de dispositivos, atualização manual e invalidação de operações obsoletas |
 

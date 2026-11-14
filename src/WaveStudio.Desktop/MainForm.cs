@@ -43,6 +43,7 @@ internal sealed partial class MainForm : Form
         watch = audioWatch ?? new AudioWatchWorker();
         microphoneTest = new MicrophoneTestPanel(microphoneSession);
         store = settingsStore ?? new SettingsStore(SettingsStore.DefaultPath);
+        InitializeEqualizerProfiles();
         readWorkAreas = workAreas ?? (() => Screen.AllScreens.Select(screen => screen.WorkingArea)
             .Select(area => new WindowArea(area.X, area.Y, area.Width, area.Height)).ToArray());
         showStorageWarning = storageWarning ?? (message => MessageBox.Show(this, message, "Preferências locais", MessageBoxButtons.OK, MessageBoxIcon.Warning));
@@ -182,7 +183,7 @@ internal sealed partial class MainForm : Form
             catch (Exception error) { ReportClosePending(error); }
             finally { closeAttemptRunning = false; }
         };
-        FormClosed += (_, _) => { lifetime.Dispose(); peakTimer.Dispose(); };
+        FormClosed += (_, _) => { lifetime.Dispose(); peakTimer.Dispose(); equalizerSaveTimer.Dispose(); };
     }
 
     protected override void Dispose(bool disposing)

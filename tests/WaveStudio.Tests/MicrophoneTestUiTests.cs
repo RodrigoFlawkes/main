@@ -11,39 +11,22 @@ public sealed class MicrophoneTestUiTests
     private static DeviceSnapshot Device(string id, EndpointDirection direction) =>
         new(id, id, direction, EndpointState.Active, false, false, new(48000, 1, 32, "IeeeFloat"), null);
 
-    internal static Task OnSta(Action<MicrophoneTestPanel, MicrophoneTestTests.FakeBackend> test)
-    {
-        var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var thread = new Thread(() =>
+    internal static Task OnSta(Action<MicrophoneTestPanel, MicrophoneTestTests.FakeBackend> test) =>
+        PreferencesUiTests.OnSta(async () =>
         {
+            var backend = new MicrophoneTestTests.FakeBackend();
+            using var form = new TestForm { ClientSize = new Size(850, 700), ShowInTaskbar = false, Opacity = 0 };
+            using var panel = new MicrophoneTestPanel(new MicrophoneTestSession(backend));
+            form.Controls.Add(panel);
+            form.Show();
             try
             {
-                var backend = new MicrophoneTestTests.FakeBackend();
-                using var form = new TestForm { ClientSize = new Size(850, 700), ShowInTaskbar = false, Opacity = 0 };
-                using var panel = new MicrophoneTestPanel(new MicrophoneTestSession(backend));
-                form.Controls.Add(panel);
-                form.Show();
-                try
-                {
-                    panel.SelectDevices(Device("input", EndpointDirection.Capture), Device("output", EndpointDirection.Playback));
-                    Pump(() => panel.RecordButton.Enabled);
-                    test(panel, backend);
-                }
-                finally
-                {
-                    var close = panel.StopAsync().AsTask();
-                    Pump(() => close.IsCompleted);
-                    close.GetAwaiter().GetResult();
-                }
-                done.TrySetResult();
+                panel.SelectDevices(Device("input", EndpointDirection.Capture), Device("output", EndpointDirection.Playback));
+                await PreferencesUiTests.PumpUntilAsync(() => panel.RecordButton.Enabled);
+                test(panel, backend);
             }
-            catch (Exception error) { done.TrySetException(error); }
-        }) { IsBackground = true };
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        return done.Task;
-    }
-
+            finally { await panel.StopAsync(); }
+        });
     internal static void Pump(Func<bool> condition)
     {
         var clock = Stopwatch.StartNew();

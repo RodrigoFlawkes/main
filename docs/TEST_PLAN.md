@@ -1,5 +1,11 @@
 # Plano de testes
 
+## EQ-PROFILE-1 — ajustes e perfis
+
+38 casos novos:31 de modelos/JSON/armazenamento e7 de UI (quatro integrações Windows de janela/armazenamento, sem áudio). Cobrem cópias independentes, limites de ganhos/preamp/nomes/quantidade, CRUD e IDs, ajuste atual distinto do perfil, migração v1 em memória com campos antigos e defaults de janela, backups v1/v2, campos desconhecidos/duplicados/ausentes, conflitos/versões futuras, falha de escrita/retry, arraste consolidado/flush no fechamento, duas aberturas isoladas, nenhuma captura/playback automática, 20% digital, clipe vazio e congelamento/formato incompatível. Testes de versão futura existentes passaram a usar3, pois2 agora é suportada.
+
+A primeira regressão Debug teve556/557 aprovados; MeterVisibilityTests também falhou isoladamente ao esperar o fechamento na fixture síncrona com DoEvents. Reutilizado o loop STA assíncrono existente, preservando prazo/assertivas e produção de medição; os dois casos direcionados passaram. A execução seguinte terminou após489 aprovados com exceção FlowLayout/índice, em continuação de MicrophoneTestPanel.RunAsync na thread pool. A fixture de microfone foi convertida para o mesmo loop de mensagens existente, mantendo os testes e prazos; callbacks deixam de depender de um contexto de UI não instalado. Nenhuma correção especulativa no layout de produção. Isso não comprova a causa histórica completa de intermitências do runner. Resultados das regressões finais Debug/Release no PROJECT_STATUS. A14 manual no ALPHA_ACCEPTANCE, demais casos físicos e Windows11 pendentes.
+
 ## CHECKUP-1 — liberação, encerramento e snapshots
 
 24 casos novos:19 CheckupMicrophoneTests,2 CheckupShutdownUiTests (integrações Windows somente leitura/janela) e3 CheckupTransportTests. Nove falharam contra a base antes do patch, reproduzindo cleanup ignorado com erro/descarte e provider/modo pré-Start retidos. Cobertura de captura/reprodução × clear/select/invalidation/close, erro primário+Dispose, falhas RequestStop/Tick, worker/stop bloqueado e timeout/retry sem descarte ativo; completion com erro durante close de ambos os papéis. Mantidos testes existentes e suas asserções.

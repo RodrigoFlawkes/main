@@ -118,7 +118,7 @@ public sealed class SettingsStoreTests
 
     [Theory]
     [InlineData(0)]
-    [InlineData(2)]
+    [InlineData(3)]
     [InlineData(100)]
     public async Task IncompatibleVersionSurvivesSaveResetRecoveryAndCloseStyleSave(int version)
     {
@@ -304,7 +304,7 @@ public sealed class SettingsStoreTests
 
     [Theory]
     [InlineData(1)]
-    [InlineData(2)]
+    [InlineData(3)]
     public async Task Utf8BomIsAcceptedAndIncompatibleFileStillPreserved(int version)
     {
         using var directory = new TemporarySettingsDirectory();

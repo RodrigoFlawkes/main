@@ -128,8 +128,8 @@ internal sealed class MicrophoneTestPanel : UserControl
     {
         var value = session.Latest;
         bool busy = value.State is MicrophoneTestState.Recording or MicrophoneTestState.Playing or MicrophoneTestState.Stopping;
-        record.Enabled = pending == 0 && !stopped && value.CanRecord;
-        play.Enabled = pending == 0 && !stopped && value.CanPlay;
+        record.Enabled = pending == 0 && !stopped && value.CanRecord && equalizer.PreferencesLoaded;
+        play.Enabled = pending == 0 && !stopped && value.CanPlay && equalizer.PreferencesLoaded;
         bool eqSupported = value.RecordedSampleRate is not null ? value.EqualizerSupported
             : inputFormat is not null && GraphicEqualizerSettings.SupportsRate(inputFormat.SampleRate);
         equalizer.SetAvailability(eqSupported, stopped || pending != 0 || busy);

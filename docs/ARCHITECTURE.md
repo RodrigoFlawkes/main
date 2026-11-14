@@ -1,6 +1,12 @@
 # Arquitetura do Wave Studio
 
-## Implementação atual — CHECKUP-1
+## Implementação atual — EQ-PROFILE-1
+
+EqualizerValues/EqualizerProfile/EqualizerPreferences são snapshots imutáveis de parâmetros, com cópias nos limites e coleção limitada a20. O modelo separa ajuste atual e perfil salvo por ID estável, sem serializar DSP ou áudio. EqualizerPreviewPanel faz binding suprimido e comandos locais; MainForm.EqualizerProfiles consolida gestos/debounce de500 ms e reutiliza a fila de MainForm.Preferences/SettingsStore, com flush após operações de recuperação no fechamento. Nada foi acrescentado ao callback ou ao projeto Audio.
+
+SettingsJson grava schemaVersion2 com equalizer obrigatório, validação estrita e migração explícita de1 em memória (inclusive defaults históricos de WindowPlacement). O original1 permanece baseline/backup até uma gravação posterior; backup1/2 e proteção de futuro/conflito continuam no mesmo SettingsStore. Primeira abertura neutra; ativações persistidas não autorizam áudio. Nível digital permanece20% e clipe vazio após reinício. [Formato, limites e uso](EQ_PREVIEW.md). A seção histórica v1 abaixo descreve o contrato anterior.
+
+## Base preservada — CHECKUP-1
 
 Correções de ciclo de vida sobre a base funcional: engine do diagnóstico invalida época de entrega, separa erros primários/cleanup e só libera recursos após completion ou antes de Start. Session trata falhas de controle/Tick e limita a espera de Dispose, mantendo worker/recursos quando a parada não é confirmada. MainForm.Shutdown acompanha tarefas independentes, captura falhas no async FormClosing e permite nova tentativa sem iniciar disposers concorrentes ou destruir streams ativos. Snapshot do transporte isolado distingue indisponibilidade e invalida entrega. [Evidências, limites e sequência F2-I6A/B](GENERAL_CHECKUP.md). Não há mudança de DSP, backend ativo ou fluxo de áudio global.
 

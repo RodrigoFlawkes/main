@@ -74,6 +74,7 @@ internal sealed partial class MainForm
             settings = loaded.Settings;
             settingsLoaded = true;
             ApplySavedSelections();
+            LoadEqualizerPreferences();
             windowPlacementAvailable = ApplyWindowPlacement();
             ShowStorageStatus(loaded.Message + (windowPlacementAvailable ? "" : " Área útil da tela indisponível; posição salva preservada nesta abertura."));
             EnablePreferenceSelections(true);
@@ -137,6 +138,7 @@ internal sealed partial class MainForm
                 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3));
                 var result = await store.SaveAsync(settings, timeout.Token);
                 lastSaveError = result.Success ? null : result.Message;
+                if (!IsDisposed) ShowEqualizerSaveResult(result.Success, result.Message);
                 if (!IsDisposed) ShowStorageStatus(result.Message);
                 if (!result.Success) { settingsSaveRequested = false; break; }
             }
@@ -144,12 +146,14 @@ internal sealed partial class MainForm
         catch (OperationCanceledException)
         {
             lastSaveError = "A gravação das preferências foi cancelada. Confira o armazenamento antes de fechar.";
+            if (!IsDisposed) ShowEqualizerSaveResult(false, lastSaveError);
             if (!IsDisposed) ShowStorageStatus(lastSaveError);
         }
         catch (Exception error) when (SettingsJson.IsValidationError(error) || SettingsStore.IsStorageError(error))
         {
             settingsSaveRequested = false;
             lastSaveError = "Falha ao salvar preferências. A configuração válida foi preservada. " + error.Message;
+            if (!IsDisposed) ShowEqualizerSaveResult(false, lastSaveError);
             if (!IsDisposed) ShowStorageStatus(lastSaveError);
         }
         finally { savingSettings = false; }
@@ -244,12 +248,14 @@ internal sealed partial class MainForm
     private async Task RecoverOrResetAsync(bool useBackup)
     {
         if (stopping || preferenceOperation || (useBackup ? !store.CanRecoverBackup : !store.CanReset)) return;
-        string prompt = useBackup ? "Recuperar as preferências do backup válido? A seleção será recarregada e os níveis atuais serão consultados."
-            : "Redefinir seleções e valores salvos nas preferências locais? A configuração válida anterior ficará no backup. Um original inválido será arquivado.";
+        string prompt = useBackup ? "Recuperar as preferências e os perfis do backup válido? A seleção será recarregada e os níveis atuais serão consultados."
+            : "Redefinir seleções, níveis salvos e todos os perfis e ajustes do equalizador? A configuração válida anterior ficará no backup. Um original inválido será arquivado.";
         if (MessageBox.Show(this, prompt, "Preferências locais", MessageBoxButtons.YesNo,
             MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
         preferenceOperation = true;
         recoveringPreferences = true;
+        FlushEqualizerPreferences();
+        microphoneTest.Equalizer.BeginLoad();
         EnablePreferenceSelections(false);
         ShowStorageStatus("Atualizando preferências locais…");
         try
@@ -265,6 +271,7 @@ internal sealed partial class MainForm
                 if (!stopping)
                 {
                     ApplySavedSelections();
+                    LoadEqualizerPreferences();
                     RequestRefresh(true);
                 }
             }
@@ -280,6 +287,7 @@ internal sealed partial class MainForm
             if (!stopping && !IsDisposed)
             {
                 EnablePreferenceSelections(!refreshing);
+                LoadEqualizerPreferences();
                 ShowStorageStatus(storageStatus.Text);
             }
         }
@@ -300,6 +308,7 @@ internal sealed partial class MainForm
             showStorageWarning("A operação de preferências ficou pendente ou falhou. Confira o arquivo na próxima abertura. " + error.GetType().Name);
             return;
         }
+        FlushEqualizerPreferences();
         var bounds = WindowState == FormWindowState.Normal ? Bounds : RestoreBounds;
         var placement = new WindowPlacement(bounds.X, bounds.Y, bounds.Width, bounds.Height, WindowState == FormWindowState.Maximized);
         if (windowPlacementAvailable && settings.Window != placement && store.CanSave)

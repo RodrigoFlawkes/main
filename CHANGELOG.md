@@ -2,6 +2,13 @@
 
 ## Em desenvolvimento
 
+### 2026-11-14 — EQ-PROFILE-1, ajustes e perfis locais
+
+- Persistência dos dez ganhos, entrada/preamp, ativação e perfil selecionado; edição atual independente do perfil salvo. Criação, salvamento explícito, renomeação e exclusão confirmada, com nomes simples/únicos e até 20 perfis.
+- Migração explícita JSON v1→v2 em memória, sem escrita na abertura, preservando campos existentes, backups, conflitos e arquivos protegidos. Saves consolidados e flush no fechamento com mensagem de falha.
+- Carregamento antes da interação e controles bloqueados durante atividade. Clipe não persistido, nível digital inicial de 20%, nenhuma captura/reprodução automática ou alteração do Windows. DSP, headroom, backend e dependências preservados.
+- Testes de modelo, migração, armazenamento, falha de escrita, duas aberturas, congelamento e fechamento; resultados e republicação no PROJECT_STATUS. A14 manual e Windows 11 pendentes; sem aceitação automática da Alpha/Fase 2.
+
 ### 2026-11-14 — CHECKUP-1, cleanup e encerramento seguro
 
 - Corrigida liberação ignorada quando o diagnóstico conclui com erro e descarte pendente; erros primários/cleanup separados, sem liberar callbacks ativos ou repetir Dispose cegamente. Provider/modo/contadores são limpos em cancelamento pré-Start.

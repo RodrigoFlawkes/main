@@ -73,76 +73,56 @@ public sealed class MeterVisibilityTests
     [Trait("Category", "WindowsIntegration")]
     public Task MainWindowMeasuresBothAudioTabsAndPausesOtherTabsAndMinimizedWindow()
     {
-        var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var thread = new Thread(() =>
+        return PreferencesUiTests.OnSta(async () =>
         {
+            using var directory = new TemporarySettingsDirectory();
+            var backend = new Backend();
+            var microphoneBackend = new MicrophoneTestTests.FakeBackend();
+            int workers = 0;
+            var worker = new AudioWatchWorker(_ => { Interlocked.Increment(ref workers); return backend; });
+            using var form = new MainForm(new SettingsStore(directory.FilePath), audioWatch: worker,
+                microphoneSession: new MicrophoneTestSession(microphoneBackend)) { ShowInTaskbar = false, Opacity = 0 };
+            form.Show();
             try
             {
-                using var directory = new TemporarySettingsDirectory();
-                var backend = new Backend();
-                var microphoneBackend = new MicrophoneTestTests.FakeBackend();
-                int workers = 0;
-                var worker = new AudioWatchWorker(_ => { Interlocked.Increment(ref workers); return backend; });
-                using var form = new MainForm(new SettingsStore(directory.FilePath), audioWatch: worker,
-                    microphoneSession: new MicrophoneTestSession(microphoneBackend)) { ShowInTaskbar = false, Opacity = 0 };
-                form.Show();
-                try
+                await PreferencesUiTests.PumpUntilAsync(() => form.StartupTask.IsCompleted);
+                var controls = Descendants(form).ToArray();
+                var tabs = controls.OfType<TabControl>().Single();
+                var microphone = controls.OfType<MicrophoneTestPanel>().Single();
+                foreach (var (page, minimized, enabled) in new[]
                 {
-                    Pump(() => form.StartupTask.IsCompleted);
-                    var controls = Descendants(form).ToArray();
-                    var tabs = controls.OfType<TabControl>().Single();
-                    var microphone = controls.OfType<MicrophoneTestPanel>().Single();
-                    foreach (var (page, minimized, enabled) in new[]
+                    ("Dispositivos", false, true), ("Testar microfone", false, true),
+                    ("Mixer de aplicativos", false, false), ("Preferências locais", false, false),
+                    ("Testar microfone", true, false), ("Testar microfone", false, true)
+                })
+                {
+                    tabs.SelectedTab = tabs.TabPages.Cast<TabPage>().Single(tab => tab.Text == page);
+                    form.WindowState = minimized ? FormWindowState.Minimized : FormWindowState.Normal;
+                    try { await PreferencesUiTests.PumpUntilAsync(() => worker.MeteringEnabled == enabled); }
+                    catch (TimeoutException error)
                     {
-                        ("Dispositivos", false, true), ("Testar microfone", false, true),
-                        ("Mixer de aplicativos", false, false), ("Preferências locais", false, false),
-                        ("Testar microfone", true, false), ("Testar microfone", false, true)
-                    })
-                    {
-                        tabs.SelectedTab = tabs.TabPages.Cast<TabPage>().Single(tab => tab.Text == page);
-                        form.WindowState = minimized ? FormWindowState.Minimized : FormWindowState.Normal;
-                        try { Pump(() => worker.MeteringEnabled == enabled); }
-                        catch (TimeoutException error)
-                        {
-                            throw new TimeoutException($"Aba={page}; minimizar={minimized}; estado={form.WindowState}; selecionada={tabs.SelectedTab?.Text}; medindo={worker.MeteringEnabled}; esperado={enabled}.", error);
-                        }
-                        Assert.Equal(page == "Testar microfone" && !minimized, microphone.InputMeter.MeteringEnabled);
-                        if (!enabled)
-                        {
-                            Assert.Equal(0, microphone.InputMeter.PeakBar.Value);
-                            Assert.Contains("pausada", microphone.InputMeter.ReadingText);
-                        }
-                        Assert.Empty(microphoneBackend.Calls);
-                        Assert.Equal(20, microphone.TestLevel.Value);
+                        throw new TimeoutException($"Aba={page}; minimizar={minimized}; estado={form.WindowState}; selecionada={tabs.SelectedTab?.Text}; medindo={worker.MeteringEnabled}; esperado={enabled}.", error);
                     }
+                    Assert.Equal(page == "Testar microfone" && !minimized, microphone.InputMeter.MeteringEnabled);
+                    if (!enabled)
+                    {
+                        Assert.Equal(0, microphone.InputMeter.PeakBar.Value);
+                        Assert.Contains("pausada", microphone.InputMeter.ReadingText);
+                    }
+                    Assert.Empty(microphoneBackend.Calls);
+                    Assert.Equal(20, microphone.TestLevel.Value);
                 }
-                finally { form.Close(); Pump(() => form.IsDisposed); }
-                Assert.False(worker.MeteringEnabled);
-                Assert.Equal(1, workers);
-                Assert.Equal(backend.Opens, backend.Closed);
-                Assert.Equal(1, backend.Disposals);
-                Assert.Empty(microphoneBackend.Calls);
-                done.TrySetResult();
             }
-            catch (Exception error) { done.TrySetException(error); }
-        }) { IsBackground = true };
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        return done.Task;
+            finally { form.Close(); await PreferencesUiTests.PumpUntilAsync(() => form.IsDisposed); }
+            Assert.False(worker.MeteringEnabled);
+            Assert.Equal(1, workers);
+            Assert.Equal(backend.Opens, backend.Closed);
+            Assert.Equal(1, backend.Disposals);
+            Assert.Empty(microphoneBackend.Calls);
+        });
     }
 
     private static IEnumerable<Control> Descendants(Control parent) =>
         parent.Controls.Cast<Control>().SelectMany(child => new[] { child }.Concat(Descendants(child)));
 
-    private static void Pump(Func<bool> condition)
-    {
-        var clock = Stopwatch.StartNew();
-        while (!condition())
-        {
-            if (clock.Elapsed > TimeSpan.FromSeconds(8)) throw new TimeoutException("A janela não concluiu a transição de visibilidade.");
-            Application.DoEvents();
-            Thread.Sleep(5);
-        }
-        Application.DoEvents();
-    }
 }

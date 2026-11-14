@@ -1,4 +1,4 @@
-# EQ-PREVIEW-1 — equalizador audível no teste de microfone
+# Equalizador da prévia — ajustes e perfis
 
 Prévia local em 14/11/2026. Reutiliza captura curta, buffer, worker e reprodução existentes. Apenas o trecho gravado pelo usuário é processado, ao clicar em **Ouvir com EQ**. Não é EQ global, monitoramento, microfone virtual ou efeito em Discord/OBS/jogos. F2-I6 nativa continua pendente; Alpha/Fase 2 não declaradas aceitas.
 
@@ -10,7 +10,17 @@ Prévia local em 14/11/2026. Reutiliza captura curta, buffer, worker e reproduç
 4. Use Zerar EQ e preamp para voltar às dez bandas em 0 dB/preamp 0. Desmarcar Ativar EQ faz bypass; o botão original continua disponível mesmo com ajustes de EQ.
 5. Pare antes de alterar parâmetros ou o nível digital. Limpar, seleção/atualização de dispositivos, desconexão, suspensão e fechamento preservam a política de descarte existente.
 
-EQ desligado, bandas/preamp neutros na abertura; configurações de EQ não persistidas. Válido para gravações PCM16/float32 mono/estéreo em 44,1/48 kHz. Demais taxas continuam com o teste original; EQ desabilitado com motivo. A taxa efetivamente gravada prevalece sobre metadados do catálogo. Saída compartilhada mantém a conversão de formato Windows já usada no diagnóstico.
+Na primeira abertura, EQ desligado e bandas/preamp neutros. Depois, ajustes atuais, ativação e perfil selecionado são lembrados localmente. Isso nunca inicia gravação ou reprodução; o clipe permanece temporário e o nível digital de teste volta a 20%. Válido para gravações PCM16/float32 mono/estéreo em 44,1/48 kHz. Demais taxas continuam com o teste original; EQ desabilitado com motivo, preservando os ajustes. A taxa efetivamente gravada prevalece sobre metadados do catálogo. Saída compartilhada mantém a conversão de formato Windows já usada no diagnóstico.
+
+## Ajustes e perfis personalizados — EQ-PROFILE-1
+
+- Ajuste o EQ, digite um nome e use **Criar perfil**. Para modificar o perfil selecionado, ajuste e clique em **Salvar alterações**. Ajustes atuais são salvos automaticamente, mas não sobrescrevem o perfil nomeado sem essa ação.
+- A indicação de ajustes diferentes permanece mesmo após reiniciar. Ao escolher outro perfil, confirme o descarte das alterações que ainda não foram salvas nele. **Padrão** aplica bandas/preamp neutros e EQ desligado. **Zerar EQ e preamp** conserva a ativação, como antes.
+- Para renomear, edite o nome e clique em **Renomear**. **Excluir** pede confirmação e mantém os ajustes atuais, desvinculados do perfil apagado. Nenhuma dessas ações inicia áudio ou modifica controles do Windows.
+- Até 20 perfis, nomes únicos sem distinção de maiúsculas, de 1 a 48 caracteres: letras, números, espaços, hífen, sublinhado e parênteses. Espaços são consolidados e Unicode normalizado; “Padrão” é reservado. IDs internos estáveis não aparecem na interface. Bandas em passos de 1 dB; entrada/preamp admite 0,1 dB.
+- Controles ficam bloqueados durante captura, reprodução, parada, operação pendente, carregamento e fechamento. A mensagem de salvamento informa falha ou arquivo protegido. Em falha transitória, **Salvar alterações** permite tentar novamente; o fechamento também tenta conservar os últimos ajustes.
+
+Configuração JSON v2 reutiliza o armazenamento e os saves serializados existentes. v1 é migrada somente em memória ao abrir, com EQ neutro, preservando seleção, níveis e janela; a próxima gravação produz v2 e conserva o original no backup. Backups v1/v2 são recuperáveis. Arquivos futuros, inválidos e conflitos entre instâncias mantêm a proteção existente. Não altere manualmente schemaVersion para contornar validação. Os arrastes são consolidados antes do save; demais edições usam espera de 500 ms e flush ao fechar, sem I/O no callback de áudio. Apenas parâmetros/copias independentes são serializados, sem filtros, áudio ou autorização de reprodução.
 
 ## Implementação e segurança
 
@@ -32,4 +42,4 @@ Novos testes cobrem todos os centros/±15 dB em 44,1/48 kHz (tolerância ±0,12 
 
 Um teste antigo de UI observava Play habilitado antes de terminar a reconciliação dos demais controles. Reproduzidos Clear ainda desabilitado e, ao mudar a ordem, Play ainda habilitado depois de observar Record. Corrigida somente a espera do teste para incluir o conjunto de estados esperado; asserções preservadas. Não atribuir isso à causa histórica do runner. Resultados finais/tempos/hashes e publicação no PROJECT_STATUS.
 
-Teste audível A/B, distorção percebida, layout/DPI, troca/desconexão durante play e Windows 11 continuam pendentes do proprietário. Windows 10 experimental. Após escuta/revisão e avaliação do saldo, decidir retomada F2-I6 para resolver clock nativo/stream antes da prova externa Fase 3 ou expansão de efeitos. Não há promessa de consumo percentual de cota.
+O proprietário relatou diferença audível entre original e EQ; os demais subcasos de A13 não estão automaticamente aprovados. Teste manual de perfis A14, distorção percebida, layout/DPI, troca/desconexão durante play e Windows 11 continuam pendentes. Windows 10 experimental. Após revisão, retomar F2-I6A para resolver clock nativo/preparação sem Start antes de ampliar o backend. Não há promessa de consumo percentual de cota.
