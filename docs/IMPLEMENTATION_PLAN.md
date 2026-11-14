@@ -62,3 +62,7 @@ Consultar [PRODUCT_HUB_PLAN.md](PRODUCT_HUB_PLAN.md) para navegação lateral fu
 ## Adendo — catálogo visual e aparência (14/11/2026)
 
 [PRODUCT_HUB_PLAN.md](PRODUCT_HUB_PLAN.md) registra Meu Equipamento, associação visual independente de endpoint, catálogo local expansível, imagens licenciadas/personalizadas, conexão/estado e bateria apenas se realmente disponível, além de Claro/Escuro/Alto contraste/Seguir Windows, cor personalizada, wallpaper e persistência. Escopo posterior de design; não ampliar EQ-PREVIEW-1, não gastar cota implementando agora nem prometer bateria universal. Manter a prova de processamento externo e funções reais primeiro.
+
+## Consolidação mestre e disciplina de cota (14/11/2026)
+
+[PRODUCT_MASTER_PLAN.md](PRODUCT_MASTER_PLAN.md) reúne o escopo completo e as decisões de navegação; Config concentra aparência/animações/cor/wallpaper/idioma/sistema. O proprietário informa 47% restantes no Codex. Alto por padrão; Extra alto quando necessário e decidido pelo proprietário. Não pular etapas técnicas, testes, segurança ou otimização necessária. Economizar por foco e evitar redundâncias; pausar em checkpoint seguro se cota acabar, preservar trabalho, registrar resultados/pendências e retomar após reset. Não ampliar a tarefa atual. F2-I6 e F3 necessárias antes da expansão em massa; redesign depois do núcleo funcional.
