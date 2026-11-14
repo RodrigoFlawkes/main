@@ -40,3 +40,11 @@ Rascunho do proprietário de 14/11/2026 detalhado em [PRODUCT_HUB_PLAN.md](PRODU
 ## Estudo opcional — áudio por aba de navegador
 
 Ver [plano mestre](PRODUCT_MASTER_PLAN.md), refinamentos da validação. API tabCapture permite acesso mediante ação explícita; investigar extensão Chromium opcional e ganho por aba após F3, sem promessa de cobertura universal. Não ampliar tarefa atual. Descartar se custo/segurança/estabilidade não justificarem.
+
+## Modos de EQ aprovados
+
+Disponibilizar seletor de modo nos equalizadores independentes de Áudio e Microfone. Preservar o modo atual, os perfis e a opção simples de graves/médios/agudos.
+- Básico: 10 bandas fixas existentes (31/62/125/250/500 Hz, 1/2/4/8/16 kHz), ±15 dB.
+- Avançado: gráfico de 31 bandas, centros nominais de um terço de oitava de 20 Hz a 20 kHz (20,25,31,5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000,20000 Hz). Avaliar extensão até ±30 dB somente com validação de resposta, estabilidade, headroom e proteção de saída; limitar/desabilitar valores incompatíveis com formato e Nyquist.
+- Personalizado: adicionar/remover filtros, editar frequência, ganho e Q/largura, tipos peak/shelf/HP/LP/notch/band-pass e curva de resposta real. Permitir reproduzir a seleção de 13 frequências do exemplo Equalizer APO do proprietário (10,21,42,83,166,333,577,1000,2000,4000,8000,16000,20000 Hz), quando tecnicamente válidas. Não prometer equivalência de resposta apenas por coincidência de frequência/ganho; interpolação, Q e algoritmos podem diferir. Importação de subconjunto APO permanece estudo seguro posterior.
+- Modos e parâmetros independentes por entrada/saída, perfil persistente e migração sem perda; evitar cascata inadvertida de múltiplos modos. Troca explícita com aviso quando conversão não preservar curva, bypass/reset, comparação A/B, proteção e suavização em tempo real; nenhum ganho de hardware/nível Windows implícito. UI leiga e controles avançados opcionais. Não alterar prévia de dez bandas nesta etapa; expansão em F6/F7 após prova externa F3, sem antecipar DSP em massa ou redesign. 

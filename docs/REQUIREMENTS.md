@@ -107,3 +107,7 @@ Estrutura sugerida (ajuste sem burocracia): `src/WaveStudio.Desktop`, `WaveStudi
 - Fabricantes: https://www.redragon.com.br/ e https://fifinemicrophone.com/ (validar modelos/manuais e licenças)
 
 A especificação define escopo desejado. A arquitetura e a viabilidade de recursos avançados devem ser confirmadas; nenhuma referência comercial equivale a garantia de suporte universal.
+
+## Adendo aprovado — três modos de equalização
+
+Básico 10 bandas ±15 dB; Avançado 31 bandas, ±30 dB condicionados à segurança/validação; Personalizado com filtros, frequência/ganho/Q editáveis, inclusive exemplo de 13 frequências do proprietário. Aplicável aos EQs independentes de Áudio e Microfone. Detalhes e restrições no [plano mestre](PRODUCT_MASTER_PLAN.md). Preservar requisitos anteriores e execução por fases.

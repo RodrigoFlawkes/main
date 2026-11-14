@@ -187,3 +187,7 @@ O proprietário especificou que os ajustes do equalizador da aba Testar microfon
 ## Confirmação A13 — diferença audível
 
 14/11/2026: após pergunta direta se percebeu diferença na própria voz entre original e reprodução com EQ ativado, o proprietário respondeu “sim”. **Subcaso A13 de comparação audível confirmado pelo proprietário.** Não há valores de banda, medição objetiva, evidência de ausência de distorção ou confirmação de todos os controles/descarte/formatos/DPI. A13 permanece parcial; A06 seleção/níveis, A04 isolamento e demais subcasos não relatados permanecem pendentes. Preparado EQ-PROFILE-1 para persistência de parâmetros/perfis, sem salvar clipe ou alterar níveis Windows. Não declarar Alpha aceita.
+
+## Retorno A14 — perfis do EQ
+
+14/11/2026: proprietário respondeu “sobre os teste tudo ok” após roteiro de perfis e salvamento de EQ-PROFILE-1. **A14 aprovado por relato geral do proprietário**, sem discriminação de subcasos, valores, layout ou logs. A gravação descartada ao fechar já era comportamento desejado; a diferença audível A13 foi confirmada separadamente. Não inferir aceitação completa da Alpha, outros casos físicos ou Windows 11. A próxima tarefa é F2-I6A sem Start, não transporte ativo.
