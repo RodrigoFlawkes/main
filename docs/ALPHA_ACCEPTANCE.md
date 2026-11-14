@@ -137,3 +137,7 @@ Identificação histórica do pacote F1-I6-METER anterior à identidade visual:
 | WaveStudio.Audio.dll | 100.864 | 68350948F73E0AB14F983DFDBD6BD10C03177CEA8580AC0BEC480346830C5F5F |
 
 Conteúdo e hashes completos em artifacts/alpha-preview/validation/meter-package-manifest.json, ignorado pelo Git. Distribua/use a pasta completa com as licenças existentes.
+
+## Conferência visual da prévia com identidade oficial
+
+Base ace3e1e. Quatro capturas do proprietário confirmam logo no cabeçalho, ícone na barra de título e abertura das quatro abas. Catálogo com 51 endpoints; saída USB Audio Device estéreo 48 kHz e microfone fifine Microphone mono 48 kHz, ambos com contêiner 32 bits; preferência explícita de captura e seguimento do padrão de reprodução. Mixer mostra oito sessões, incluindo League of Legends e Discord ativas com picos não nulos. A aba Testar microfone mostra medidor disponível com leitura pontual de 1,0%, sem gravação iniciada. Preferências carregadas, seleção salva visível e zero preferências de níveis. Isso confirma apresentação e leituras pontuais, não reação à fala/silêncio, isolamento audível, hotplug ou restauração de níveis. Taskbar/Alt+Tab, DPI, demais subcasos de A01–A12 e Windows 11 ainda pendentes. Recomenda-se concluir checklist de aceitação no Windows 10 antes do redesign, sem reexecutar tarefa F1-I6-METER já entregue. Observação visual: detalhes técnicos ocupam espaço excessivo e controles inferiores exigem rolagem; priorizar compactação no futuro redesign sem ocultar controles funcionais.
