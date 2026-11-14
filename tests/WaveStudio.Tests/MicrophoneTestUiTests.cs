@@ -11,7 +11,7 @@ public sealed class MicrophoneTestUiTests
     private static DeviceSnapshot Device(string id, EndpointDirection direction) =>
         new(id, id, direction, EndpointState.Active, false, false, new(48000, 1, 32, "IeeeFloat"), null);
 
-    private static Task OnSta(Action<MicrophoneTestPanel, MicrophoneTestTests.FakeBackend> test)
+    internal static Task OnSta(Action<MicrophoneTestPanel, MicrophoneTestTests.FakeBackend> test)
     {
         var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() =>
@@ -44,7 +44,7 @@ public sealed class MicrophoneTestUiTests
         return done.Task;
     }
 
-    private static void Pump(Func<bool> condition)
+    internal static void Pump(Func<bool> condition)
     {
         var clock = Stopwatch.StartNew();
         while (!condition())
@@ -78,15 +78,17 @@ public sealed class MicrophoneTestUiTests
         Assert.False(panel.TestLevel.Enabled);
         backend.Capture.Emit(400);
         Button(panel, "&Parar").PerformClick();
-        Pump(() => panel.PlayButton.Enabled);
+        Pump(() => panel.PlayButton.Enabled && Button(panel, "&Limpar teste").Enabled);
         Assert.Equal(0, backend.Playback.Starts);
         panel.PlayButton.PerformClick();
         Pump(() => panel.Snapshot.State == MicrophoneTestState.Playing && Button(panel, "Parar &reprodução").Enabled);
         Assert.False(panel.RecordButton.Enabled);
         Button(panel, "Parar &reprodução").PerformClick();
-        Pump(() => panel.PlayButton.Enabled);
-        Button(panel, "&Limpar teste").PerformClick();
-        Pump(() => panel.Snapshot.State == MicrophoneTestState.Idle && panel.RecordButton.Enabled);
+        Pump(() => panel.PlayButton.Enabled && Button(panel, "&Limpar teste").Enabled);
+        var clear = Button(panel, "&Limpar teste");
+        Assert.True(clear.CanSelect && clear.Enabled, $"Limpar selecionável={clear.CanSelect}, habilitado={clear.Enabled}, estado={panel.Snapshot.State}");
+        clear.PerformClick();
+        Pump(() => panel.Snapshot.State == MicrophoneTestState.Idle && panel.RecordButton.Enabled && !panel.PlayButton.Enabled);
         Assert.False(panel.PlayButton.Enabled);
         Assert.Equal(TimeSpan.Zero, panel.Snapshot.RecordedDuration);
     });

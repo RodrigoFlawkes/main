@@ -1,5 +1,7 @@
 # Plano da v0.1.0 Alpha
 
+Atualização EQ-PREVIEW-1, 14/11/2026: prova vertical de EQ no diagnóstico curto entregue para escuta/revisão, com reutilização de captura/provider/worker/filtros NAudio. [Escopo e teste A/B](EQ_PREVIEW.md). Resultados finais no status. F2-I6 continua pendente e será a próxima decisão após teste audível/saldo, antes de multiplicar efeitos. As seções anteriores de F2-I5 abaixo são histórico; requisitos e critérios físicos Alpha permanecem.
+
 Estado em 14/11/2026: F2-I5 implementada isoladamente. Descritores/probe WASAPI reais somente leitura, adaptação de relógio com evidência explícita e sessão de transporte simulado que exercita FIR adaptativo, SPSC, priming, ocupação temporal, parada e recuperação. Regressão dos 375 anteriores preservada; verificações finais em PROJECT_STATUS/TEST_PLAN. [Contrato, APIs e bloqueios](WASAPI_BACKEND_PLAN.md). Prévia corrigida republicada localmente pelo fluxo autorizado, sem release pública.
 
 Parar após F2-I5 para revisão. Proposta F2-I6: resolver lacuna pública do clock/HRESULT, confirmar negociação real sem conversão implícita, ownership e fechamento, interlock compartilhado com diagnóstico e eventual conexão física opt-in. Não abrir streams novos nesta etapa nem liberar integração física sem revisão, regressão A01–A12 e autorização. Validar Windows 11; Windows 10 experimental. Não antecipar EQ, Fase 3 ou drivers. Consulta de mix/capacidade não é negociação efetiva nem validação física.

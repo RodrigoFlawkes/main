@@ -1,5 +1,6 @@
 using System.Buffers.Binary;
 using NAudio.Wave;
+using WaveStudio.Audio.Dsp;
 
 namespace WaveStudio.Audio;
 
@@ -51,11 +52,11 @@ internal sealed class BoundedTestAudio : IDisposable
 
     public void Seal() { lock (sync) sealedBuffer = true; }
 
-    public IWaveProvider CreatePlayback(float level, Func<bool> isCurrent)
+    public ClipProvider CreatePlayback(float level, Func<bool> isCurrent, GraphicEqualizerSettings? equalizer = null)
     {
         if (!float.IsFinite(level) || level is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(level));
         Seal();
-        return new ClipProvider(this, level, isCurrent);
+        return new ClipProvider(this, level, isCurrent, equalizer);
     }
 
     public void Dispose()
@@ -68,10 +69,22 @@ internal sealed class BoundedTestAudio : IDisposable
         }
     }
 
-    private sealed class ClipProvider(BoundedTestAudio clip, float level, Func<bool> isCurrent) : IWaveProvider
+    internal sealed class ClipProvider : IWaveProvider
     {
+        private readonly BoundedTestAudio clip;
+        private readonly float level;
+        private readonly Func<bool> isCurrent;
+        private readonly GraphicEqualizer? equalizer;
+        private long limited;
         private int position;
+        public long LimitedSamples => Volatile.Read(ref limited);
+        public long SanitizedSamples => equalizer?.SanitizedSamples ?? 0;
         public WaveFormat WaveFormat => clip.Format;
+        public ClipProvider(BoundedTestAudio clip, float level, Func<bool> isCurrent, GraphicEqualizerSettings? settings)
+        {
+            this.clip = clip; this.level = level; this.isCurrent = isCurrent;
+            if (settings?.Enabled == true) equalizer = new(clip.Format.SampleRate, clip.Format.Channels, settings);
+        }
         public int Read(Span<byte> buffer)
         {
             if (!isCurrent()) return 0;
@@ -84,7 +97,8 @@ internal sealed class BoundedTestAudio : IDisposable
                 for (int i = 0; i < size; i += 4)
                 {
                     float sample = BinaryPrimitives.ReadSingleLittleEndian(destination[i..]);
-                    sample = float.IsFinite(sample) ? Math.Clamp(sample, -1f, 1f) * level : 0;
+                    if (equalizer is null) sample = float.IsFinite(sample) ? Math.Clamp(sample, -1f, 1f) * level : 0;
+                    else sample = Protect(equalizer.Process(sample, i / 4 % WaveFormat.Channels) * level);
                     BinaryPrimitives.WriteSingleLittleEndian(destination[i..], sample);
                 }
             }
@@ -93,13 +107,23 @@ internal sealed class BoundedTestAudio : IDisposable
                 for (int i = 0; i < size; i += 2)
                 {
                     short sample = BinaryPrimitives.ReadInt16LittleEndian(destination[i..]);
-                    BinaryPrimitives.WriteInt16LittleEndian(destination[i..], (short)(sample * level));
+                    if (equalizer is null) BinaryPrimitives.WriteInt16LittleEndian(destination[i..], (short)(sample * level));
+                    else
+                    {
+                        float value = Protect(equalizer.Process(sample / 32768f, i / 2 % WaveFormat.Channels) * level);
+                        BinaryPrimitives.WriteInt16LittleEndian(destination[i..], (short)Math.Clamp((int)MathF.Round(value * 32768), -32768, 32767));
+                    }
                 }
             }
             position += size;
             // Invalidation during a read also suppresses the packet already copied.
             if (!isCurrent()) { destination.Clear(); return 0; }
             return size;
+        }
+        private float Protect(float value)
+        {
+            if (value is < -1 or > 1) { Interlocked.Increment(ref limited); return Math.Clamp(value, -1, 1); }
+            return value;
         }
     }
 }

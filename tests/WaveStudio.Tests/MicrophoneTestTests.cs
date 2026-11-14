@@ -37,7 +37,7 @@ public sealed class MicrophoneTestTests
         public Exception? Error { get; set; }
         public int Starts { get; private set; }
         public int Disposals { get; private set; }
-        public void Start() => Starts++;
+        public void Start() { Completed = false; Starts++; }
         public void RequestStop() => Completed = true;
         public void Dispose() => Disposals++;
     }

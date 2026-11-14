@@ -8,6 +8,8 @@ Aplicação desktop para gerenciamento de áudio no Windows, independente de fab
 
 ## Estado do projeto
 
+**EQ-PREVIEW-1:** na aba Testar microfone, a mesma gravação agora pode ser ouvida original ou com **EQ real de dez bandas**, preamp, bypass/reset e atenuação de segurança. EQ desligado inicialmente; formatos 44,1/48 kHz mono/estéreo. Ajuste antes de ouvir, com fones e nível baixo. [Como comparar A/B e limitações](docs/EQ_PREVIEW.md). Afeta apenas o teste local; EQ global/monitoramento e F2-I6 seguem pendentes.
+
 A F2-I5 implementa o [contrato WASAPI isolado](docs/WASAPI_BACKEND_PLAN.md): consulta real de formatos/capacidades/períodos e transporte exclusivamente simulado com clocks explícitos, FIR adaptativo, fila, priming, parada e recuperação. A [fundação do motor](docs/AUDIO_ENGINE_PLAN.md) preserva [resampling e qualidade anteriores](docs/ADAPTIVE_RESAMPLING_QUALITY.md). Não há stream nativo contínuo novo ou integração desse motor à janela. Funcionalidades reais são prioridade, redesign depois; aceitação física da Alpha permanece pendente.
 
 F1-I6-METER acrescenta o medidor de entrada na aba de teste ao checkpoint técnico da Alpha. A prévia oferece seleção independente, volume/mute, balanço condicional, medidores reais, mixer de sessões, notificações, teste curto de microfone e preferências JSON. A aceitação física da v0.1.0 Alpha permanece pendente.

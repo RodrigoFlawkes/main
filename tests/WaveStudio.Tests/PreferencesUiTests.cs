@@ -139,8 +139,8 @@ public sealed class PreferencesUiTests(ITestOutputHelper output)
                 Phase("refresh concluído");
                 Assert.Null(panel.AudioControls.Selection.DeviceId);
                 Assert.Contains(Descendants(panel).OfType<Label>(), label => label.Text.Contains("Salvo — volume 25"));
-                Assert.False(Descendants(form).OfType<CheckBox>().First().Checked);
-                Assert.True(Descendants(form).OfType<CheckBox>().Last().Checked);
+                Assert.False(Descendants(form).OfType<CheckBox>().Single(check => check.Text == "Seguir padrão multimídia de reprodução").Checked);
+                Assert.True(Descendants(form).OfType<CheckBox>().Single(check => check.Text == "Seguir padrão multimídia de captura").Checked);
                 Assert.Contains(form.Bounds, Screen.AllScreens.Select(screen => Rectangle.Intersect(screen.WorkingArea, form.Bounds)));
                 Phase("Close");
                 form.Close();

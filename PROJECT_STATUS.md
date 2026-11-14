@@ -2,7 +2,47 @@
 
 Atualizado em 14/11/2026.
 
-## Estado atual — F2-I5, formatos/relógios/ciclo de vida WASAPI isolados
+## Estado atual — EQ-PREVIEW-1, EQ audível no diagnóstico curto
+
+14/11/2026: execução/commit/push/republicação autorizados. Main limpa em ad504f8, sincronizada por fast-forward para54d545e e, antes da publicação, para ca6cf8a; remoto Wave-Universal-Studio/main confirmado. AGENTS/NEXT_TASK/REVIEW e requisitos/arquitetura/status consultados; normativos/tarefa/revisão preservados. Escopo pequeno: reutilizar gravação curta, buffer, worker, player e biquads NAudio; não expandir FIR/clocks/watchdog ou integrar F2-I6. Quatro commits de planejamento remoto incorporados sem conflito por fast-forward, com trabalho local preservado em stash e reaplicado; planos de hub/aparência preservados, sem implementação. Código verificado permaneceu igual, sem repetir suítes por mudanças documentais.
+
+| Categoria | Resultado EQ-PREVIEW-1 |
+| --- | --- |
+| Implementado | GraphicEqualizerSettings/GraphicEqualizer em Audio/Dsp; provider BoundedTestAudio e engine/session existentes integrados; EqualizerPreviewPanel na aba Testar microfone |
+| EQ | Dez peaking biquads públicos NAudio.Core 3.1.0 por canal, Q√2, centros31/62/125/250/500 Hz e1/2/4/8/16 kHz; ganhos−15/+15 dB, preamp−30/0 dB, bypass/reset. Sem dependência/projeto novo |
+| Segurança | EQ off/bandas/preamp neutros inicialmente, nível digital20%; preamp efetivo desconta soma dos boosts (conservador, pode soar mais baixo), sanitização antes dos filtros, hard clip final contado após nível digital. Não é limiter nem normalização de loudness |
+| Formatos | PCM16/float32 mono/estéreo em 44,1/48 kHz; demais taxas mantêm original, EQ desabilitado com motivo. Valida taxa gravada real/Nyquist; canais/estados separados |
+| A/B | Original selado imutável em um único clip≤10 s/8 MiB. Filtros novos/snapshot imutável por play, sem cauda adicional. Ajustes congelados durante atividade; sem captura nova, arquivo processado, alocação recorrente ou trabalho pesado na UI |
+| Ciclo de vida | Play/stop/clear, ID/revisão/cancelamento e conferência antes de Start preservados; provider invalida antes/depois de copiar. Seleção/desconexão/suspensão/fechamento descartam conforme o diagnóstico existente |
+| Testes novos |54:40 respostas centrais ±15 dB/duas taxas (±0,12 dB com headroom),11 regras/provider/ciclo e3 UI. Flat/bypass/preamp/reset, estabilidade, canais, PCM, clipping/sanitização, original, EOF, estado novo, invalidação e abertura cancelada;100 leituras aquecidas sem bytes alocados na thread medida |
+| Direcionados |100 aprovados no conjunto EQ+microfone;21 UI/preferências após ajuste de seletores. Nenhum teste novo inicia áudio físico |
+| Restore/build |SDK 10.0.404, Git 2.56; restore --locked-mode com NuGetAudit=true/Mode=all aprovado sem alertas; Debug/Release x64 com0 erros/0 avisos. SDK/dependências/locks/branding preservados |
+| Regressão final | **495 aprovados por configuração** (441 anteriores+54 novos),0 falhas/ignorados; Debug59,994 s/Release29,826 s; watchdog=False, pipes completos |
+| Distribuição | Prévia local Release x64 framework-dependent, com backup e validação própria de abertura/fechamento. Caminho habitual artifacts/alpha-preview/win-x64/WaveStudio.exe; hashes/manifesto abaixo |
+
+Detalhes e roteiro A/B em [EQ_PREVIEW.md](docs/EQ_PREVIEW.md). API pública `BiQuadFilter.PeakingEQ(float,float,float,float)`/`Transform(float)` conferida na fonte 3.1.0 e por compilação/testes, licença MIT existente; sem copiar filtros ou criar DSP de relógios novo. O provider decodifica no span de reprodução, aplica preamp→cascata→nível digital→proteção/PCM; não escreve volume/mute/padrão Windows. PCM16 flat pode diferir do original por até1 LSB na quantização; bytes armazenados do original não mudam. A comparação não é casada automaticamente em loudness.
+
+Ocorrências intermediárias preservadas: duas tentativas direcionadas tiveram99 aprovados/um timeout ao limpar. Diagnóstico mostrou Clear desabilitado enquanto Play já habilitado; uma reordenação experimental revelou a mesma espera incompleta no sentido oposto e foi descartada. Ajustado somente o fixture para aguardar os estados pertinentes juntos, sem retirar asserções ou aumentar prazos. O primeiro Debug completo teve494/495 aprovados: teste de preferências usava último checkbox e passou a ler o novo EQ; corrigido para localizar explicitamente Seguir padrão de captura/reprodução.21 casos de UI/preferências passaram depois. Não foi reproduzida nem declarada resolvida a causa histórica completa do runner; sem expansão de watchdog/produção por hipótese.
+
+Comandos: `dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all`; builds Debug/Release --no-restore; testes direcionados `dotnet test --no-build -c Debug -- --filter-class '*EqualizerPreview*' --filter-class '*MicrophoneTest*' --timeout 40s`. Suítes finais pelo watchdog existente, Configuration Debug/Release, Seed20261114/20261113, TimeoutSeconds180 (MTP165); sem alteração no script, política de execução, SO ou instalação. Para iniciar pela fonte: `dotnet run --project src/WaveStudio.Desktop`.
+
+Logs finais em artifacts/clock-drift/Debug-20261114-0f36f5989af549c891a01d818158e894 e Release-20261113-b506a9c6acd4435191b4077c07bceba9:495 aprovados em cada,474 regras/simulações/arquivos/STA e21 integrações Windows existentes,0 falhas/ignorados. Primeiro Debug494/495 em58,471 s permanece no diagnóstico local. Não foi necessário encerrar runner; pipes completos. Nenhuma suíte completa extra foi executada após as duas finais aprovadas.
+
+Republicação local concluída: `dotnet publish src/WaveStudio.Desktop/WaveStudio.Desktop.csproj -c Release --no-restore --self-contained false -p:DebugType=None -p:DebugSymbols=false -p:IncludeSourceRevisionInInformationalVersion=false -o artifacts/alpha-preview/staging-eq-preview-1-20261114`. Nenhuma instância do proprietário aberta nas conferências antes da promoção. Instância própria15480, com --settings-file exclusivo sob validation/eq-preview-1, abriu com título oficial, respondeu e fechou normalmente/código0; configurações de teste salvas e nenhum áudio iniciado. Revisão visual física não realizada. PE AMD64/produto Wave Studio/FileVersion0.1.0.0 e marca incorporada preservados.
+
+Pasta habitual artifacts/alpha-preview/win-x64 atualizada com15 arquivos conhecidos (8 runtime,3 documentos de instrução/avisos e4 licenças), hashes comparados com staging. Backup anterior intacto em artifacts/alpha-preview/backup-before-eq-preview-1-f16ea75bc56c48029ec8af6ced168282; arquivos desconhecidos/preferências não substituídos. Manifesto completo e startup em artifacts/alpha-preview/validation/eq-preview-1, ignorados pelo Git. Requer .NET Desktop Runtime 10 x64; Windows 10 de ensaio continua experimental, sem instalador/release pública.
+
+| Arquivo publicado | Bytes | SHA-256 |
+| --- | --- | --- |
+| WaveStudio.exe |303.616|97D1892C98D2DC66A4B8B2F0190AAC1690CD227286B06595FA946DB25E307285|
+| WaveStudio.dll |512.000|F549BDD438F5A8CC0CB7F8ED12658FA2F278AA5F5DA80A06A07A325F280D601C|
+| WaveStudio.Audio.dll |195.072|4745F089231E2C3893CB315F0585E9139FABD14BE463F0F10EDA7222C672343A|
+
+O apphost/ícone mantém hash; as mudanças estão nas DLLs. Criados 5 arquivos: DSP, painel EQ, duas classes de testes e docs/EQ_PREVIEW.md. Atualizados diagnóstico/fixtures e documentação pertinente; os ajustes de fixtures preservam semântica/asserts. Conferência final do índice inclui diff check, padrões de credenciais e arquivos sensíveis/artefatos; normativos/locks/branding e motor isolado existentes preservados. Commit/push autorizados, com conferência de árvore limpa/sincronizada após publicação.
+
+Pendências: **A13 audível**, layout/DPI e descarte durante troca/USB/suspensão a validar pelo proprietário com fones/nível baixo; não houve reprodução/gravação física automática. A01–A12 e Windows 11 x64 seguem pendentes, Windows 10 experimental. EQ afeta somente a gravação curta; não é EQ global/microfone virtual/efeito no Discord/OBS/jogos. Alpha/Fase 2 não aceitas. Parar após esta entrega; próxima decisão após escuta/revisão e saldo é retomar F2-I6/clock nativo/stream e posteriormente prova externa Fase 3, antes de expandir efeitos/mixer. Não há medição ou promessa de economia percentual de cota.
+
+## Histórico — F2-I5, formatos/relógios/ciclo de vida WASAPI isolados
 
 Implementação, commit/push e republicação local autorizados expressamente. Main inicialmente limpa em1771d39; sincronizada por fast-forward para92fedff, remoto `https://github.com/Wave-Universal-Studio/main.git` confirmado. AGENTS.md, NEXT_TASK.md, REVIEW.md e referências de requisitos, arquitetura, motor, qualidade, clocks, implementação, testes e aceitação consultados. Arquivos normativos/tarefa/revisão preservados contra92fedff. Nenhuma alteração anterior do proprietário foi descartada.
 
@@ -20,7 +60,7 @@ Implementação, commit/push e republicação local autorizados expressamente. M
 | Ocupação/controle | Integral de contadores/eventos por papel com watermark **do fake**, não média de snapshots. Exemplo média 1184; futuro/intervalo não fechado recusados. Drop/underrun real→fronteira→ReprimeRequired, alvo±500 ppm/slew25. Snapshot separa correção solicitada/aplicada |
 | Amostras | PCM16↔float32, mono→LR, blocos irregulares, silent/payload vazio, mute default e nível digital0,2; nenhum nível Windows escrito. FIFO48.000 produzidos/lidos, priming/descarte1.024, zero perdas e hash1A1C0D8E5FE4E9FD igual à referência FIR/ganho |
 | Drift aplicado |5 s sintéticos com captura+300 ppm:240.063 produzidos/240.000 lidos, zero perdas; alvo−100 ppm e aplicado−97,5 ppm. Prova atuação real do slew no produtor; não afirma convergência longa/hardware, cobertos separadamente pelos ensaios anteriores |
-| Restore/build | SDK10.0.404/Git2.56; restore locked com NuGetAudit=true/Mode=all aprovado, sem alertas. Debug e Release x64 com0 erros/0 avisos. Dependências/locks/SDK/nominal/adaptativo anterior/branding/Desktop preservados |
+| Restore/build | SDK 10.0.404/Git 2.56; restore locked com NuGetAudit=true/Mode=all aprovado, sem alertas. Debug e Release x64 com0 erros/0 avisos. Dependências/locks/SDK/nominal/adaptativo anterior/branding/Desktop preservados |
 | Testes finais | **441 aprovados por configuração**,0 falhas/ignorados:375 anteriores+66 novos;420 regras/simulações/STA e21 integrações Windows somente leitura/janelas. Debug53,850 s; Release25,687 s. Watchdog não precisou encerrar runner, pipes completos |
 | Custo callbacks |100 pares aquecidos ×480 frames, FIR/SPSC/codificação/hash;0 bytes alocados na thread medida, Debug77,1036 ms/Release17,6812 ms. Sem asserção de desempenho/deadline físico |
 | Prévia | Release x64 framework-dependent republicada localmente em artifacts/alpha-preview/win-x64; startup próprio e fechamento normal código0 com settings exclusivo, metadados/PE/recursos/licenças/hashes conferidos. Sem release pública/instalador |

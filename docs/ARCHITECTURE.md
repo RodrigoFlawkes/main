@@ -1,6 +1,10 @@
 # Arquitetura do Wave Studio
 
-## Implementação atual — F2-I5, contrato WASAPI isolado
+## Implementação atual — EQ-PREVIEW-1
+
+Prova audível pequena no diagnóstico curto: GraphicEqualizerSettings/GraphicEqualizer em Audio/Dsp reutilizam os biquads públicos NAudio, sem projeto/dependência nova. BoundedTestAudio mantém um original selado e cria provider processado com filtros independentes/estado novo por play. Engine/session congelam o snapshot no worker; MicrophoneTestPanel/EqualizerPreviewPanel oferecem dez bandas, preamp/headroom, bypass/reset e comparação original/processado, com ajustes bloqueados durante atividade. Não há novo backend de captura, arquivo processado, monitoramento ou EQ global. [Contrato e teste A/B](EQ_PREVIEW.md). Base WASAPI isolada abaixo preservada; F2-I6 pendente.
+
+## Histórico — F2-I5, contrato WASAPI isolado
 
 Em 14/11/2026, a fundação incorpora WasapiPcm/TransportEndpoint/TransportRoute, probe real de mix/capacidade/períodos em MTA e WasapiClockAdapter testado com posições nativas simuladas. Os snapshots são independentes de COM. Buffer/latência efetivos permanecem desconhecidos, sem Initialize/Start novo ou conversão Windows implícita. Auditoria NAudio 3.1.0 identificou lacuna no HRESULT de precisão do clock; caminho nativo ativo continua bloqueado. [APIs, formatos e limites](WASAPI_BACKEND_PLAN.md).
 

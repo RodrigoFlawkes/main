@@ -1,5 +1,9 @@
 # Motor de áudio — fundação, conversão e relógios
 
+## Adendo EQ-PREVIEW-1 — reutilização do diagnóstico curto
+
+Prova audível em 14/11/2026, independente do backend contínuo: EQ de dez bandas em Audio/Dsp aplicado pelo provider da gravação curta existente, com snapshot imutável/estados novos por play, A/B sem alterar o original e proteção/headroom explícitos. APIs públicas dos biquads NAudio já disponíveis; nenhum pacote, FIR/clock, stream de captura ou worker novo. [Contrato e teste local](EQ_PREVIEW.md). F2-I6 permanece pendente, sem liberação de monitoramento/rota global; Alpha em validação.
+
 ## F2-I5 — implementação atual, 14/11/2026
 
 Consulta WASAPI real somente leitura e prova de transporte simulado com a cadeia adaptativa anterior. [WASAPI_BACKEND_PLAN](WASAPI_BACKEND_PLAN.md) registra auditoria de APIs públicas NAudio 3.1.0/Microsoft, campos do formato, canais, unidades/qualidade de clocks, evidências de capacidade versus negociação efetiva, ciclo de vida, buffers e bloqueios. Sem pacote/projeto novo ou integração na Alpha.

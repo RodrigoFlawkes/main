@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using WaveStudio.Audio.Dsp;
 
 namespace WaveStudio.Audio;
 
@@ -8,6 +9,9 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
     private ITestCapture? capture;
     private ITestPlayback? playback;
     private BoundedTestAudio? clip;
+    private BoundedTestAudio.ClipProvider? playbackSource;
+    private long limitedSamples, sanitizedSamples;
+    private string? playbackMode;
     private string? captureId;
     private string? playbackId;
     private long generation;
@@ -20,7 +24,9 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
     internal MicrophoneTestSnapshot Snapshot => new(State, clip?.Duration ?? TimeSpan.Zero, elapsed, message,
         !Busy && captureId is not null && State != MicrophoneTestState.Disposed,
         !Busy && clip?.Length > 0 && playbackId is not null && State != MicrophoneTestState.Disposed,
-        Busy || clip is not null);
+        Busy || clip is not null, clip?.Format.SampleRate,
+        clip is not null && GraphicEqualizerSettings.SupportsRate(clip.Format.SampleRate), playbackMode,
+        playbackSource?.LimitedSamples ?? limitedSamples, playbackSource?.SanitizedSamples ?? sanitizedSamples);
 
     internal void Select(string? input, string? output, long revision)
     {
@@ -51,21 +57,24 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
         catch (Exception error) { Fail(error, true); }
     }
 
-    internal void Play(long revision, float level, TimeSpan now, Func<bool>? requested = null)
+    internal void Play(long revision, float level, TimeSpan now, Func<bool>? requested = null, GraphicEqualizerSettings? equalizer = null)
     {
         bool Current() => Valid(revision) && (requested?.Invoke() ?? true);
         if (!float.IsFinite(level) || level is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(level));
         if (Busy || !Current() || clip?.Length is not > 0 || playbackId is null) return;
         try
         {
-            playback = backend.OpenPlayback(playbackId, clip.CreatePlayback(level, () => isCurrent(revision) && (requested?.Invoke() ?? true)));
+            playbackSource = clip.CreatePlayback(level, () => isCurrent(revision) && (requested?.Invoke() ?? true), equalizer);
+            limitedSamples = sanitizedSamples = 0;
+            playbackMode = equalizer?.Enabled == true ? "Processado com EQ" : "Original (sem EQ)";
+            playback = backend.OpenPlayback(playbackId, playbackSource);
             if (!Current()) { playback.Dispose(); playback = null; return; }
             startedAt = now;
             elapsed = TimeSpan.Zero;
             discard = false;
             playback.Start();
             State = MicrophoneTestState.Playing;
-            message = "Reproduzindo o teste na saída selecionada. Captura desligada.";
+            message = $"{playbackMode}: reproduzindo na saída selecionada. Captura desligada.";
         }
         catch (Exception error) { Fail(error, false); }
     }
@@ -120,14 +129,20 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
 
     private bool Valid(long revision) => generation == revision && isCurrent(revision) && State != MicrophoneTestState.Disposed;
     private void RequestStop() { capture?.RequestStop(); playback?.RequestStop(); }
-    private void DropClip() { clip?.Dispose(); clip = null; elapsed = TimeSpan.Zero; }
+    private void DropClip() { clip?.Dispose(); clip = null; playbackSource = null; playbackMode = null; limitedSamples = sanitizedSamples = 0; elapsed = TimeSpan.Zero; }
     private Exception? ReleaseStreams()
     {
         Exception? failure = null;
         try { capture?.Dispose(); } catch (Exception error) { failure = error; }
         finally { capture = null; }
         try { playback?.Dispose(); } catch (Exception error) { failure ??= error; }
-        finally { playback = null; }
+        finally
+        {
+            playback = null;
+            limitedSamples = playbackSource?.LimitedSamples ?? limitedSamples;
+            sanitizedSamples = playbackSource?.SanitizedSamples ?? sanitizedSamples;
+            playbackSource = null;
+        }
         return failure;
     }
     private void Fail(Exception error, bool clearAudio)

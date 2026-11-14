@@ -2,6 +2,13 @@
 
 ## Em desenvolvimento
 
+### 2026-11-14 — EQ-PREVIEW-1, primeiro EQ audível de dez bandas
+
+- Prévia de EQ real na reprodução explícita da gravação curta existente: 31 Hz a 16 kHz, −15/+15 dB, preamp, headroom conservador, bypass e reset; NAudio.Core reutilizado, sem dependências novas.
+- Comparação original/processado com a mesma memória imutável, PCM16/float32 em 44,1/48 kHz, estados independentes por play, proteção final contada e ajustes congelados durante atividade. Taxas não suportadas mantêm o original, com EQ desabilitado.
+- Testes de resposta, segurança, provider/cancelamento e UI; fixture antigo aguarda reconciliação completa dos controles. Detalhes/resultados no status e docs/EQ_PREVIEW.md. Sem áudio físico automático, EQ global, novo pipeline de captura ou expansão de FIR/clocks/watchdog.
+- Republicação local Release x64 autorizada; teste audível/visual do proprietário pendente. Alpha/Fase 2 não aceitas e F2-I6 continua pendente para a próxima decisão.
+
 ### 2026-11-14 — F2-I5, backend WASAPI isolado
 
 - Descritores completos de formato/endpoint/geração e consulta real de mix/capacidade/períodos em MTA, sem Initialize/Start ou escrita de níveis. Mono/LR PCM16/float32 coerentes; formato ambíguo/PCM32/multicanal rejeitado, sem fallback ou conversão oculta.

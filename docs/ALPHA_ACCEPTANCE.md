@@ -1,5 +1,11 @@
 # Aceitação da prévia v0.1.0 Alpha
 
+## EQ-PREVIEW-1 — teste audível A13 pendente
+
+O pacote local atualizado mantém A01–A12 e acrescenta somente EQ na reprodução explícita da gravação curta. [Instruções A/B e limites](EQ_PREVIEW.md); versão, hashes, startup e verificações desta publicação no PROJECT_STATUS. A identificação do pacote F2-I5 abaixo é histórica. Sem aceitação automática da Alpha/Fase 2, release pública ou novo monitoramento.
+
+**A13 — proprietário, fones/volume baixo:** gravar uma frase em 44,1/48 kHz, parar e ouvir original em 20%. Ativar EQ, cortar 1 kHz em −9 dB, ouvir com EQ e comparar o mesmo original. Conferir bandas/preamp/reset/bypass, congelamento de ajustes durante play, stop/limpar, contadores de proteção e descarte em troca/USB/suspensão. Boost aplica atenuação conservadora; não compensar aumentando volume Windows. Em taxa não suportada, original continua disponível e EQ informa limitação. Informar resultado audível e layout/DPI. Nada desse caso foi executado fisicamente pelo agente.
+
 ## Pacote atual — republicação local autorizada na F2-I5, 14/11/2026
 
 Prévia corrigida Release x64 framework-dependent em `artifacts/alpha-preview/win-x64/WaveStudio.exe`. Incorpora o hotfix de área útil inválida da F2-I4 e mantém identidade/funcionalidades Alpha. O motor F2-I5 permanece interno e isolado; não há controle novo de monitoramento ou stream físico. 441 testes aprovados em cada configuração (375 anteriores +66 novos); zero falhas/ignorados e builds sem erros/avisos. Detalhes no status e [contrato WASAPI](WASAPI_BACKEND_PLAN.md).

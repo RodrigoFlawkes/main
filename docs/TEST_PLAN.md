@@ -1,6 +1,16 @@
 # Plano de testes
 
-## F2-I5 — contrato WASAPI isolado
+## EQ-PREVIEW-1 — prova audível local
+
+54 testes novos: 51 EqualizerPreviewTests (40 casos centros/ganhos + 11 de regras/provider/ciclo) e três EqualizerPreviewUiTests, reutilizando fakes/fixture de microfone. Resposta de cada banda em ±15 dB, 44,1/48 kHz, tolerância ±0,12 dB contando preamp/headroom; canais, estabilidade, PCM16/float32, flat/bypass, clipping/sanitização, memória original, EOF/blocos, cancelamento/invalidação, estado novo por play e zero alocação recorrente na leitura. UI: dez valores reais/reset, default desligado/20%, parâmetros congelados e EQ indisponível pela taxa efetivamente gravada. Nenhuma reprodução/captura física nos testes novos.
+
+Conjunto direcionado final: 100 aprovados. Houve duas execuções com 99 aprovados/um timeout no teste antigo de limpar; diagnóstico adicional mostrou Clear desabilitado apesar de Play habilitado. Reordenação experimental apenas transferiu a corrida para a asserção Play após observar Record; descartada. Espera do teste passou a exigir os controles pertinentes juntos, preservando suas asserções; produção/runner não foram refatorados por hipótese. Primeiro Debug completo: 494/495 aprovados, uma falha porque PreferencesUiTests identificava Seguir padrão de captura pelo último checkbox, agora pertencente ao EQ; consulta alterada para texto explícito, mantendo asserção. Depois, 21 testes direcionados de UI/preferências aprovados. Suítes completas finais Debug/Release, resultados e comandos no status. Não atribuir resolução da intermitência histórica a essas correções de fixture.
+
+Teste físico pendente: [A/B e limites](EQ_PREVIEW.md), caso A13 do roteiro Alpha. Conferir em fones/volume baixo original, cortes/boosts com headroom, bypass/reset, parar/limpar, formatos, USB/seleção e encerramento. Demais A01–A12 e Windows 11 pendentes. Sem release pública ou novo motor contínuo.
+
+Suítes finais: **495 aprovados em cada configuração**,0 falhas/ignorados; Debug59,994 s/Release29,826 s. Restore auditado/builds x64 sem erros/avisos.441 regressões anteriores preservadas,54 novos,21 integrações Windows existentes. Startup/fechamento próprio do executável Release: código0, armazenamento isolado, nenhum áudio. Publicação local/backup e hashes no PROJECT_STATUS; sem nova inspeção visual.
+
+## Histórico — F2-I5, contrato WASAPI isolado
 
 Regressão integral dos 375 anteriores mais 66 novos: 32 WasapiContractTests, 32 IsolatedTransportTests e duas consultas WindowsIntegration em WasapiProbeTests. Restore locked com auditoria de todos os pacotes; builds Debug/Release x64; suítes completas com watchdog de180 s, MTP165 s e sementes20261114/20261113. Contagens/tempos finais e hashes da republicação no PROJECT_STATUS. Testes físicos e aceite Alpha não são inferidos destes resultados.
 

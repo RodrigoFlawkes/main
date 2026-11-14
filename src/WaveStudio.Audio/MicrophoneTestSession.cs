@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using WaveStudio.Audio.Dsp;
 
 namespace WaveStudio.Audio;
 
@@ -37,6 +38,11 @@ public sealed class MicrophoneTestSession : IAsyncDisposable
     }
     public Task RecordAsync() => Submit((target, value, requested) => target.Record(value, clock.Elapsed, requested));
     public Task PlayAsync(float digitalLevel) => Submit((target, value, requested) => target.Play(value, digitalLevel, clock.Elapsed, requested));
+    public Task PlayEqualizedAsync(float digitalLevel, GraphicEqualizerSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        return Submit((target, value, requested) => target.Play(value, digitalLevel, clock.Elapsed, requested, settings));
+    }
     public Task StopAsync() => Submit((target, _, _) => target.Stop(), cancel: true);
     public Task ClearAsync() => Submit((target, _, _) => target.Clear(), cancel: true);
 

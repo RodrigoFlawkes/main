@@ -1,6 +1,6 @@
 # Componentes da prévia Alpha
 
-Inventário da publicação local Release x64, republicada na F2-I5 com a correção de inicialização da janela. Versões resolvidas pelos arquivos de lock e metadados dos pacotes instalados; nenhuma dependência nova nesta etapa.
+Inventário da publicação local Release x64, atualizado na EQ-PREVIEW-1. O EQ reutiliza BiQuadFilter do NAudio.Core já listado. Versões resolvidas pelos arquivos de lock e metadados dos pacotes instalados; nenhuma dependência nova nesta etapa.
 
 | Componente | Versão | Licença e avisos |
 | --- | --- | --- |

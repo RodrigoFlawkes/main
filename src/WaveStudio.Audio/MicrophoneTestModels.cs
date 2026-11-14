@@ -5,7 +5,9 @@ namespace WaveStudio.Audio;
 public enum MicrophoneTestState { Idle, Recording, Stopping, Ready, Playing, Error, Disposed }
 
 public sealed record MicrophoneTestSnapshot(MicrophoneTestState State, TimeSpan RecordedDuration,
-    TimeSpan Elapsed, string Message, bool CanRecord, bool CanPlay, bool CanClear);
+    TimeSpan Elapsed, string Message, bool CanRecord, bool CanPlay, bool CanClear,
+    int? RecordedSampleRate = null, bool EqualizerSupported = false, string? PlaybackMode = null,
+    long LimitedSamples = 0, long SanitizedSamples = 0);
 
 internal delegate void TestAudioData(ReadOnlySpan<byte> data);
 
