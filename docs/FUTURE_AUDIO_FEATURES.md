@@ -32,3 +32,7 @@ O proprietário deseja reunir os tratamentos que usa com plugins de terceiros. P
 ## Adendo — teste de microfone solicitado pelo proprietário
 
 Na prévia Alpha, o proprietário confirmou volume e mute da captura e solicitou ouvir a própria voz dentro do Wave Studio. Priorizar teste local por gravação curta em memória e reprodução explícita, sem gravação em disco e sem captura automática. Monitoramento ao vivo/sidetone digital continua na Fase 2: seleção explícita de headset, nível independente baixo, desligado por padrão, stop imediato, buffers limitados, prevenção de feedback, recuperação, medição de latência. Futuramente permitir comparar sinal original/processado. Mic mono não possui balanço L/R físico; futuro pan no mixer é distinto.
+
+## Adendo — hub, reparos e apoio ao desenvolvedor
+
+Rascunho do proprietário de 14/11/2026 detalhado em [PRODUCT_HUB_PLAN.md](PRODUCT_HUB_PLAN.md). Acrescentar teste de saída junto ao seletor, presets de voz robótica/monstruosa como sugestões, isolamento de fala conforme viabilidade, diagnóstico e assistente de reparos seguro e página de apoio voluntário. Não confundir diagnóstico com atualização automática de drivers; nenhuma integração de pagamento ou driver autorizada. Organização visual futura e funcionalidades reais preservadas. Não ampliar a tarefa atual.
