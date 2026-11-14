@@ -18,6 +18,9 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
     private TimeSpan startedAt;
     private TimeSpan elapsed;
     private bool discard;
+    private bool captureStarted, playbackStarted, stopRequested;
+    private long deliveryEpoch;
+    private Exception? primaryError, cleanupError;
     private string message = "Selecione o microfone e a saída na aba Dispositivos. Nenhuma gravação iniciada.";
     internal MicrophoneTestState State { get; private set; }
     internal bool Busy => capture is not null || playback is not null;
@@ -26,7 +29,9 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
         !Busy && clip?.Length > 0 && playbackId is not null && State != MicrophoneTestState.Disposed,
         Busy || clip is not null, clip?.Format.SampleRate,
         clip is not null && GraphicEqualizerSettings.SupportsRate(clip.Format.SampleRate), playbackMode,
-        playbackSource?.LimitedSamples ?? limitedSamples, playbackSource?.SanitizedSamples ?? sanitizedSamples);
+        playbackSource?.LimitedSamples ?? limitedSamples, playbackSource?.SanitizedSamples ?? sanitizedSamples,
+        Busy && stopRequested, false, primaryError is null ? null : Describe(primaryError),
+        cleanupError is null ? null : Describe(cleanupError));
 
     internal void Select(string? input, string? output, long revision)
     {
@@ -38,19 +43,23 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
 
     internal void Record(long revision, TimeSpan now, Func<bool>? requested = null)
     {
-        bool Current() => Valid(revision) && (requested?.Invoke() ?? true);
+        long epoch = Volatile.Read(ref deliveryEpoch);
+        bool Current() => Valid(revision) && epoch == Volatile.Read(ref deliveryEpoch) && (requested?.Invoke() ?? true);
         if (Busy || !Current() || captureId is null) return;
+        ResetFailure();
+        epoch = Interlocked.Increment(ref deliveryEpoch);
         DropClip();
         try
         {
             capture = backend.OpenCapture(captureId);
-            if (!Current()) { capture.Dispose(); capture = null; return; }
+            if (!Current()) { ReleaseCapture(); Finish(); return; }
             var recording = new BoundedTestAudio(capture.Format);
             clip = recording;
             startedAt = now;
             elapsed = TimeSpan.Zero;
             discard = false;
-            capture.Start(data => { if (isCurrent(revision) && (requested?.Invoke() ?? true)) recording.Append(data); });
+            captureStarted = true; // A failing Start may already have created a callback thread.
+            capture.Start(data => { if (Current()) recording.Append(data); });
             State = MicrophoneTestState.Recording;
             message = "GRAVANDO — fale por até 10 segundos. Clique em Parar quando terminar.";
         }
@@ -59,19 +68,23 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
 
     internal void Play(long revision, float level, TimeSpan now, Func<bool>? requested = null, GraphicEqualizerSettings? equalizer = null)
     {
-        bool Current() => Valid(revision) && (requested?.Invoke() ?? true);
+        long epoch = Volatile.Read(ref deliveryEpoch);
+        bool Current() => Valid(revision) && epoch == Volatile.Read(ref deliveryEpoch) && (requested?.Invoke() ?? true);
         if (!float.IsFinite(level) || level is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(level));
         if (Busy || !Current() || clip?.Length is not > 0 || playbackId is null) return;
+        ResetFailure();
+        epoch = Interlocked.Increment(ref deliveryEpoch);
         try
         {
-            playbackSource = clip.CreatePlayback(level, () => isCurrent(revision) && (requested?.Invoke() ?? true), equalizer);
+            playbackSource = clip.CreatePlayback(level, Current, equalizer);
             limitedSamples = sanitizedSamples = 0;
             playbackMode = equalizer?.Enabled == true ? "Processado com EQ" : "Original (sem EQ)";
             playback = backend.OpenPlayback(playbackId, playbackSource);
-            if (!Current()) { playback.Dispose(); playback = null; return; }
+            if (!Current()) { ReleasePlayback(); ResetPlayback(); Finish(); return; }
             startedAt = now;
             elapsed = TimeSpan.Zero;
             discard = false;
+            playbackStarted = true;
             playback.Start();
             State = MicrophoneTestState.Playing;
             message = $"{playbackMode}: reproduzindo na saída selecionada. Captura desligada.";
@@ -82,6 +95,8 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
     internal void Stop()
     {
         if (!Busy) return;
+        Interlocked.Increment(ref deliveryEpoch);
+        stopRequested = true;
         clip?.Seal();
         State = MicrophoneTestState.Stopping;
         message = "Parando o teste…";
@@ -92,9 +107,12 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
     {
         discard = true;
         clip?.Seal();
-        if (Busy) Stop();
-        else { DropClip(); State = MicrophoneTestState.Idle; }
-        message = reason;
+        if (Busy)
+        {
+            Stop();
+            message = "Descarte pendente; parada ainda não confirmada. Recursos preservados até o término. " + FailureMessage();
+        }
+        else { DropClip(); State = MicrophoneTestState.Idle; message = reason; }
     }
 
     internal void Tick(TimeSpan now)
@@ -105,14 +123,37 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
         if (State == MicrophoneTestState.Recording &&
             (elapsed >= TimeSpan.FromSeconds(BoundedTestAudio.MaximumSeconds) || clip?.Full == true)) Stop();
         if (State == MicrophoneTestState.Playing && elapsed >= TimeSpan.FromSeconds(BoundedTestAudio.MaximumSeconds + 2)) Stop();
-        if (State == MicrophoneTestState.Stopping) RequestStop();
-        bool finished = capture?.Completed ?? playback?.Completed ?? false;
-        if (!finished) return;
-        var error = capture?.Error ?? playback?.Error;
-        error ??= ReleaseStreams();
+        if (stopRequested) RequestStop();
+        // Never short-circuit cleanup because the stream already has an error.
+        // Each resource is released only once and only after completion (or before Start).
+        if (capture is not null && (!captureStarted || capture.Completed))
+        {
+            try { if (capture.Error is { } error) { primaryError ??= error; discard = true; } }
+            catch (Exception error) { primaryError ??= error; discard = true; }
+            ReleaseCapture();
+        }
+        if (playback is not null && (!playbackStarted || playback.Completed))
+        {
+            try { if (playback.Error is { } error) { primaryError ??= error; discard = true; } }
+            catch (Exception error) { primaryError ??= error; discard = true; }
+            ReleasePlayback();
+        }
+        if (Busy) return;
+        Finish();
+    }
+
+    private void Finish()
+    {
+        Interlocked.Increment(ref deliveryEpoch);
+        stopRequested = false;
         clip?.Seal();
-        if (discard) { DropClip(); State = MicrophoneTestState.Idle; return; }
-        if (error is not null) { Fail(error, true); return; }
+        if (discard) DropClip();
+        if (primaryError is not null || cleanupError is not null)
+        {
+            State = MicrophoneTestState.Error;
+            message = FailureMessage();
+            return;
+        }
         State = clip?.Length > 0 ? MicrophoneTestState.Ready : MicrophoneTestState.Idle;
         message = clip?.Length > 0
             ? "Teste pronto em memória. Use fones e clique em Ouvir gravação. Não há reprodução automática."
@@ -124,40 +165,62 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
         if (Busy) throw new InvalidOperationException("Encerre os streams antes do descarte.");
         DropClip();
         State = MicrophoneTestState.Disposed;
-        message = "Teste encerrado e áudio descartado.";
+        message = "Teste encerrado e áudio descartado." + (primaryError is not null || cleanupError is not null ? " " + FailureMessage() : "");
     }
 
     private bool Valid(long revision) => generation == revision && isCurrent(revision) && State != MicrophoneTestState.Disposed;
-    private void RequestStop() { capture?.RequestStop(); playback?.RequestStop(); }
-    private void DropClip() { clip?.Dispose(); clip = null; playbackSource = null; playbackMode = null; limitedSamples = sanitizedSamples = 0; elapsed = TimeSpan.Zero; }
-    private Exception? ReleaseStreams()
+    private void RequestStop()
     {
-        Exception? failure = null;
-        try { capture?.Dispose(); } catch (Exception error) { failure = error; }
-        finally { capture = null; }
-        try { playback?.Dispose(); } catch (Exception error) { failure ??= error; }
-        finally
-        {
-            playback = null;
-            limitedSamples = playbackSource?.LimitedSamples ?? limitedSamples;
-            sanitizedSamples = playbackSource?.SanitizedSamples ?? sanitizedSamples;
-            playbackSource = null;
-        }
-        return failure;
+        try { if (captureStarted) capture?.RequestStop(); } catch (Exception error) { ReportControlFailure(error); }
+        try { if (playbackStarted) playback?.RequestStop(); } catch (Exception error) { ReportControlFailure(error); }
+    }
+    private void DropClip() { clip?.Dispose(); clip = null; playbackSource = null; playbackMode = null; limitedSamples = sanitizedSamples = 0; elapsed = TimeSpan.Zero; }
+    private void ReleaseCapture()
+    {
+        var released = capture; capture = null; captureStarted = false;
+        try { released?.Dispose(); } catch (Exception error) { cleanupError ??= error; }
+    }
+    private void ReleasePlayback()
+    {
+        var released = playback; playback = null; playbackStarted = false;
+        try { released?.Dispose(); } catch (Exception error) { cleanupError ??= error; }
+        limitedSamples = playbackSource?.LimitedSamples ?? limitedSamples;
+        sanitizedSamples = playbackSource?.SanitizedSamples ?? sanitizedSamples;
+        playbackSource = null;
+    }
+    private void ResetPlayback() { playbackSource = null; playbackMode = null; limitedSamples = sanitizedSamples = 0; }
+    private void ResetFailure() { primaryError = cleanupError = null; stopRequested = discard = false; }
+    internal void ReportControlFailure(Exception error)
+    {
+        primaryError ??= error; discard = true; stopRequested = true;
+        Interlocked.Increment(ref deliveryEpoch); clip?.Seal();
+        State = Busy ? MicrophoneTestState.Stopping : MicrophoneTestState.Error;
+        message = Busy ? "Parada ainda não confirmada; recursos preservados. " + FailureMessage() : FailureMessage();
     }
     private void Fail(Exception error, bool clearAudio)
     {
-        ReleaseStreams();
+        primaryError ??= error;
+        Interlocked.Increment(ref deliveryEpoch); clip?.Seal();
         clearAudio |= error is TestEndpointUnavailableException || error is COMException
             { HResult: unchecked((int)0x88890004) or unchecked((int)0x80070490) };
-        if (clearAudio) DropClip();
-        State = MicrophoneTestState.Error;
-        message = error switch
+        discard |= clearAudio;
+        if (!captureStarted) ReleaseCapture();
+        if (!playbackStarted) { ReleasePlayback(); ResetPlayback(); }
+        if (Busy)
+        {
+            stopRequested = true; State = MicrophoneTestState.Stopping;
+            RequestStop(); message = "Parada ainda não confirmada; recursos preservados. " + FailureMessage();
+            try { Tick(startedAt); } catch (Exception secondary) { ReportControlFailure(secondary); }
+        }
+        else Finish();
+    }
+    private string FailureMessage() => (primaryError is null ? "" : Describe(primaryError)) +
+        (cleanupError is null ? "" : " Falha ao liberar recurso concluído: " + Describe(cleanupError));
+    private static string Describe(Exception error) => error switch
         {
             NotSupportedException or InvalidOperationException => error.Message,
             UnauthorizedAccessException => "O Windows negou acesso. Confira Privacidade > Microfone e permita aplicativos da área de trabalho.",
             COMException => $"O teste de áudio falhou (0x{error.HResult:X8}). Confira conexão, permissões e formato; atualize os dispositivos.",
             _ => "Não foi possível completar o teste. Confira os dispositivos e tente novamente."
         };
-    }
 }

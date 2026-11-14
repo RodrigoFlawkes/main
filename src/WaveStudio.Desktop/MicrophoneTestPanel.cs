@@ -24,6 +24,7 @@ internal sealed class MicrophoneTestPanel : UserControl
     private string? inputId;
     private string? outputId;
     private bool stopped;
+    private bool timerDisposed;
     private int pending;
     private MixFormatSnapshot? inputFormat;
     private MixFormatSnapshot? outputFormat;
@@ -145,10 +146,21 @@ internal sealed class MicrophoneTestPanel : UserControl
 
     public async ValueTask StopAsync()
     {
+        if (timerDisposed) return;
         stopped = true;
         inputMeter.Stop();
         timer.Stop();
-        await session.DisposeAsync();
-        timer.Dispose();
+        ShowSnapshot();
+        try
+        {
+            await session.DisposeAsync();
+            timer.Dispose();
+            timerDisposed = true;
+        }
+        catch
+        {
+            if (!IsDisposed) status.Text = session.Latest.Message;
+            throw;
+        }
     }
 }

@@ -26,7 +26,7 @@ public sealed class PreferencesUiTests(ITestOutputHelper output)
             writer.Commit(temporary, target, replacing, backup);
     }
 
-    private static async Task OnSta(Func<Task> test)
+    internal static async Task OnSta(Func<Task> test)
     {
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() =>
@@ -57,7 +57,7 @@ public sealed class PreferencesUiTests(ITestOutputHelper output)
         Assert.True(thread.Join(TimeSpan.FromSeconds(2)), "A thread STA não terminou após o teste.");
     }
 
-    private static async Task PumpUntilAsync(Func<bool> done)
+    internal static async Task PumpUntilAsync(Func<bool> done)
     {
         var watch = Stopwatch.StartNew();
         while (!done())
@@ -67,7 +67,7 @@ public sealed class PreferencesUiTests(ITestOutputHelper output)
         }
     }
 
-    private static IEnumerable<Control> Descendants(Control parent) =>
+    internal static IEnumerable<Control> Descendants(Control parent) =>
         parent.Controls.Cast<Control>().SelectMany(child => new[] { child }.Concat(Descendants(child)));
 
     [Fact]

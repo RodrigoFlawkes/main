@@ -7,7 +7,8 @@ public enum MicrophoneTestState { Idle, Recording, Stopping, Ready, Playing, Err
 public sealed record MicrophoneTestSnapshot(MicrophoneTestState State, TimeSpan RecordedDuration,
     TimeSpan Elapsed, string Message, bool CanRecord, bool CanPlay, bool CanClear,
     int? RecordedSampleRate = null, bool EqualizerSupported = false, string? PlaybackMode = null,
-    long LimitedSamples = 0, long SanitizedSamples = 0);
+    long LimitedSamples = 0, long SanitizedSamples = 0, bool ResourcesRetained = false,
+    bool ShutdownPending = false, string? PrimaryError = null, string? CleanupError = null);
 
 internal delegate void TestAudioData(ReadOnlySpan<byte> data);
 

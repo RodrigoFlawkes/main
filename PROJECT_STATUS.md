@@ -2,7 +2,46 @@
 
 Atualizado em 14/11/2026.
 
-## Estado atual — EQ-PREVIEW-1, EQ audível no diagnóstico curto
+## Estado atual — CHECKUP-1, encerramento e recursos
+
+14/11/2026: execução, testes, commit/push e republicação local autorizados. Main inicialmente limpa em af2ba4b, sincronizada por fast-forward para645921d; remoto Wave-Universal-Studio/main confirmado. AGENTS/NEXT_TASK/REVIEW/GENERAL_CHECKUP, requisitos, arquitetura/status e trechos pertinentes lidos. Preservados normativos/tarefa/revisão e plano mestre; não implementados novos efeitos, backend/COM/clock, drivers, monitoramento ou redesign.
+
+| Categoria | Resultado CHECKUP-1 |
+| --- | --- |
+| Causas reproduzidas |9 testes inicialmente falharam:8 captura/reprodução×discard/select/invalidation/close com erro deixavam Busy true;1 cancelamento pré-Start deixava provider/modo. Corrigidos sem apagar original indevidamente |
+| Liberação |Completion com erro não pula cleanup. Cada stream concluído/pré-Start recebe uma tentativa de Dispose; erros primário/cleanup separados. Nunca força Dispose enquanto Completed não confirma término após tentativa de Start |
+| Entrega/worker |Época de entrega invalidada antes de stop/falha e buffer selado. RequestStop/Tick tratados no controle, nova operação bloqueada enquanto Busy; falha retida/estado pendente, sem restart/fallback automático |
+| Timeout/retry |DisposeAsync aguarda até 3 s por chamada sem abortar nativo; mantém referências/worker e permite nova espera. Exceção terminal inesperada invalida seleção e informa recursos não confirmados, sem descartá-los à força |
+| Start NAudio |Wrappers de teste one-shot; fonte pública 3.1.0 auditada: inicialização síncrona/Thread.Start final. Falha síncrona do primeiro Start não é confundida com callback ativo; falhas assíncronas continuam nos eventos Stopped. Nenhuma API privada/reflection |
+| Janela |FormClosing protegido, cleanup independente de mic/startup/settings/catálogo/endpoints/mixer/watch. Tarefas pendentes/sucesso reutilizadas, falhas podem ser tentadas novamente. Espera global 5 s; janela/caption permanecem disponíveis e conteúdo bloqueado se encerramento não confirmado |
+| Snapshot fake |Snapshot nulo/exceção→SnapshotUnavailable, gate inválido e média null. Flag de disponibilidade e últimos contadores conhecidos, sem zerar/inventar leitura atual. Teste de callback durante Start preserva priming e recusa entrega |
+| Preservado |EQ/headroom/original A/B, FIR/nominal/adaptativo/SPSC, comandos Windows, sessões, preferências/backup, marca, SDK/dependências/locks e scripts de watchdog |
+| Novos testes |24:19 engine/worker,2 STA de fechamento (Windows somente leitura/janela),3 de transporte fake. Inclui Stop/Tick que falha, chamada bloqueada, erros primário+Dispose, deadline sem descarte ativo e retry |
+| Verificações |Restore locked auditado, builds Debug/Release x64 sem erros/avisos; **519 aprovados por configuração** (495+24),0 falhas/ignorados. Debug61,510 s/Release30,756 s |
+
+Testes direcionados:9 falhas antes do patch confirmaram os defeitos, depois17 novos passaram e54 no conjunto novo+transporte existente. Conjunto amplo intermediário167 aprovados; ampliação final acrescentou o caso worker-close de reprodução. Dois preparos iniciais do teste de aviso de armazenamento encerravam a janela antes de executar Shown, portanto não acionavam o erro; teste passou a aguardar startup real/área útil injetada, mantendo asserções. Falha intermediária de compatibilidade do teste de Start foi resolvida limpando imediatamente apenas após confirmação de término. Nenhum teste removido, critério relaxado ou prazo aumentado para ocultar falha.
+
+[GENERAL_CHECKUP.md](docs/GENERAL_CHECKUP.md) separa causas corrigidas e limitações. Chamada nativa síncrona bloqueada não é cancelável por WaitAsync: pode manter worker/recurso pendente até retornar. Deadline limita a espera gerenciada, não é prova de que hardware parou. Falha de Dispose após completion é reportada, não repetida cegamente. Em falha terminal não recuperável, recursos não confirmados ficam preservados; não há promessa de recuperação automática. Não houve falha provocada em hardware nem encerramento forçado do aplicativo.
+
+Comandos: `dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all`, builds Debug/Release --no-restore; testes direcionados --filter-class '*Checkup*' e classes existentes pertinentes. Regressões pelo script Test-WithWatchdog existente, Debug/seed20261114 e Release/seed20261113, TimeoutSeconds180/MTP165. Para iniciar a UI pela fonte: `dotnet run --project src/WaveStudio.Desktop`. Sem instalação, mudança de ExecutionPolicy, volume/padrão Windows ou gravação/reprodução física automática.
+
+As primeiras suítes com518 casos passaram (Debug59,112 s/Release31,032 s). Na revisão final, mais um teste reproduziu mensagem falsa de “apagado da memória” durante Clear com stream ativo (18/19 passaram na classe antes da correção); agora informa descarte pendente até completion. Após essa mudança, repetição necessária e final com519 aprovados em ambas as configurações,496 regras/simulações/arquivos/STA e23 integrações Windows somente leitura/janelas. Logs finais em artifacts/clock-drift/Debug-20261114-1ebf8f4ac3b04e57b125bae87cab58b9 e Release-20261113-ab46c3f9bf104089a6223be61eda7328; watchdog=False, pipes completos, nenhum runner encerrado. Causa histórica do runner não declarada resolvida.
+
+Atualização remota f400e17 apenas do README incorporada por fast-forward antes da publicação: nota local preservada em stash e reinserida no README novo, restante do trabalho/código intacto. Não houve nova alteração de código após as suítes finais, só documentação e publicação. Requisitos, AGENTS/NEXT_TASK/REVIEW, master/hub, DSP/headroom/FIR e dependências preservados contra a base sincronizada.
+
+Prévia local Release x64 framework-dependent em artifacts/alpha-preview/win-x64/WaveStudio.exe. Publicação em staging-checkup-1-20261114 com --no-restore --self-contained false, DebugType=None, DebugSymbols=false, IncludeSourceRevisionInInformationalVersion=false. Nenhuma instância do proprietário aberta nas conferências; processo próprio5148 com --settings-file exclusivo abriu/respondeu e fechou normalmente/código0, settings de teste salvos, nenhum áudio iniciado. PE AMD64, produto Wave Studio/FileVersion0.1.0.0 e logo/ícone preservados. Revisão visual e testes físicos permanecem pendentes.
+
+| Arquivo publicado | Bytes | SHA-256 |
+| --- | --- | --- |
+| WaveStudio.exe |303.616|97D1892C98D2DC66A4B8B2F0190AAC1690CD227286B06595FA946DB25E307285|
+| WaveStudio.dll |518.656|5CF268D8CA97440EE6A2ED3728D4099DF4D98492CE4A218070EA2FE266952197|
+| WaveStudio.Audio.dll |200.704|CCD1FB262E646F89BE6F83327E211C5D272A8729475460010FA8FA47ABABCB85|
+
+Apphost mantém hash; mudanças estão nas DLLs. Pacote completo com8 arquivos runtime,4 documentos e4 licenças, hashes/manifesto/startup em artifacts/alpha-preview/validation/checkup-1; backup anterior preservado em artifacts/alpha-preview/backup-before-checkup-1-85f2be20cef54f37a67ea28e473706ad antes da promoção. Preferências/arquivos desconhecidos não substituídos. Exige .NET Desktop Runtime10 x64; sem instalador/release pública. Conferência de conteúdo versionável, credenciais/artefatos e diff check antes do commit/push autorizado; sincronização/árvore limpa verificadas após publicação.
+
+Pendências: F2-I6A (ponte pública IAudioClock/HRESULT S_OK/S_FALSE na mesma sessão, preparação sem Start) após revisão; F2-I6B opt-in posterior com guard realmente compartilhado, ownership/quiescência/priming e checkpoint nativos, validação/autorização. Gate/start e watermark atuais são apenas fake, não contrato WASAPI. A01–A13, USB/suspensão/layout e Windows 11x64 seguem pendentes, Windows 10 experimental; causa histórica de intermitência não comprovada. Alpha/Fase 2 não aceitas. Parar após CHECKUP-1, sem Fase 3/efeitos em massa ou release pública.
+
+## Histórico — EQ-PREVIEW-1, EQ audível no diagnóstico curto
 
 14/11/2026: execução/commit/push/republicação autorizados. Main limpa em ad504f8, sincronizada por fast-forward para54d545e e, antes da publicação, para ca6cf8a; remoto Wave-Universal-Studio/main confirmado. AGENTS/NEXT_TASK/REVIEW e requisitos/arquitetura/status consultados; normativos/tarefa/revisão preservados. Escopo pequeno: reutilizar gravação curta, buffer, worker, player e biquads NAudio; não expandir FIR/clocks/watchdog ou integrar F2-I6. Quatro commits de planejamento remoto incorporados sem conflito por fast-forward, com trabalho local preservado em stash e reaplicado; planos de hub/aparência preservados, sem implementação. Código verificado permaneceu igual, sem repetir suítes por mudanças documentais.
 

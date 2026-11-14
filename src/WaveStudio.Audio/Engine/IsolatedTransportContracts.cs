@@ -1,7 +1,7 @@
 namespace WaveStudio.Audio.Engine;
 
 internal enum TransportState { Closed, Preparing, Priming, Running, Stopping, Faulted }
-internal enum TransportFault { None, Canceled, Backend, Clock, Discontinuity, Protocol, Boundary, QuiescenceTimeout }
+internal enum TransportFault { None, Canceled, Backend, Clock, Discontinuity, Protocol, Boundary, QuiescenceTimeout, SnapshotUnavailable }
 internal enum AudioActivity { ShortDiagnostic = 1, IsolatedTransport = 2 }
 
 // Share this arbiter with the short diagnostic only when a future physical integration is authorized.
@@ -52,7 +52,8 @@ internal interface ISimulatedAudioTransport : IDisposable
 internal sealed record TransportSnapshot(TransportState State, long Generation, TransportFault Fault,
     long PrimedFrames, long ProducedFrames, long ReadFrames, long DroppedFrames, long UnderrunFrames,
     long SubmittedFrames, long MutedFrames, long DiscardedQueuedFrames, double? MeanOccupancy,
-    double TargetPpm, double AppliedPpm, DriftControlState ControlState, int OwnerThreadId, bool ResourcesRetained);
+    double TargetPpm, double AppliedPpm, DriftControlState ControlState, int OwnerThreadId, bool ResourcesRetained,
+    bool BufferSnapshotAvailable = true);
 
 // One writer per ledger, bounded seqlock reads on the control worker. Only closed intervals are integrated.
 internal sealed class TransportLedger

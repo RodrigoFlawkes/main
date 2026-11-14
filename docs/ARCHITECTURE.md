@@ -1,6 +1,10 @@
 # Arquitetura do Wave Studio
 
-## Implementação atual — EQ-PREVIEW-1
+## Implementação atual — CHECKUP-1
+
+Correções de ciclo de vida sobre a base funcional: engine do diagnóstico invalida época de entrega, separa erros primários/cleanup e só libera recursos após completion ou antes de Start. Session trata falhas de controle/Tick e limita a espera de Dispose, mantendo worker/recursos quando a parada não é confirmada. MainForm.Shutdown acompanha tarefas independentes, captura falhas no async FormClosing e permite nova tentativa sem iniciar disposers concorrentes ou destruir streams ativos. Snapshot do transporte isolado distingue indisponibilidade e invalida entrega. [Evidências, limites e sequência F2-I6A/B](GENERAL_CHECKUP.md). Não há mudança de DSP, backend ativo ou fluxo de áudio global.
+
+## Histórico — EQ-PREVIEW-1
 
 Prova audível pequena no diagnóstico curto: GraphicEqualizerSettings/GraphicEqualizer em Audio/Dsp reutilizam os biquads públicos NAudio, sem projeto/dependência nova. BoundedTestAudio mantém um original selado e cria provider processado com filtros independentes/estado novo por play. Engine/session congelam o snapshot no worker; MicrophoneTestPanel/EqualizerPreviewPanel oferecem dez bandas, preamp/headroom, bypass/reset e comparação original/processado, com ajustes bloqueados durante atividade. Não há novo backend de captura, arquivo processado, monitoramento ou EQ global. [Contrato e teste A/B](EQ_PREVIEW.md). Base WASAPI isolada abaixo preservada; F2-I6 pendente.
 

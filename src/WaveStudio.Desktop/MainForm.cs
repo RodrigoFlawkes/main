@@ -36,8 +36,10 @@ internal sealed partial class MainForm : Form
 
     public MainForm(SettingsStore? settingsStore = null, Action<string>? storageWarning = null,
         AudioWatchWorker? audioWatch = null, MicrophoneTestSession? microphoneSession = null,
-        Func<WindowArea[]>? workAreas = null)
+        Func<WindowArea[]>? workAreas = null, TimeSpan? shutdownTimeout = null)
     {
+        closeTimeout = shutdownTimeout ?? TimeSpan.FromSeconds(5);
+        if (closeTimeout <= TimeSpan.Zero || closeTimeout > TimeSpan.FromSeconds(30)) throw new ArgumentOutOfRangeException(nameof(shutdownTimeout));
         watch = audioWatch ?? new AudioWatchWorker();
         microphoneTest = new MicrophoneTestPanel(microphoneSession);
         store = settingsStore ?? new SettingsStore(SettingsStore.DefaultPath);
@@ -143,27 +145,42 @@ internal sealed partial class MainForm : Form
         tabs.SelectedIndexChanged += (_, _) => UpdateMetering();
         Resize += (_, _) => UpdateMetering();
         UpdateMetering();
+        closeSteps = [
+            new("microfone", async () => await microphoneTest.StopAsync()),
+            new("inicialização", () => startupTask),
+            new("preferências", async () => { await startupTask; await SaveWindowOnCloseAsync(); }),
+            new("catálogo", () => refreshTask),
+            new("reprodução", async () => await playback.StopAsync()),
+            new("captura", async () => await capture.StopAsync()),
+            new("mixer", async () => await mixer.StopAsync()),
+            new("medidores", async () => await watch.DisposeAsync())
+        ];
         FormClosing += async (_, args) =>
         {
             if (closing)
                 return;
             args.Cancel = true;
-            if (stopping)
+            if (closeAttemptRunning)
                 return;
-            stopping = true;
-            UpdateMetering();
-            _ = microphoneTest.InvalidateAsync();
-            peakTimer.Stop();
-            watch.CatalogChanged -= OnCatalogChanged;
-            SystemEvents.PowerModeChanged -= OnPowerModeChanged;
-            Enabled = false;
-            lifetime.Cancel();
-            await startupTask;
-            await SaveWindowOnCloseAsync();
-            await refreshTask;
-            await Task.WhenAll(playback.StopAsync().AsTask(), capture.StopAsync().AsTask(), mixer.StopAsync().AsTask(), watch.DisposeAsync().AsTask(), microphoneTest.StopAsync().AsTask());
-            closing = true;
-            Close();
+            closeAttemptRunning = true;
+            try
+            {
+                if (!stopping)
+                {
+                    stopping = true;
+                    UpdateMetering();
+                    peakTimer.Stop();
+                    watch.CatalogChanged -= OnCatalogChanged;
+                    SystemEvents.PowerModeChanged -= OnPowerModeChanged;
+                    // Keep the caption/X available for retry, while preventing conflicting commands.
+                    foreach (Control child in Controls) child.Enabled = false;
+                    lifetime.Cancel();
+                }
+                closeAttemptTask = FinishCloseAttemptAsync();
+                await closeAttemptTask;
+            }
+            catch (Exception error) { ReportClosePending(error); }
+            finally { closeAttemptRunning = false; }
         };
         FormClosed += (_, _) => { lifetime.Dispose(); peakTimer.Dispose(); };
     }

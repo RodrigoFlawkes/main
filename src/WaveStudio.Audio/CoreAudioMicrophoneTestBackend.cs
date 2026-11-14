@@ -62,6 +62,7 @@ internal sealed class CoreAudioMicrophoneTestBackend : IMicrophoneTestBackend
         private TestAudioData? receive;
         private Exception? error;
         private int completed;
+        private int startAttempted;
         public WaveFormat Format => recorder.WaveFormat;
         public bool Completed => Volatile.Read(ref completed) != 0;
         public Exception? Error => Volatile.Read(ref error);
@@ -81,8 +82,17 @@ internal sealed class CoreAudioMicrophoneTestBackend : IMicrophoneTestBackend
         }
         public void Start(TestAudioData receive)
         {
+            if (Interlocked.Exchange(ref startAttempted, 1) != 0) throw new InvalidOperationException("Este stream de teste já foi iniciado.");
             this.receive = receive;
-            recorder.StartRecording();
+            try { recorder.StartRecording(); }
+            catch
+            {
+                // Audited 3.1.0: a fresh StartRecording initializes synchronously,
+                // then launches its thread as its final action. Caller-side failure
+                // has no running capture callback; asynchronous failure uses RecordingStopped.
+                Volatile.Write(ref completed, 1);
+                throw;
+            }
         }
         public void RequestStop()
         {
@@ -110,6 +120,7 @@ internal sealed class CoreAudioMicrophoneTestBackend : IMicrophoneTestBackend
         private readonly WasapiPlayer player;
         private Exception? error;
         private int completed;
+        private int startAttempted;
         public bool Completed => Volatile.Read(ref completed) != 0;
         public Exception? Error => Volatile.Read(ref error);
         public Playback(MMDevice device, WasapiPlayer player)
@@ -123,7 +134,18 @@ internal sealed class CoreAudioMicrophoneTestBackend : IMicrophoneTestBackend
             Volatile.Write(ref error, args.Exception);
             Volatile.Write(ref completed, 1);
         }
-        public void Start() => player.Play();
+        public void Start()
+        {
+            if (Interlocked.Exchange(ref startAttempted, 1) != 0) throw new InvalidOperationException("Este stream de teste já foi iniciado.");
+            try { player.Play(); }
+            catch
+            {
+                // Fresh one-shot Play ends in Thread.Start in the pinned source;
+                // callback failures are reported separately through PlaybackStopped.
+                Volatile.Write(ref completed, 1);
+                throw;
+            }
+        }
         public void RequestStop() => player.Stop();
         public void Dispose()
         {

@@ -361,7 +361,7 @@ public sealed class IsolatedTransportTests
         Directory.CreateDirectory(directory); File.WriteAllText(Path.Combine(directory, name + ".json"), JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true }));
     }
 
-    private sealed class RoleThread : IDisposable
+    internal sealed class RoleThread : IDisposable
     {
         private readonly BlockingCollection<Action> work = new(); private readonly Thread thread;
         public int ThreadId => thread.ManagedThreadId;
@@ -375,13 +375,14 @@ public sealed class IsolatedTransportTests
         }
         public void Dispose() { work.CompleteAdding(); Assert.True(thread.Join(TimeSpan.FromSeconds(2))); work.Dispose(); }
     }
-    private sealed class FakeTransport : ISimulatedAudioTransport
+    internal sealed class FakeTransport : ISimulatedAudioTransport
     {
         public readonly RoleThread Producer = new("test transport producer"), Consumer = new("test transport consumer");
         public readonly ConcurrentQueue<string> Events = new(); public readonly ConcurrentQueue<int> ControlThreads = new();
         public CapturePacket? CaptureSink; public RenderPacket? RenderSink;
         public ManualResetEventSlim? SubmitEntered, SubmitRelease, PrepareEntered, PrepareRelease;
         public DeliveryTicket? PendingTicket; public string? FailOperation; public bool ThrowSubmit;
+        public Action? BeforeStartPlayback, BeforeStartCapture;
         public readonly byte[] Last = new byte[32768]; public int LastLength; public long Submissions, NonzeroSamples; public double Peak, LastValue; public bool EqualChannels = true;
         public ulong Hash = 14695981039346656037UL;
         private bool capture, render, driversDisposed; private WasapiPcm? output;
@@ -391,7 +392,9 @@ public sealed class IsolatedTransportTests
         private void Event(string operation) { ControlThreads.Enqueue(Environment.CurrentManagedThreadId); Assert.Equal(ApartmentState.MTA, Thread.CurrentThread.GetApartmentState()); Events.Enqueue(operation); if (FailOperation == operation) throw new IOException("Falha simulada."); }
         public void PrepareCapture(TransportRoute route, CapturePacket callback) { Event("prepare-capture"); capture = true; CaptureSink = callback; PrepareEntered?.Set(); if (PrepareRelease is not null && !PrepareRelease.Wait(TimeSpan.FromSeconds(4))) throw new TimeoutException(); }
         public void PreparePlayback(TransportRoute route, RenderPacket callback) { Event("prepare-render"); render = true; RenderSink = callback; output = route.Playback.Mix; }
-        public void StartPlayback() => Event("start-render"); public void StartCapture() => Event("start-capture"); public void RequestStop() => Event("stop");
+        public void StartPlayback() { Event("start-render"); BeforeStartPlayback?.Invoke(); }
+        public void StartCapture() { Event("start-capture"); BeforeStartCapture?.Invoke(); }
+        public void RequestStop() => Event("stop");
         public bool Submit(DeliveryTicket ticket, ReadOnlySpan<byte> bytes)
         {
             if (ThrowSubmit) throw new IOException("Submissão simulada falhou.");

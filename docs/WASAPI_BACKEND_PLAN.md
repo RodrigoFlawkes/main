@@ -1,5 +1,7 @@
 # Backend WASAPI isolado — F2-I5
 
+Adendo CHECKUP-1: Tick não acessa mais Buffer!.Value quando o snapshot falta/falha. Interrompe entrega com SnapshotUnavailable e média null; BufferSnapshotAvailable distingue ausência e últimos contadores conhecidos. Testes injetam falha/ausência e callbacks durante Start, que permanecem barrados pelo gate. Priming/start/watermark **continuam somente fake**, não autorização para conectar WASAPI ativo. Próxima preparação F2-I6A: HRESULT preciso na mesma sessão sem Start; F2-I6B posterior: guard compartilhado com diagnóstico, ownership/quiescência e checkpoint/priming nativos, revisão/aceitação/autorização. [Check-up](GENERAL_CHECKUP.md).
+
 Implementação em 14/11/2026. Contratos internos em Audio/Engine, consulta real somente leitura e sessão de transporte **exclusivamente simulada**. Não há Initialize/Start nativo novo, vínculo com a UI, gravação, monitoramento contínuo ou ajuste de níveis/padrões do Windows. A Alpha continua em validação; Windows 10 experimental e Windows 11 x64 pendente. Este documento complementa os requisitos, sem alterar seu escopo.
 
 ## Auditoria das APIs fixadas

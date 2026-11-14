@@ -11,15 +11,29 @@ public sealed class MicrophoneTestSession : IAsyncDisposable
     private readonly TaskCompletionSource completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly MicrophoneTestEngine engine;
     private readonly Stopwatch clock = Stopwatch.StartNew();
+    private readonly TimeSpan shutdownTimeout;
     private long revision;
     private long cancellation;
     private bool stopping;
     private MicrophoneTestSnapshot latest;
-    public MicrophoneTestSnapshot Latest => Volatile.Read(ref latest);
+    public MicrophoneTestSnapshot Latest
+    {
+        get
+        {
+            var snapshot = Volatile.Read(ref latest);
+            return Volatile.Read(ref stopping) && !completion.Task.IsCompleted
+                ? snapshot with { State = MicrophoneTestState.Stopping, CanRecord = false, CanPlay = false,
+                    ShutdownPending = true, ResourcesRetained = true,
+                    Message = "Encerramento ainda não confirmado; recursos preservados. Aguarde e tente fechar novamente. " + snapshot.Message }
+                : snapshot;
+        }
+    }
 
     public MicrophoneTestSession() : this(new CoreAudioMicrophoneTestBackend()) { }
-    internal MicrophoneTestSession(IMicrophoneTestBackend backend)
+    internal MicrophoneTestSession(IMicrophoneTestBackend backend, TimeSpan? shutdownTimeout = null)
     {
+        this.shutdownTimeout = shutdownTimeout ?? TimeSpan.FromSeconds(3);
+        if (this.shutdownTimeout <= TimeSpan.Zero || this.shutdownTimeout > TimeSpan.FromSeconds(30)) throw new ArgumentOutOfRangeException(nameof(shutdownTimeout));
         engine = new MicrophoneTestEngine(backend, value => value == Volatile.Read(ref revision));
         latest = engine.Snapshot;
         var thread = new Thread(Run) { IsBackground = true, Name = "Wave Studio — teste local de microfone" };
@@ -87,14 +101,23 @@ public sealed class MicrophoneTestSession : IAsyncDisposable
                         Publish();
                         next.Done.TrySetResult();
                     }
-                    catch (Exception error) { next.Done.TrySetException(error); }
+                    catch (Exception error)
+                    {
+                        if (error is not ArgumentException) { Interlocked.Increment(ref cancellation); engine.ReportControlFailure(error); }
+                        Publish(); next.Done.TrySetException(error);
+                    }
                 }
                 if (end && !shutdownStarted)
                 {
                     shutdownStarted = true;
                     engine.Clear("Encerrando e descartando o teste…");
                 }
-                engine.Tick(clock.Elapsed);
+                try { engine.Tick(clock.Elapsed); }
+                catch (Exception error)
+                {
+                    Interlocked.Increment(ref cancellation);
+                    engine.ReportControlFailure(error);
+                }
                 Publish();
                 if (end && !engine.Busy)
                 {
@@ -102,11 +125,18 @@ public sealed class MicrophoneTestSession : IAsyncDisposable
                     Publish();
                     break;
                 }
-                if (command is null) wake.WaitOne(engine.Busy ? 25 : Timeout.Infinite);
+                if (command is null) wake.WaitOne(engine.Busy ? (end ? 100 : 25) : Timeout.Infinite);
             }
             completion.TrySetResult();
         }
-        catch (Exception error) { completion.TrySetException(error); }
+        catch (Exception error)
+        {
+            Interlocked.Increment(ref revision);
+            Volatile.Write(ref latest, latest with { State = MicrophoneTestState.Error, CanRecord = false, CanPlay = false,
+                ResourcesRetained = true, ShutdownPending = true, PrimaryError = error.GetType().Name,
+                Message = "O worker falhou; encerramento não confirmado. Recursos preservados. " + error.GetType().Name });
+            completion.TrySetException(error);
+        }
         finally
         {
             lock (sync)
@@ -119,7 +149,7 @@ public sealed class MicrophoneTestSession : IAsyncDisposable
     }
     private void Publish() => Volatile.Write(ref latest, engine.Snapshot);
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         lock (sync)
         {
@@ -127,9 +157,11 @@ public sealed class MicrophoneTestSession : IAsyncDisposable
             {
                 stopping = true;
                 Interlocked.Increment(ref revision);
+                Interlocked.Increment(ref cancellation);
                 wake.Set();
             }
+            else if (!completion.Task.IsCompleted) wake.Set();
         }
-        return new ValueTask(completion.Task);
+        await completion.Task.WaitAsync(shutdownTimeout).ConfigureAwait(false);
     }
 }

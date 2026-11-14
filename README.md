@@ -22,6 +22,8 @@
 > [!IMPORTANT]
 > **Projeto em desenvolvimento — Alpha experimental.** A prévia local já oferece controles reais do Windows, teste de microfone e equalização de uma gravação curta. O processamento global, microfone virtual, mesa digital completa e demais efeitos continuam em desenvolvimento. Não há instalador ou release pública nesta etapa.
 
+**CHECKUP-1:** corrigidos cleanup com erro, cancelamento pré-Start e encerramento pendente. Falhas/timeout de parada preservam recursos em uso e permitem nova tentativa de fechar, com diagnóstico não modal. Funcionalidades/EQ existentes preservados. [Causas, testes e limites](docs/GENERAL_CHECKUP.md); [resultados e pacote atual](PROJECT_STATUS.md). Nenhum backend contínuo ou efeito global novo.
+
 ## Sobre o Wave Studio
 
 O Wave Studio nasce para reunir em uma única aplicação controles que normalmente ficam espalhados entre o Windows, softwares de periféricos e ferramentas de áudio. O objetivo é oferecer uma experiência completa inclusive a quem utiliza microfones e headsets sem software dedicado, respeitando as capacidades reais de cada dispositivo.
@@ -175,7 +177,7 @@ WaveStudio.slnx
 
 A entrega EQ-PREVIEW-1 registrou **495 testes aprovados em Debug e 495 em Release**, com builds sem erros/avisos. Consulte o [status atualizado](PROJECT_STATUS.md) para os resultados mais recentes. Testes automatizados e simulações não equivalem à validação de áudio físico. O backend WASAPI contínuo ainda não está integrado à interface; a lacuna de precisão do relógio nativo está documentada.
 
-As correções de ciclo de vida e encerramento estão priorizadas na [auditoria geral](docs/GENERAL_CHECKUP.md). Não iniciar transporte contínuo antes de revisar segurança, relógios, formatos, quiescência e validação física.
+As correções CHECKUP-1 de ciclo de vida e encerramento passaram com **519 testes em cada configuração**, sem erros/avisos de build; [causas e limitações na auditoria geral](docs/GENERAL_CHECKUP.md). Não iniciar transporte contínuo antes de revisar segurança, relógios, formatos, quiescência e validação física.
 
 <details>
 <summary><strong>Detalhes operacionais da Alpha</strong></summary>

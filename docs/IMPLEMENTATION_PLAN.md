@@ -1,5 +1,7 @@
 # Plano da v0.1.0 Alpha
 
+CHECKUP-1 em14/11/2026 corrige recursos/encerramento sobre a base EQ, sem expansão de funcionalidades. [Check-up e limites](GENERAL_CHECKUP.md), resultados no status. Parar para revisão antes de F2-I6A (HRESULT de clock público na mesma sessão, sem Start) e F2-I6B (transporte opt-in/guard/priming/checkpoint nativos). Testes físicos/Alpha e plano mestre preservados; nenhuma mudança de sequência de efeitos/mixer ou aparência.
+
 Atualização EQ-PREVIEW-1, 14/11/2026: prova vertical de EQ no diagnóstico curto entregue para escuta/revisão, com reutilização de captura/provider/worker/filtros NAudio. [Escopo e teste A/B](EQ_PREVIEW.md). Resultados finais no status. F2-I6 continua pendente e será a próxima decisão após teste audível/saldo, antes de multiplicar efeitos. As seções anteriores de F2-I5 abaixo são histórico; requisitos e critérios físicos Alpha permanecem.
 
 Estado em 14/11/2026: F2-I5 implementada isoladamente. Descritores/probe WASAPI reais somente leitura, adaptação de relógio com evidência explícita e sessão de transporte simulado que exercita FIR adaptativo, SPSC, priming, ocupação temporal, parada e recuperação. Regressão dos 375 anteriores preservada; verificações finais em PROJECT_STATUS/TEST_PLAN. [Contrato, APIs e bloqueios](WASAPI_BACKEND_PLAN.md). Prévia corrigida republicada localmente pelo fluxo autorizado, sem release pública.

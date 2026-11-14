@@ -1,5 +1,17 @@
 # Plano de testes
 
+## CHECKUP-1 — liberação, encerramento e snapshots
+
+24 casos novos:19 CheckupMicrophoneTests,2 CheckupShutdownUiTests (integrações Windows somente leitura/janela) e3 CheckupTransportTests. Nove falharam contra a base antes do patch, reproduzindo cleanup ignorado com erro/descarte e provider/modo pré-Start retidos. Cobertura de captura/reprodução × clear/select/invalidation/close, erro primário+Dispose, falhas RequestStop/Tick, worker/stop bloqueado e timeout/retry sem descarte ativo; completion com erro durante close de ambos os papéis. Mantidos testes existentes e suas asserções.
+
+STA reutiliza fixture de preferências, espera de inicialização observada e áreas úteis injetadas (sem alterar telas). Prova janela aberta/diagnóstico não modal no timeout, cleanup independente após exceção no aviso de armazenamento e segunda tentativa segura. Primeiras tentativas desse caso fecharam antes de executar Shown: corrigido o preparo do teste para esperar startup real, sem mudar critério de produção. Não atribuir essas ocorrências à causa histórica de runner.
+
+Fake de transporte injeta snapshot ausente/exceção: falha latched, gate invalidado, média null, flag explícita e últimos contadores conhecidos; não substitui falta por zero. Callback de start é recusado antes de habilitar gate, sem consumir priming. Watermark/priming continuam limitações documentadas antes de F2-I6B, sem prova nativa.
+
+Restore locked auditado, builds x64 e regressão final completa495+24 por configuração; resultados/tempos finais e comandos no PROJECT_STATUS. Testes direcionados durante edição incluíram167 aprovados antes da última ampliação de um caso de close. Não iniciam gravação/reprodução física. Roteiro físico A01–A13 e fechamento normal/USB/suspensão permanecem pendentes; não instalar driver, mudar Windows ou medir latência física nesta tarefa.
+
+Suítes finais: **519 aprovados em Debug e519 em Release**,0 falhas/ignorados;61,510 s/30,756 s, sem kill do watchdog e com pipes completos. As suítes anteriores518 passaram antes de um caso adicional reproduzir a mensagem incorreta de Clear enquanto recursos continuavam retidos. Corrigida a mensagem para descarte pendente, seguida das duas suítes finais. Startup/close normal de instância própria do pacote: código0, settings isolado, sem áudio. Não repetir suites/benchmarks após aprovação sem nova causa.
+
 ## EQ-PREVIEW-1 — prova audível local
 
 54 testes novos: 51 EqualizerPreviewTests (40 casos centros/ganhos + 11 de regras/provider/ciclo) e três EqualizerPreviewUiTests, reutilizando fakes/fixture de microfone. Resposta de cada banda em ±15 dB, 44,1/48 kHz, tolerância ±0,12 dB contando preamp/headroom; canais, estabilidade, PCM16/float32, flat/bypass, clipping/sanitização, memória original, EOF/blocos, cancelamento/invalidação, estado novo por play e zero alocação recorrente na leitura. UI: dez valores reais/reset, default desligado/20%, parâmetros congelados e EQ indisponível pela taxa efetivamente gravada. Nenhuma reprodução/captura física nos testes novos.

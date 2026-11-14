@@ -1,5 +1,9 @@
 # Aceitação da prévia v0.1.0 Alpha
 
+## CHECKUP-1 — prévia corrigida, validação de encerramento pendente
+
+Pacote local atualizado na pasta habitual, com backup/hashes/startup no PROJECT_STATUS. Preserva EQ e A01–A13. Conferir fechamento normal após testar mic/EQ, durante parada e após troca/USB/suspensão por ação própria, em nível baixo. Se houver status de encerramento pendente, não presumir que o hardware parou: aguarde e tente fechar novamente; não forçar encerramento durante este roteiro. Recursos ativos não são descartados à força. A falha de parada não foi provocada em hardware pelo agente; testes de falha/timeout são simulados. Nenhuma aceitação automática da Alpha/Fase 2 ou Windows 11, sem novo monitoramento.
+
 ## EQ-PREVIEW-1 — teste audível A13 pendente
 
 O pacote local atualizado mantém A01–A12 e acrescenta somente EQ na reprodução explícita da gravação curta. [Instruções A/B e limites](EQ_PREVIEW.md); versão, hashes, startup e verificações desta publicação no PROJECT_STATUS. A identificação do pacote F2-I5 abaixo é histórica. Sem aceitação automática da Alpha/Fase 2, release pública ou novo monitoramento.

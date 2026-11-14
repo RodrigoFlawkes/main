@@ -10,18 +10,20 @@ internal sealed class IsolatedTransportSession : IAsyncDisposable
     private readonly BlockingCollection<Action> commands = new(8);
     private readonly object posting = new(); // Control plane only; callbacks never take this lock.
     private readonly TransportActivityGuard guard;
+    private readonly Func<SyntheticAudioPipeline, FrameBufferSnapshot?> readBuffer;
     private readonly Thread worker;
     private readonly TaskCompletionSource exited = new(TaskCreationOptions.RunContinuationsAsynchronously);
-    private TransportSnapshot snapshot = new(TransportState.Closed, 0, TransportFault.None, 0, 0, 0, 0, 0, 0, 0, 0, null, 0, 0, DriftControlState.Waiting, 0, false);
+    private TransportSnapshot snapshot = new(TransportState.Closed, 0, TransportFault.None, 0, 0, 0, 0, 0, 0, 0, 0, null, 0, 0, DriftControlState.Waiting, 0, false, false);
     private Epoch? active;
     private long requestedGeneration, stoppedThrough;
     private int disposing;
     private bool shutdown;
     public TransportSnapshot Snapshot => Volatile.Read(ref snapshot);
 
-    public IsolatedTransportSession(TransportActivityGuard guard)
+    public IsolatedTransportSession(TransportActivityGuard guard, Func<SyntheticAudioPipeline, FrameBufferSnapshot?>? readBuffer = null)
     {
         this.guard = guard;
+        this.readBuffer = readBuffer ?? (static pipe => pipe.Snapshot().Buffer);
         worker = new Thread(Run) { IsBackground = true, Name = "WaveStudio isolated transport control" };
         worker.SetApartmentState(ApartmentState.MTA); worker.Start();
     }
@@ -238,7 +240,10 @@ internal sealed class IsolatedTransportSession : IAsyncDisposable
         if (integral < e.PreviousArea) { Fail(e, TransportFault.Protocol); return StopCore(true); }
         double mean = (double)(integral - e.PreviousArea) / (now - e.ControlTime);
         e.PreviousArea = integral; e.ControlTime = now; e.Mean = mean;
-        var buffer = e.Pipe.Snapshot().Buffer!.Value;
+        if (ReadBuffer(e) is not { } buffer)
+        {
+            e.Mean = null; Fail(e, TransportFault.SnapshotUnavailable); return StopCore(true);
+        }
         if (mean < 0 || mean > e.Capacity) { Fail(e, TransportFault.Protocol); return StopCore(true); }
         if (p.Observed && c.Observed)
         {
@@ -285,12 +290,21 @@ internal sealed class IsolatedTransportSession : IAsyncDisposable
     }
     private TransportSnapshot Publish(Epoch e, TransportState state)
     {
-        var buffer = e.Pipe.Snapshot().Buffer;
+        var buffer = ReadBuffer(e);
+        var prior = Snapshot;
+        bool same = prior.Generation == e.Generation;
         var next = new TransportSnapshot(state, e.Generation, (TransportFault)Volatile.Read(ref e.Fault), e.Primed,
-            buffer is { } b ? b.WrittenFrames - e.Primed : 0, buffer?.ReadFrames ?? 0, buffer?.OverrunFrames ?? 0,
-            buffer?.UnderrunFrames ?? 0, Volatile.Read(ref e.Submitted), Volatile.Read(ref e.Muted), e.Discarded,
-            e.Mean, Volatile.Read(ref e.Ratio).Ppm, Volatile.Read(ref e.AppliedPpm), e.ControlState, Environment.CurrentManagedThreadId, e.Retained);
+            buffer is { } b ? b.WrittenFrames - e.Primed : same ? prior.ProducedFrames : 0,
+            buffer?.ReadFrames ?? (same ? prior.ReadFrames : 0), buffer?.OverrunFrames ?? (same ? prior.DroppedFrames : 0),
+            buffer?.UnderrunFrames ?? (same ? prior.UnderrunFrames : 0), Volatile.Read(ref e.Submitted), Volatile.Read(ref e.Muted), e.Discarded,
+            buffer is null ? null : e.Mean, Volatile.Read(ref e.Ratio).Ppm, Volatile.Read(ref e.AppliedPpm), e.ControlState,
+            Environment.CurrentManagedThreadId, e.Retained, buffer.HasValue);
         Volatile.Write(ref snapshot, next); return next;
+    }
+    private FrameBufferSnapshot? ReadBuffer(Epoch e)
+    {
+        try { return readBuffer(e.Pipe); }
+        catch { return null; } // Diagnostic failure is unavailability, never an invented queue value.
     }
     public async ValueTask DisposeAsync()
     {

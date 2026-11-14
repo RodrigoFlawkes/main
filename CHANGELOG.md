@@ -2,6 +2,13 @@
 
 ## Em desenvolvimento
 
+### 2026-11-14 — CHECKUP-1, cleanup e encerramento seguro
+
+- Corrigida liberação ignorada quando o diagnóstico conclui com erro e descarte pendente; erros primários/cleanup separados, sem liberar callbacks ativos ou repetir Dispose cegamente. Provider/modo/contadores são limpos em cancelamento pré-Start.
+- Época de entrega e tratamento de falhas de controle/Tick no worker, Dispose com espera limitada e recursos preservados quando o término não é confirmado.
+- Fechamento da janela captura exceções, inicia cleanup independente e permite retry de componentes falhados, sem duplicar tarefas em voo nem fechar à força.
+- Transporte exclusivamente simulado trata snapshot indisponível explicitamente; teste de gate/priming reforça o limite do fake. EQ, FIR, headroom, dependências e recursos existentes preservados. Resultados e limitações no status/check-up; F2-I6A/B e validação física pendentes.
+
 ### 2026-11-14 — EQ-PREVIEW-1, primeiro EQ audível de dez bandas
 
 - Prévia de EQ real na reprodução explícita da gravação curta existente: 31 Hz a 16 kHz, −15/+15 dB, preamp, headroom conservador, bypass e reset; NAudio.Core reutilizado, sem dependências novas.

@@ -12,9 +12,18 @@ public sealed class MicrophoneTestTests
     internal sealed class FakeCapture : ITestCapture
     {
         public WaveFormat Format { get; set; } = WaveFormat.CreateIeeeFloatWaveFormat(48000, 1);
-        public bool Completed { get; set; }
+        private bool completed;
+        public int CompletionReadFailures;
+        public bool Completed
+        {
+            get { if (Interlocked.Exchange(ref CompletionReadFailures, 0) > 0) throw new InvalidOperationException("falha de Tick simulada"); return Volatile.Read(ref completed); }
+            set => Volatile.Write(ref completed, value);
+        }
         public Exception? Error { get; set; }
         public Exception? StartError { get; set; }
+        public Exception? StopError { get; set; }
+        public Exception? DisposeError { get; set; }
+        public Action? BeforeStop { get; set; }
         public bool FinishOnStop { get; set; } = true;
         public int Starts { get; private set; }
         public int Stops { get; private set; }
@@ -27,19 +36,28 @@ public sealed class MicrophoneTestTests
             Starts++;
         }
         public void Emit(int bytes) => Receive?.Invoke(new byte[bytes]);
-        public void RequestStop() { Stops++; if (FinishOnStop) Completed = true; }
-        public void Dispose() => Disposals++;
+        public void RequestStop() { Stops++; BeforeStop?.Invoke(); if (StopError is not null) throw StopError; if (FinishOnStop) Completed = true; }
+        public void Dispose() { Disposals++; if (DisposeError is not null) throw DisposeError; }
     }
 
     internal sealed class FakePlayback : ITestPlayback
     {
-        public bool Completed { get; set; }
+        private bool completed;
+        public int CompletionReadFailures;
+        public bool Completed
+        {
+            get { if (Interlocked.Exchange(ref CompletionReadFailures, 0) > 0) throw new InvalidOperationException("falha de Tick simulada"); return Volatile.Read(ref completed); }
+            set => Volatile.Write(ref completed, value);
+        }
         public Exception? Error { get; set; }
+        public Exception? StopError { get; set; }
+        public Exception? DisposeError { get; set; }
+        public bool FinishOnStop { get; set; } = true;
         public int Starts { get; private set; }
         public int Disposals { get; private set; }
         public void Start() { Completed = false; Starts++; }
-        public void RequestStop() => Completed = true;
-        public void Dispose() => Disposals++;
+        public void RequestStop() { if (StopError is not null) throw StopError; if (FinishOnStop) Completed = true; }
+        public void Dispose() { Disposals++; if (DisposeError is not null) throw DisposeError; }
     }
 
     internal sealed class FakeBackend : IMicrophoneTestBackend
