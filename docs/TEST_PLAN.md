@@ -1,6 +1,18 @@
 # Plano de testes
 
-## F2-I1 — fundação sintética isolada
+## F2-I2 — canais e resampling nominal
+
+Restore locked com NuGetAudit=true/Mode=all aprovado; builds Debug/Release x64 com zero erros/avisos. Suíte completa: 313 aprovados por configuração (283 anteriores + 30 novos), zero falhas/ignorados; 301 regras/simulações/arquivos/STA/sintéticos e 12 integrações Windows existentes. Nenhum teste novo abre áudio físico ou escreve volumes.
+
+- NominalResamplingTests: 23 casos para políticas mono/LR, anti-fase, não finitos e extremos finitos no FIR, limites/overlap, identidade bit a bit, impulso/canais, continuidade com blocos irregulares e saída de um frame, reset/EOF/flush, contagem exata em mais de 88 mil frames por cenário e limites de memória. Fórmula de contagem também verificada para 24 horas e overflow rejeitado, sem afirmar execução de um dia de áudio. Trajetórias mono48→estéreo48, estéreo44,1→estéreo48 e estéreo96→mono48 passam pelo SPSC original; contadores de drop/underrun são de frames de saída. A contagem usa fase racional inteira, sem aproximar a razão em cada bloco.
+- PipelineLifecycleConcurrencyTests: cinco casos; três ações com 32 corridas cada (Stop/cancelamento/Dispose), produção/consumo em threads de teste, reset/descarte após Join; dois callbacks float/PCM atrasados depois de reinício devem ser rejeitados pela geração. Prazos por participante e timeout global; nenhuma barreira adicionada ao callback produtivo. Stress limitado não demonstra todos os interleavings.
+- ResamplingQualityTests: dois casos, grade de DC/senos/alias/imagem com metas fixadas antes da avaliação e medição de custo/alocação após aquecimento. Ganho máximo observado 0,00148773 dB, pior alias -81,11294 dB, imagem -123,96323 dB; zero bytes alocados na thread medida. Método, ripple, bandas, memória e Debug/Release em [RESAMPLING_QUALITY.md](RESAMPLING_QUALITY.md).
+
+Execuções finais completas: Debug 11,821 s e Release 9,238 s, com dotnet test --solution WaveStudio.slnx -c Debug/Release --no-build -- --timeout 90s --long-running 15, diagnóstico MTP habilitado; Release final com --seed 20261113 e TESTINGPLATFORM_TELEMETRY_OPTOUT=1. Duas outras tentativas ficaram incompletas, com 304 aprovados e sem falha de caso reportada antes do encerramento somente dos runners próprios. Diagnóstico Release identificou em andamento PreferencesUiTests.MainWindowReloadsAbsentPreferenceAcrossTwoStartsWithIsolatedStorage, caso preexistente; os seis da classe passaram isoladamente. Timeout de 90 s não encerrou o processo travado. Causa/interleaving não comprovados, sem alteração de runner/testes antigos/produção; logs locais ignorados em artifacts/engine-foundation/diagnostics-* e f2i2-*.txt. Registrar a intermitência para revisão, sem afirmar correção. Totais de retorno em operações já em voo não são transação com Stop/cancelamento ou autorização de envio físico; detalhes em [AUDIO_ENGINE_PLAN.md](AUDIO_ENGINE_PLAN.md).
+
+Pendente: revisão técnica F2-I2, simulação de drift/jitter/razão adaptativa e backend futuro, latência acústica e aceitação física Alpha A01–A12; Windows 11 sem ambiente validado e Windows 10 experimental. Executável publicado, Desktop, recursos e áudio existentes preservados; não há novos controles a testar na UI nesta etapa.
+
+## Histórico F2-I1 — fundação sintética isolada
 
 Restore locked com auditoria aprovado. Debug/Release x64 sem erros/avisos; 283 testes aprovados por configuração, zero falhas/ignorados (252 anteriores + 31 novos): 271 regras/simulações/arquivos/STA/sintéticos e 12 integrações existentes. Estado, formato/limites, conversão, interleaving, overflow/underrun, silêncio, wrap/rollover, cancelamento/geração/reset/descarte e NaN/Infinity/clipping testados em EngineFoundationTests. Quatro cenários SPSC concorrentes de 100.000 frames, preservando ordem/canais e contadores finais. Nenhum novo teste abre stream físico ou reproduz áudio.
 

@@ -2,6 +2,16 @@
 
 ## Em desenvolvimento
 
+### 2026-11-13 — F2-I2, adaptação de canais e resampling nominal
+
+- Políticas explícitas de preservação, duplicação mono→L/R e média 0,5L+0,5R; layouts desconhecidos, multicanal, buffers inválidos e sobreposição recusados. Não finitos sanitizados antes do histórico; proteção final independente.
+- FIR causal streaming de 161 taps com fases racionais inteiras, memória pré-alocada, identidade exata sem atraso, 44,1↔48 e 96→48 kHz, consumo/produção parcial, reset e EOF/flush com contagem explícita da cauda.
+- Trajetórias sintéticas com adaptação/resampling, fila SPSC original e proteção realmente exercitadas, sem integrar à UI nem alterar o teste de microfone. Ciclo de vida da base testado em concorrência e contrato não transacional de operações em voo documentado.
+- Metas fixadas antes da medição atendidas na grade: erro útil máximo 0,00148773 dB; pior alias -81,11294 dB. Release final: cerca de 2,05 milhões de frames de saída/s e zero bytes alocados na thread medida; método, ripple, imagens, memória e limitações em docs/RESAMPLING_QUALITY.md.
+- Restore locked auditado, Debug/Release x64 sem erros/avisos; 313 testes aprovados por configuração (283 anteriores + 30 novos), sem falhas/ignorados. Plano de backend/relógios/drift futuro atualizado, sem alegar sincronização física.
+- Duas outras tentativas de regressão ficaram incompletas; log identificou teste de preferências WinForms já existente em andamento após 304 aprovados. Classe passou isolada e suítes finais passaram; causa da intermitência permanece pendente, sem alegar correção. Runners próprios encerrados, diagnósticos locais ignorados e limite do timeout registrado.
+- Alpha, marca, recursos e executável publicado preservados; A01–A12 e Windows 11 continuam pendentes conforme evidências. Sem novo áudio físico, driver, redesign, release pública, efeitos ou F2-I3.
+
 ### 2026-11-13 — F2-I1, fundação isolada do motor
 
 - Pipeline sintético realmente executado nos testes: PCM16/float32, formato intercalado, fila SPSC pré-alocada, neutralidade e proteção de NaN/Infinity/clipping.
