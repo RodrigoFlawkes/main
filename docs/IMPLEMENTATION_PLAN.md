@@ -56,3 +56,7 @@ O proprietário solicitou consolidar primeiro o produto funcional bruto, preserv
 ## Adendo do proprietário — Hub e novos módulos (14/11/2026)
 
 Consultar [PRODUCT_HUB_PLAN.md](PRODUCT_HUB_PLAN.md) para navegação lateral futura, organização de áreas, dois novos módulos (Reparos e Apoiar) e refinamento dos presets de voz. Complemento de planejamento, sem modificar REQUIREMENTS.md ou ampliar EQ-PREVIEW-1. Mesa virtual não equivale a controles fictícios; recursos indisponíveis ficam ocultos/desabilitados. Diagnóstico somente leitura primeiro, correções de Windows/driver apenas com suporte oficial, consentimento e recuperação. Doação voluntária após definição de link/plataforma pelo proprietário. Design profissional depois das funções reais. Manter economia e sequência técnica acordadas.
+
+## Adendo — catálogo visual e aparência (14/11/2026)
+
+[PRODUCT_HUB_PLAN.md](PRODUCT_HUB_PLAN.md) registra Meu Equipamento, associação visual independente de endpoint, catálogo local expansível, imagens licenciadas/personalizadas, conexão/estado e bateria apenas se realmente disponível, além de Claro/Escuro/Alto contraste/Seguir Windows, cor personalizada, wallpaper e persistência. Escopo posterior de design; não ampliar EQ-PREVIEW-1, não gastar cota implementando agora nem prometer bateria universal. Manter a prova de processamento externo e funções reais primeiro.
