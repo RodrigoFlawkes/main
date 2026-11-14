@@ -38,3 +38,7 @@ dotnet run --project src/WaveStudio.Desktop
 ## Sequência posterior
 
 Fase 2 constrói captura/reprodução, buffers, resampling, monitoramento opcional, gravação de teste e medição de latência. Fase 3 comprova DSP de navegador e microfone externo em OBS/Discord. O resultado dessa prova condiciona a expansão de efeitos. Seguir então as Fases 4–12 dos requisitos, passando por mesa, barramentos, EQ/dinâmica, tratamento vocal, soundboard, efeitos de voz, surround, gravação multifaixa e distribuição.
+
+## Direção atual: funcionalidade antes do redesign profissional
+
+O proprietário solicitou consolidar primeiro o produto funcional bruto, preservando a marca e a interface simples/acessível durante o desenvolvimento. O redesign profissional será etapa posterior à consolidação das funcionalidades; ajustes de usabilidade necessários continuam permitidos. O EQ gráfico de 10 bandas, presets, EQ paramétrico e 7.1 virtual speaker shifter/HRTF permanecem nos requisitos das fases correspondentes, sem antecipar controles fictícios. A sequência técnica Fases 2–12 não é alterada. A fundação isolada F2-I1 pode ser desenvolvida com sinal sintético enquanto a aceitação física da Fase 1 permanece pendente. Não declarar aceitação da Alpha nem integrar um novo pipeline contínuo à UI antes da revisão e regressão física da base. A etapa não envolve driver, captura automática, áudio externo ou release pública.
