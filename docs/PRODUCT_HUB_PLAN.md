@@ -3,16 +3,15 @@
 Registro de 14/11/2026 do rascunho do proprietário. Complementa REQUIREMENTS.md e FUTURE_AUDIO_FEATURES.md, não substitui requisitos normativos nem declara implementação. Não muda a tarefa EQ-PREVIEW-1 em andamento. Produto funcional primeiro, design profissional depois. Esforço Alto por padrão e economia de cota; nenhuma instalação/elevação/operação crítica autorizada por este documento.
 
 ## Navegação futura
-Barra lateral compacta, ícones com nomes curtos abaixo. Hub abre visão geral, atalhos, dispositivos selecionados/padrão, estado de processamento e alertas. Proposta de áreas (rótulos ajustáveis no redesign):
+Barra lateral compacta, ícones com nomes curtos abaixo. Hub abre visão geral, atalhos, dispositivos selecionados/padrão, estado de processamento e alertas. Organização aprovada pelo proprietário (seis áreas principais; rótulos ajustáveis no redesign):
 - Hub
-- Áudio (equalizador de reprodução)
-- Microfone (equalizador de captura)
-- Mixer (mesa de som digital)
-- Voz (efeitos divertidos e Soundboard)
-- Tratamento (DSP avançado e surround)
+- Áudio (dispositivos/testes, EQ de reprodução, tratamento sonoro, surround 7.1, presets)
+- Microfone (dispositivos/testes, EQ de captura, tratamento vocal, efeitos de voz, Soundboard, presets)
+- Mixer (mesa de som digital e roteamento)
 - Reparos (solução de problemas)
-- Apoiar (doação voluntária)
 - Ajustes (preferências gerais)
+
+Apoiar é um item secundário pequeno e discreto, fixado no rodapé da barra lateral, separado da navegação principal por espaço/divisor sutil. Ícone de coração e rótulo curto; sem banners, destaque excessivo ou interrupção do uso. Voz e Tratamento não são abas laterais independentes. Processamento vocal fica em Microfone; processamento de reprodução e Surround 7.1 ficam em Áudio. Soundboard pode ter acesso contextual também pelo Mixer, sem duplicar motor/estado.
 
 Não retirar abas/recursos existentes nem mudar a interface atual nesta etapa. Quando houver mais funções, agrupar páginas e manter acesso a rotas, perfis, gravação, diagnósticos e configurações. Ícones acessíveis, rótulos, teclado e estados indisponíveis explícitos. O desenho visual completo fica para etapa posterior à consolidação funcional.
 
@@ -22,10 +21,10 @@ Seletores independentes de entrada/saída, indicar padrão Windows multimídia/c
 ## Mixer e mesa digital
 Mesa virtual que emula organização de console físico, com faders, canais MIC/GAME/CHAT/MUSIC/MEDIA/SYSTEM/AUX/SOUNDBOARD e MASTER, medição, ganho, pan, mute/solo, EQ/dinâmica por canal, buses, matriz e mix-minus conforme requisitos. Simulações para desenvolvimento/testes ou protótipos devem ser rotuladas; não disponibilizar controles fictícios como funcionais. Roteamento externo depende de prova de integração.
 
-## Voz e Soundboard
+## Microfone — Voz e Soundboard
 Presets iniciais pedidos: Eco, voz fina, grossa, feminina e masculina estilizadas. Sugestões para os dois adicionais: robô e monstro. Pitch/formantes quando aplicável, sem afirmar transformação natural perfeita; preservar voz grave natural como opção distinta dos efeitos cômicos. Soundboard com pads, arquivos próprios/licenciados, gravação explícita, volume, atalhos, stop e destinos conforme recursos reais. Demais presets e efeitos anteriores continuam previstos.
 
-## Tratamento
+## Tratamento — dentro de Áudio ou Microfone conforme o sinal
 Compressor, supressão de ruído, isolamento de fala (se tecnicamente viável), saturação, reverb, redução de reverberação/de-reverb, noise gate, limiter, de-esser, AGC, AEC conforme viabilidade e requisitos anteriores. Diferenciar isolamento de fala de isolamento acústico físico, supressão de gate, reverb de de-reverb. Cadeia modular e ativação individual, medição antes/depois e presets. Surround 7.1: detectar capacidades, virtualização HRTF para estéreo onde viável, shifter e teste de canais; não prometer universalidade nem chamar expansão estéreo de 7.1 real. Sem efeitos globais até rota comprovada.
 
 ## Reparos — novo módulo proposto
@@ -36,7 +35,7 @@ Inspirado funcionalmente na solução de problemas de áudio de Driver Booster; 
 Critérios: ações em ambiente simulado primeiro, identificação correta, falhas tratadas, confirmação explícita, documentação e verificação pós-reparo; ensaios físicos apenas com autorização. Logs locais sem segredos/áudio.
 
 ## Apoiar — novo módulo proposto
-Página discreta "Apoie o desenvolvedor", doação voluntária sugerida US$ 1 (ou valor livre, se plataforma escolhida permitir), sem bloquear recursos ou inserir anúncios. Link oficial de pagamento externo definido pelo proprietário mais tarde; nenhuma conta, credencial, endereço de pagamento ou plataforma inventada. Não coletar dados de cartão no aplicativo, não simular pagamento, não exibir botão de pagamento ativo sem destino validado. Avaliar taxas/moeda e termos quando escolher plataforma. Não implementar agora.
+Acesso pequeno no rodapé da barra lateral, abrindo página ou painel discreto "Apoie o desenvolvedor", doação voluntária sugerida US$ 1 (ou valor livre, se plataforma escolhida permitir), sem bloquear recursos ou inserir anúncios. Link oficial de pagamento externo definido pelo proprietário mais tarde; nenhuma conta, credencial, endereço de pagamento ou plataforma inventada. Não coletar dados de cartão no aplicativo, não simular pagamento, não exibir botão de pagamento ativo sem destino validado. Avaliar taxas/moeda e termos quando escolher plataforma. Não implementar agora.
 
 ## Ordem
 Manter EQ-PREVIEW-1; retomar infraestrutura indispensável F2-I6 e prova externa F3 antes de expansão em massa. Reaproveitar DSP modular. Mixer e EQs/efeitos/roteamento conforme requisitos e dependências; diagnósticos básicos em momento oportuno, correções avançadas após revisão; doação e redesign posterior. Nenhuma ampliação automática do escopo atual nem consumo de cota com mockups/código vazio.
