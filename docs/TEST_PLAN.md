@@ -1,6 +1,24 @@
 # Plano de testes
 
-## F2-I3 — relógios independentes e estabilidade
+## F2-I4 — resampling adaptativo de amostras
+
+Restore locked auditado; builds Debug/Release x64 com zero erros/avisos. Suítes finais: 375 aprovados por configuração, zero falhas/ignorados (336 anteriores + 39 novos). São 356 regras/simulações/arquivos/STA/sintéticos e 19 integrações Windows de consulta/janelas; nenhum novo stream de captura/reprodução ou alteração de volume/padrão.
+
+- ClockEstimatorWindowTests: dois casos de rejeição cumulativa com/sem Latest prévio, reset obrigatório e retomada. Deltas locais plausíveis não podem validar janela longa impossível.
+- AdaptiveResamplerTests: nove casos para blocos irregulares/saída unitária, equivalência de sequência, mapeamento/sanitização somente de frames aceitos, contadores de proteção, reset/EOF com fase/razão efetiva, limites/overlap/zero-space, geração obsoleta/parada e precisão/carry Q48 acima de 2⁵³/overflow sem mutação.
+- AdaptiveResamplingQualityTests: 16 casos, incluindo nove configurações de taxa/ppm extremo/centro com DC/senos/alias/imagem, três impulsos L/R/atraso, três transições por referência de fase variável/seam e um custo/alocação/consumo parcial. Metas definidas antes de medir, atendidas na grade; relatórios e limites em [ADAPTIVE_RESAMPLING_QUALITY.md](ADAPTIVE_RESAMPLING_QUALITY.md).
+- AdaptiveIntegrationTests: cinco casos: quatro pares ligado/desligado com sinais gerados e clocks independentes, ChannelAdapter/FIR/SPSC realmente processando amostras e hash FIFO, mais parada ReprimeRequired/descarte/reset/geração antiga/retomada. 100 s simulados em 48→48 ±300 e 35 s em 44,1↔48 ±100, oito caminhos/540 s simulados. Modelo anterior de 900 s continua na regressão. Nenhum arquivo de áudio.
+- PreferencesUiTests: sete casos adicionais de áreas úteis vazias/inválidas/mistas, coordenadas negativas, dimensões pequenas, monitor removido e preferência fora da tela/maximizada, sem exceção de startup ou perda da posição válida por fallback. Seleções habilitadas após consulta assíncrona e seleções/níveis persistidos preservados. Os 13 casos usam Application.Run/esperas assíncronas, deadline externo à STA, Join, coletor de avisos e todas as asserções; nenhum teste desabilitado.
+
+Ocorrências reais: um Debug intermediário teve 342 casos aprovados e erro de execução por exceção não tratada de área útil inválida; guardas de MainForm corrigidas e verificadas inicialmente por três casos, ampliados para sete após bd0ab52. Um Release completou 371 com 370 aprovados e um timeout de 20 s após Disposed na segunda abertura; fixture reentrante DoEvents revisado. Classe isolada depois da revisão: nove aprovados em Release. Na ampliação, houve 6 aprovados/7 falhos porque a asserção de DevicePanel.Enabled ocorria antes da consulta assíncrona terminar; corrigida a espera, preservando a asserção, 13 aprovados. Suítes finais com o complemento: Debug seed20261114 50,628 s; Release seed20261113 23,694 s, 375 cada. Repetições anteriores não são omitidas nem consideradas prova de causa histórica resolvida. Não houve kill do runner das suítes finais.
+
+Watchdog revisado foi exercitado com probe inofensivo compilado localmente (fonte em scripts/Test-Watchdog.ps1; artefatos ignorados): timeout pai/filho e pai encerrado com filho conservando stdout. Códigos 124/125 esperados; coleta completa, filho confirmado encerrado. Conhost sem nonce foi recusado, não morto; identidade ambígua nunca autoriza kill. Prazo de pipes/fim de processo incluído no orçamento; ferramentas/segurança/ExecutionPolicy preservadas. Logs em artifacts/clock-drift e métricas em artifacts/adaptive-resampling, ignorados pelo Git.
+
+Comandos: restore locked auditado; build Debug/Release --no-restore; `& ([scriptblock]::Create((Get-Content -Raw -Encoding UTF8 scripts/Test-WithWatchdog.ps1))) -RepositoryRoot (Get-Location).Path -Configuration Debug -Seed 20261114 -TimeoutSeconds 180` e Release/seed20261113. Orçamento externo 180 s (inclui coleta), processo até 170 s e timeout MTP 165 s; aumento deliberado e limitado para a nova carga de FIR/sinais, sem asserção de benchmark dependente da máquina. Suítes finais abaixo desses limites. Probes usam 30 s. Não alterar política de execução para rodar os scripts.
+
+Pendências: revisão F2-I4, causa completa da intermitência, backend real F2-I5, áudio físico, latência acústica, A01–A12 e Windows 11; Windows 10 experimental. Não foi republicado o pacote; correção de área de tela está no código/builds, preservando o executável de prévia. Não iniciar F2-I5, monitoramento, EQ, redesign ou Fase 3.
+
+## Histórico F2-I3 — relógios independentes e estabilidade
 
 Em 14/11/2026: restore locked auditado, builds Debug/Release x64 com zero erros/avisos; suítes finais com 336 aprovados por configuração (313 anteriores + 23 novos), zero falhas/ignorados. São 324 regras/simulações/arquivos/STA/sintéticos e 12 integrações Windows existentes. Nenhum novo teste abre streams ou altera configurações de áudio.
 

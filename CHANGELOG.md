@@ -2,6 +2,15 @@
 
 ## Em desenvolvimento
 
+### 2026-11-14 — F2-I4, resampling adaptativo de amostras e integração sintética
+
+- AdaptiveResampler interno: FIR interpolado de 257 fases/161 taps, cursor inteiro/Q48, 48→48 e 44,1↔48 mono/LR, ±500 ppm, slew 25 ppm/s, geração, parada e EOF por trajetória. Nominal/identidade/96→48 preservados.
+- Mapeamento somente do prefixo aceito e proteção por estágio sem recontar sufixo; zero alocação recorrente medida. Qualidade estática/transições atende metas prévias; prova liga controlador, adaptador/FIR e SPSC com amostras geradas/clocks independentes, perdas/priming/descarte explícitos.
+- Corrigida rejeição cumulativa do estimador para não confirmar baseline inválida, invalidar Latest e exigir recuperação. Watchdog valida identidade própria e limita coleta de pipes; probes de timeout/pipe exercitados com recusas seguras de conhost sem nonce.
+- Corrigida falha comprovada de inicialização com área útil de monitor inválida, preservando posição salva quando indisponível. Fixture de preferências convertido a loop STA assíncrono após timeout observado depois de Disposed; causa histórica completa permanece pendente.
+- Restore locked auditado, builds Debug/Release x64 sem erros/avisos; suítes finais com 375 aprovados por configuração (336 anteriores + 39 novos), zero falhas/ignorados. Falhas intermediárias e resultados completos documentados no status/protocolo.
+- Sem backend/streams físicos novos, UI de DSP, volumes/padrões alterados, driver, release pública ou redesign. Marca e pacote publicado preservados; A01–A12/Windows 11 pendentes. F2-I5 planejada, não iniciada.
+
 ### 2026-11-14 — F2-I3, relógios independentes e estabilidade de testes
 
 - Tipos internos de relógio/observação, estimador por deltas em referência comum e controlador de razão saída/entrada com feed-forward, PI, anti-windup, ±500 ppm e slew limitado. IDs/gerações, unidades, tempo/posição inválidos, frescor e descontinuidade verificados.

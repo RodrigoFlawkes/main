@@ -35,11 +35,14 @@ internal sealed partial class MainForm : Form
     private readonly Bitmap brandLogo = StudioBrand.CreateLogo();
 
     public MainForm(SettingsStore? settingsStore = null, Action<string>? storageWarning = null,
-        AudioWatchWorker? audioWatch = null, MicrophoneTestSession? microphoneSession = null)
+        AudioWatchWorker? audioWatch = null, MicrophoneTestSession? microphoneSession = null,
+        Func<WindowArea[]>? workAreas = null)
     {
         watch = audioWatch ?? new AudioWatchWorker();
         microphoneTest = new MicrophoneTestPanel(microphoneSession);
         store = settingsStore ?? new SettingsStore(SettingsStore.DefaultPath);
+        readWorkAreas = workAreas ?? (() => Screen.AllScreens.Select(screen => screen.WorkingArea)
+            .Select(area => new WindowArea(area.X, area.Y, area.Width, area.Height)).ToArray());
         showStorageWarning = storageWarning ?? (message => MessageBox.Show(this, message, "Preferências locais", MessageBoxButtons.OK, MessageBoxIcon.Warning));
         Text = "Wave Studio — v0.1.0 Alpha em desenvolvimento";
         Icon = brandIcon;

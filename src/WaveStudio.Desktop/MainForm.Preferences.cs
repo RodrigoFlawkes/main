@@ -7,6 +7,8 @@ internal sealed partial class MainForm
 {
     private readonly SettingsStore store;
     private readonly Action<string> showStorageWarning;
+    private readonly Func<WindowArea[]> readWorkAreas;
+    private bool windowPlacementAvailable;
     private StudioSettings settings = new();
     private readonly Label storageStatus = new() { AutoSize = true, Dock = DockStyle.Fill, MaximumSize = new Size(1000, 0) };
     private readonly Label preferencesSummary = new() { AutoSize = true, MaximumSize = new Size(800, 0) };
@@ -72,8 +74,8 @@ internal sealed partial class MainForm
             settings = loaded.Settings;
             settingsLoaded = true;
             ApplySavedSelections();
-            ApplyWindowPlacement();
-            ShowStorageStatus(loaded.Message);
+            windowPlacementAvailable = ApplyWindowPlacement();
+            ShowStorageStatus(loaded.Message + (windowPlacementAvailable ? "" : " Área útil da tela indisponível; posição salva preservada nesta abertura."));
             EnablePreferenceSelections(true);
         }
         catch (OperationCanceledException) when (stopping) { }
@@ -92,17 +94,18 @@ internal sealed partial class MainForm
         finally { bindingFollow = false; }
     }
 
-    private void ApplyWindowPlacement()
+    private bool ApplyWindowPlacement()
     {
-        var areas = Screen.AllScreens.Select(screen => screen.WorkingArea)
-            .Select(area => new WindowArea(area.X, area.Y, area.Width, area.Height)).ToArray();
-        var area = Screen.FromControl(this).WorkingArea;
-        var initial = settings.Window ?? new WindowPlacement(area.X + Math.Max(0, (area.Width - Width) / 2),
-            area.Y + Math.Max(0, (area.Height - Height) / 2), Width, Height);
+        // Display/remote-session transitions may expose zero-sized working areas.
+        // Ignore invalid monitors; if none are usable, preserve bounds and saved placement.
+        var areas = readWorkAreas().Where(area => area.Width > 0 && area.Height > 0).ToArray();
+        if (areas.Length == 0) return false;
+        var initial = settings.Window ?? new WindowPlacement(Left, Top, Width, Height);
         var placement = initial.Fit(areas);
         MinimumSize = new Size(Math.Min(600, placement.Width), Math.Min(400, placement.Height));
         SetBounds(placement.X, placement.Y, placement.Width, placement.Height);
         if (placement.Maximized) WindowState = FormWindowState.Maximized;
+        return true;
     }
 
     private void SaveSelectionPreferences()
@@ -299,7 +302,7 @@ internal sealed partial class MainForm
         }
         var bounds = WindowState == FormWindowState.Normal ? Bounds : RestoreBounds;
         var placement = new WindowPlacement(bounds.X, bounds.Y, bounds.Width, bounds.Height, WindowState == FormWindowState.Maximized);
-        if (settings.Window != placement && store.CanSave)
+        if (windowPlacementAvailable && settings.Window != placement && store.CanSave)
         {
             settings = settings with { Window = placement };
             QueueSettingsSave();

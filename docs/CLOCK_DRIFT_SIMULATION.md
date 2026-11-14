@@ -1,5 +1,7 @@
 # F2-I3 — contrato e critérios da simulação
 
+Atualização F2-I4: a rejeição cumulativa da janela longa agora não confirma a baseline curta da observação rejeitada, invalida Latest e mantém RequiresReset até recuperação explícita. O modelo de contagem de 900 s permanece como regressão; a prova nova com amostras, contratos de geração/EOF, watchdog revisado e ocorrências reais de UI estão em [ADAPTIVE_RESAMPLING_QUALITY.md](ADAPTIVE_RESAMPLING_QUALITY.md). Os resultados e o diagnóstico abaixo são históricos da F2-I3, não prova de causa resolvida ou sincronização física.
+
 Critérios definidos em 14/11/2026 antes da medição. Modelo interno, serial e sintético; não abre dispositivos e não transforma amostras. A razão controlada é **frames de saída por frame de entrada**. Produtor mais rápido exige razão menor. O FIR nominal aprovado permanece inalterado.
 
 ## Parâmetros iniciais e metas

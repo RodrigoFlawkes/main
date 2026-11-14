@@ -33,6 +33,7 @@ internal sealed class ClockRatioEstimator
     private bool started, estimated;
     private long lastReference;
     public ClockEstimate? Latest { get; private set; }
+    public bool RequiresReset { get; private set; }
     public ClockRatioEstimator(AudioClock input, AudioClock output)
     {
         ArgumentNullException.ThrowIfNull(input); ArgumentNullException.ThrowIfNull(output);
@@ -40,11 +41,12 @@ internal sealed class ClockRatioEstimator
             throw new ArgumentException("Os timestamps exigem conversão para referência comum antes da estimativa.");
         this.input = input; this.output = output;
     }
-    public void Reset() { started = estimated = false; lastReference = 0; Latest = null; firstInput = firstOutput = lastInput = lastOutput = default; }
+    public void Reset() { started = estimated = RequiresReset = false; lastReference = 0; Latest = null; firstInput = firstOutput = lastInput = lastOutput = default; }
     public ClockObservationResult Observe(ClockObservation capture, ClockObservation render, long now)
     {
         if (capture.Clock != input || render.Clock != output) return ClockObservationResult.InvalidIdentity;
         if (capture.Discontinuity || render.Discontinuity) { Reset(); return ClockObservationResult.Discontinuity; }
+        if (RequiresReset) return ClockObservationResult.Discontinuity;
         if (now < 0 || (started && now < lastReference) || capture.Timestamp < 0 || render.Timestamp < 0 || capture.Timestamp > now || render.Timestamp > now ||
             capture.Quality != ClockQuality.Monotonic || render.Quality != ClockQuality.Monotonic)
             return ClockObservationResult.InvalidTime;
@@ -65,13 +67,23 @@ internal sealed class ClockRatioEstimator
         if (!Plausible(capture.FramePosition - lastInput.FramePosition, inputDt, input.NominalRate, 2) ||
             !Plausible(render.FramePosition - lastOutput.FramePosition, outputDt, output.NominalRate, 2))
             return ClockObservationResult.Implausible;
-        lastInput = capture; lastOutput = render; lastReference = now;
         inputDt = (capture.Timestamp - firstInput.Timestamp) / (double)input.TimestampFrequency;
         outputDt = (render.Timestamp - firstOutput.Timestamp) / (double)output.TimestampFrequency;
-        if (inputDt < 1 || outputDt < 1) return ClockObservationResult.Waiting;
+        if (inputDt < 1 || outputDt < 1)
+        {
+            lastInput = capture; lastOutput = render; lastReference = now;
+            return ClockObservationResult.Waiting;
+        }
         long inputFrames = capture.FramePosition - firstInput.FramePosition, outputFrames = render.FramePosition - firstOutput.FramePosition;
         if (inputFrames <= 0 || outputFrames <= 0 || !Plausible(inputFrames, inputDt, input.NominalRate, 2) ||
-            !Plausible(outputFrames, outputDt, output.NominalRate, 2)) return ClockObservationResult.Implausible;
+            !Plausible(outputFrames, outputDt, output.NominalRate, 2))
+        {
+            // Neither baseline accepts this sample. A cumulative failure invalidates
+            // the previous estimate and requires an explicit owner reset/reprime.
+            RequiresReset = true; Latest = null; estimated = false;
+            return ClockObservationResult.Implausible;
+        }
+        lastInput = capture; lastOutput = render; lastReference = now;
         double ratio = (outputFrames / outputDt) / (inputFrames / inputDt);
         double filtered = estimated ? Latest!.Value.OutputPerInput + .2 * (ratio - Latest.Value.OutputPerInput) : ratio;
         Latest = new(filtered, now); estimated = true;
