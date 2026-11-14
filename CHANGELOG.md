@@ -2,6 +2,14 @@
 
 ## Em desenvolvimento
 
+### 2026-11-13 — F2-I1, fundação isolada do motor
+
+- Pipeline sintético realmente executado nos testes: PCM16/float32, formato intercalado, fila SPSC pré-alocada, neutralidade e proteção de NaN/Infinity/clipping.
+- Overflow com descarte de frames mais novos, underrun com silêncio, snapshots, wrap/rollover e gates de geração/cancelamento/parada/reset/descarte em quiescência.
+- Plano AUDIO_ENGINE_PLAN com ownership/ordenação de memória, limites, auditoria NAudio 3.1.0 e contratos futuros de canais/resampling/drift/backend contínuo.
+- Restore locked auditado, Debug/Release sem erros/avisos e 283 testes aprovados por configuração (252 anteriores + 31 novos). Stress concorrente e medição de 51,2 milhões de frames estéreo, zero alocação recorrente na thread medida; métricas completas no plano/status.
+- Nenhuma integração com UI ou áudio físico; comportamento, marca e prévia Alpha preservados. Fase 1 permanece em validação física. Funcionalidade antes do redesign; sem driver, EQ, monitoramento automático ou release pública.
+
 ### 2026-11-13 — identidade oficial do Wave Studio
 
 - Original da logo fornecida pelo proprietário preservado em assets/branding, com transparência e SHA-256 registrado. ICO oficial com sete resoluções e PNGs derivados reproduzíveis.

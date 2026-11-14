@@ -1,5 +1,15 @@
 # Plano de testes
 
+## F2-I1 — fundação sintética isolada
+
+Restore locked com auditoria aprovado. Debug/Release x64 sem erros/avisos; 283 testes aprovados por configuração, zero falhas/ignorados (252 anteriores + 31 novos): 271 regras/simulações/arquivos/STA/sintéticos e 12 integrações existentes. Estado, formato/limites, conversão, interleaving, overflow/underrun, silêncio, wrap/rollover, cancelamento/geração/reset/descarte e NaN/Infinity/clipping testados em EngineFoundationTests. Quatro cenários SPSC concorrentes de 100.000 frames, preservando ordem/canais e contadores finais. Nenhum novo teste abre stream físico ou reproduz áudio.
+
+EnginePerformanceTests mede PCM16→float32→fila→proteção neutra após aquecimento: 51.200.000 frames estéreo, 0 bytes alocados na thread medida; Debug 2.590,9652 ms, Release 1.152,6465 ms. CPU do processo no intervalo 3.156,25/2.187,50 ms, incluindo runner/JIT/runtime; não atribuir integralmente ao motor. Fila de 1.024 frames a 48 kHz tem capacidade teórica de 21,333 ms, não latência acústica. Relatórios locais em artifacts/engine-foundation; método, números e limites em [AUDIO_ENGINE_PLAN.md](AUDIO_ENGINE_PLAN.md).
+
+Uma execução completa inicial ficou incompleta e somente o runner próprio foi encerrado; 31 novos aprovados isoladamente e repetição completa limitada aprovada em ambas as configurações. Causa inicial não determinada; sem falha crítica reproduzida da base. Avisos iniciais de token xUnit corrigidos. Comando recomendado: dotnet test --solution WaveStudio.slnx -c Release --no-build -- --timeout 60s --long-running 10, com TESTINGPLATFORM_TELEMETRY_OPTOUT=1.
+
+Antes de integração física: revisão F2-I1, concluir regressão Alpha A01–A12, validar negociação/ownership WASAPI, resampling/canais, relógios/drift, recuperação/stop e monitoramento manual em headset/nível baixo. Precisar de autorização específica antes de abrir áudio físico em automação. Windows 11 continua pendente, Windows 10 experimental. Não foi republicado o executável aberto pelo proprietário, nem ativado pipeline experimental na UI.
+
 ## Identidade visual — 13/11/2026
 
 Restore locked com auditoria, Debug/Release x64 sem erros/avisos; 252 aprovados em cada configuração (248 anteriores + quatro BrandingTests), zero falhas/ignorados. Verificados SHA-256 e dimensões do original, sete quadros PNG do ICO, carregamento Windows, alfa do PNG incorporado, clones após fechamento de streams e metadados de produto/projeto/versão. Testes iniciais detectaram AssemblyTitle inadequado e fallback GDI no pedido 256; título corrigido e dimensão 256 validada no próprio quadro PNG. Suítes finais aprovadas.

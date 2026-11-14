@@ -2,7 +2,38 @@
 
 Atualizado em 13/11/2026.
 
-## Estado atual — identidade visual oficial incorporada
+## Estado atual — F2-I1, fundação sintética isolada implementada
+
+Autorizada implementação, commit e push. Main inicialmente limpa em ace3e1e, atualizada por fast-forward até 189f2e1; remoto Wave-Universal-Studio/main confirmado. AGENTS.md, NEXT_TASK.md, REVIEW.md, requisitos, arquitetura, planos, status, propostas futuras e aceitação lidos. Funcionalidades reais antes do redesign profissional, preservando marca e interface atual. Fase 1 segue em validação física; não foi declarada aceita.
+
+| Categoria | Resultado |
+| --- | --- |
+| Implementado | Pipeline sintético PCM16/float32 LE → float32 intercalado → buffer circular SPSC → processamento neutro/proteção → memória |
+| Formato/negociação | 8–192 kHz, mono/estéreo lógico L/R, frames completos. Taxa/layout diferentes rejeitados; nenhuma presunção de relógios físicos iguais |
+| Buffer | Pré-alocado, potência de dois até 65.536 frames; overflow descarta sufixo mais novo, underrun preenche zeros. Cursores uint com rollover, contadores e snapshots limitados |
+| Segurança | NaN/Infinity → zero, excesso finito limitado a [-1,1], demais amostras preservadas. Proteção não equivale a efeito/limiter de lookahead; não há ganho nem bypass fictício |
+| Ciclo de vida | Stopped/Running/Canceled/Disposed, geração explícita, token e gates por participante, Stop sem espera; reset/descarte somente em quiescência |
+| Memória | Até 557.056 bytes de payload por pipeline; bloco até 4.096 frames; sem I/O, COM, espera/locks ou alocação recorrente no caminho estável |
+| Integração | Tipos internos em WaveStudio.Audio/Engine, usados pelos testes; nenhum vínculo com Desktop, captura física, monitoramento ou alteração de volume/padrão |
+| Restore/build | Restore locked com auditoria aprovado; Debug/Release x64, zero erros e zero avisos |
+| Testes | 283 aprovados por configuração, zero falhas/ignorados: regressão dos 252 + 31 novos. 271 regras/simulações/arquivos/STA/sintéticos e 12 integrações Windows existentes |
+| Throughput sintético | 51,2 milhões de frames estéreo: Debug 2.590,9652 ms / 19,761 milhões frames/s; Release 1.152,6465 ms / 44,420 milhões frames/s |
+| Alocações/CPU | Zero bytes alocados na thread medida após aquecimento. CPU do processo no intervalo: Debug 3.156,25 ms; Release 2.187,50 ms, incluindo runtime/runner/JIT, não exclusiva do motor |
+| Latência | Fila teórica testada: 480 frames a 48 kHz = 10 ms; capacidade de 1.024 = 21,333 ms. Não é latência de hardware/acústica |
+| Prévia existente | Executável/pasta de publicação preservados; janela do proprietário estava aberta, não foi encerrada ou substituída. Sem republicação nesta etapa isolada |
+| Próximo passo | Revisão F2-I1 e validação/regressão física da Alpha antes de integração contínua; backend real/resampling/drift/monitoramento opt-in em incrementos posteriores autorizados |
+
+### Evidências e limites F2-I1
+
+- Produção em Engine/PcmFloatFormat.cs, SpscFrameBuffer.cs, NeutralProcessor.cs e SyntheticAudioPipeline.cs. EngineFoundationTests e EnginePerformanceTests exercitam efetivamente os componentes, sem projetos/contratos vazios. Nenhuma dependência nova. Arquitetura, prova de ordenação/ownership, auditoria NAudio e contratos futuros documentados em docs/AUDIO_ENGINE_PLAN.md.
+- Testes de formatos/limites, frames/interleaving, PCM16/float32, wrap/rollover, drop/silêncio, geração/reset/cancelamento/descarte, sanitização/clipping e snapshots. Stress de 100.000 frames em cada um dos quatro cenários concorrentes mono/estéreo, com cursores comuns/próximos do rollover; FIFO e contadores finais preservados. Reentrada de papel recusada, sem bloquear callbacks.
+- Ensaio de desempenho: 10.000 blocos de aquecimento, 200.000 blocos medidos de 256 frames, dados/arrays prontos antes da janela. Relatórios numéricos em artifacts/engine-foundation/metrics-Debug.json e metrics-Release.json. I/O do relatório ocorre depois da medição e não contém áudio. Throughput, CPU e bytes medidos não são promessa de deadline, consumo durante jogos ou latência acústica.
+- Primeiro runner completo ficou incompleto (276 aprovados, nenhuma falha reportada antes da interrupção); encerrado somente o processo próprio de testes, sem tocar no programa do proprietário. Causa não determinada. Os 31 novos passaram isoladamente; repetição completa com prazo/diagnóstico aprovou 283 em Debug, e Release aprovou 283. Não houve falha crítica reproduzida da base. Avisos xUnit1051 iniciais corrigidos usando o token do contexto nos testes; builds finais sem avisos.
+- Comandos: dotnet restore WaveStudio.slnx --locked-mode --force; dotnet build WaveStudio.slnx -c Debug/Release --no-restore; dotnet test --solution WaveStudio.slnx -c Debug/Release --no-build -- --timeout 60s --long-running 10, com TESTINGPLATFORM_TELEMETRY_OPTOUT=1. Nenhum stream físico ou reprodução foi iniciado pelos testes novos.
+- A01–A12 seguem conforme evidência anterior: cabeçalho/abas/ícone, leituras pontuais, sucesso relatado da gravação/reprodução e demais subcasos ainda pendentes. Windows 11 permanece sem ambiente validado; Windows 10 experimental. A estratégia global, prova externa Fase 3 e sequência das fases não mudaram. Sem drivers, efeitos, redesign, instalador, release pública ou integração automática de motor.
+- Documentos normativos, NEXT_TASK.md/REVIEW.md, Desktop, identidade, backends existentes, SDK/build e locks preservados contra 189f2e1. Busca de padrões comuns de credenciais e nomes sensíveis sem ocorrências no conteúdo versionável; bin/obj/artifacts ignorados. git diff --check aprovado. EXE/DLL da prévia publicada mantêm hashes 97D1892C98D2DC66A4B8B2F0190AAC1690CD227286B06595FA946DB25E307285 e E2463B1B7871894F94DDE9FB0FC1DD7E504484CBA23FD765CCF81537D70CD941, respectivamente. Commit/push autorizados, com conferência final de árvore limpa e sincronização.
+
+## Histórico — identidade visual oficial incorporada
 
 Etapa autorizada em 13/11/2026, base c28d808, main inicialmente limpa e sincronizada. AGENTS.md, NEXT_TASK.md e REVIEW.md lidos; requisitos/arquitetura preservados. F1-I6-METER já implementada e publicada, com regressão aprovada; seus testes físicos restantes continuam pendentes. Motor de áudio intacto, sem redesign completo ou Fase 2.
 

@@ -1,5 +1,7 @@
 # Arquitetura do Wave Studio
 
+F2-I1 em 13/11/2026: fundação sintética isolada em Audio/Engine, sem integração ao Desktop ou aos fluxos da Alpha. Formato PCM float32 intercalado, conversão PCM16/float32, fila SPSC pré-alocada, processamento neutro/proteção, geração e ciclo de vida exercitados por testes. Ownership, prova de ordenação, limites, métricas e contratos de canais/resampling/drift em [AUDIO_ENGINE_PLAN.md](AUDIO_ENGINE_PLAN.md). Não existem backend contínuo ou monitoramento novos; a Fase 1 segue em validação física. Estratégia de integração global abaixo preservada.
+
 Identidade oficial incorporada em 13/11/2026: assets/branding mantém original e derivados; ApplicationIcon grava o ICO no recurso Win32 do apphost. StudioBrand carrega ICO/PNG de EmbeddedResource, cria clones independentes dos streams e MainForm os descarta no Dispose. Cabeçalho usa PictureBox Zoom, preservando proporções. Não há I/O de imagem externa no runtime nem alteração no áudio. Metadados e guia em [identidade oficial](../assets/branding/README.md). Distribuição pública e instalador continuam futuros.
 
 Decisões da Fase 0, com atualizações até F1-I6-METER em 13/11/2026, em validação física pendente. Requisitos normativos em [REQUIREMENTS.md](REQUIREMENTS.md). A implementação atual é descrita primeiro, seguida pelo histórico e planejamento de evolução.

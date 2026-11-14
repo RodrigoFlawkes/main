@@ -1,5 +1,9 @@
 # Plano da v0.1.0 Alpha
 
+Estado em 13/11/2026: F2-I1 implementada somente como fundação sintética isolada, com 283 testes aprovados em Debug/Release (252 anteriores + 31 novos). Formato, conversão, fila SPSC, processamento neutro e ciclo de vida usados em testes; nenhuma mudança de UI/fluxo Alpha. [Plano incremental do motor](AUDIO_ENGINE_PLAN.md). Obter revisão desta fundação e regressão/validação física da Fase 1 antes de integrar backend contínuo. Próximos incrementos deverão negociar WASAPI real, adaptar canais/resampling/drift e permitir monitoramento manual opt-in, mediante autorização. Parar após F2-I1, sem antecipar EQ, efeitos em massa ou drivers.
+
+As referências anteriores a Fase 2 fora do escopo registram etapas históricas da identidade/Alpha; a autorização atual permite apenas esta fundação isolada. O redesign profissional continua posterior à consolidação das funcionalidades reais.
+
 Identidade oficial aplicada em 13/11/2026 após a entrega técnica F1-I6-METER: original preservado, ICO multirresolução, recursos incorporados, cabeçalho/README e metadados. Regressão atual de 252 testes por configuração. Distribuição pública, instalador, redesign completo e Fase 2 continuam fora desta etapa. Guia em [assets/branding](../assets/branding/README.md).
 
 Planejamento atualizado em 13/11/2026. Fase 1 em andamento, com incrementos verificáveis. Escopo detalhado em [REQUIREMENTS.md](REQUIREMENTS.md).

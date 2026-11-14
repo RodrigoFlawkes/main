@@ -8,6 +8,8 @@ Aplicação desktop para gerenciamento de áudio no Windows, independente de fab
 
 ## Estado do projeto
 
+A F2-I1 acrescenta uma [fundação sintética do motor](docs/AUDIO_ENGINE_PLAN.md), isolada em Audio/Engine e exercitada por testes: formato float32, conversão, fila circular, proteção e ciclo de vida. São 283 testes aprovados em Debug/Release, incluindo os 252 da base. Essa fundação ainda não controla dispositivos ou monitoramento contínuo e não modifica a janela Alpha. Funcionalidades reais são prioridade; redesign profissional fica para depois da consolidação. A prévia local existente foi preservada nesta etapa e seus testes físicos continuam pendentes conforme evidências.
+
 F1-I6-METER acrescenta o medidor de entrada na aba de teste ao checkpoint técnico da Alpha. A prévia oferece seleção independente, volume/mute, balanço condicional, medidores reais, mixer de sessões, notificações, teste curto de microfone e preferências JSON. A aceitação física da v0.1.0 Alpha permanece pendente.
 
 Na aba **Testar microfone**, clique em **Gravar teste**, fale e use **Parar** (limite de 10 segundos). Depois, com fones e volume baixo, clique em **Ouvir gravação**. A reprodução começa em nível digital de 20%, ajustável de 0 a 100%, sem alterar volume/mute do Windows. **Parar reprodução** interrompe a saída; **Limpar teste** apaga o trecho. Não há captura/reprodução automática nem monitoramento ao vivo. O áudio fica somente em memória e é descartado na troca/atualização de dispositivos, desconexão, suspensão ou fechamento.
@@ -18,7 +20,7 @@ O grupo **Nível de entrada do microfone** mostra o pico real de amplitude, de 0
 
 A aba **Mixer de aplicativos** lista sessões reais da saída selecionada, com nome/processo quando disponível, PID auxiliar, estado, volume/mute e pico por instância. Edite Volume (%) e confirme com Enter, ou use o botão de mute. Picos são consultados a cada segundo, com silêncio, pausa, indisponibilidade e atraso identificados. A reconciliação por chave preserva linhas, foco e edição.
 
-Verificação atual com 252 testes aprovados em Debug e Release, incluindo os 248 anteriores, e builds com zero erros/avisos. O executável atualizado abriu e fechou normalmente com armazenamento isolado, sem acionar captura/reprodução. O ensaio de dez minutos pertence ao checkpoint F1-I6 anterior. O proprietário confirmou volume/mute e, após relato de zumbido/ausência de voz, informou sucesso da gravação/reprodução após ajustes próprios não especificados. A causa anterior não foi determinada. Subcasos A11, medidor A12 e demais critérios completos aguardam evidência física. Windows 10 é experimental e Windows 11 x64 continua pendente.
+Verificação atual com 283 testes aprovados em Debug e Release, incluindo os 252 anteriores, e builds com zero erros/avisos. A prévia com identidade foi conferida na etapa anterior; nesta fundação isolada o executável publicado foi preservado. O ensaio de dez minutos pertence ao checkpoint F1-I6 anterior. O proprietário confirmou volume/mute e, após relato de zumbido/ausência de voz, informou sucesso da gravação/reprodução após ajustes próprios não especificados. A causa anterior não foi determinada. Subcasos A11, medidor A12 e demais critérios completos aguardam evidência física. Windows 10 é experimental e Windows 11 x64 continua pendente.
 
 Versão v0.1.0 Alpha em desenvolvimento. Preferências duráveis de sessões aguardam identidade inequívoca. A Fase 1 aguarda aprovação explícita após os testes físicos.
 
@@ -73,7 +75,7 @@ As barras de Dispositivos mostram pico do Windows em percentual e dBFS. A barra 
 
 Os controles refletem alterações externas por consultas em segundo plano a cada aproximadamente 600 ms. Balanço exige dois canais de volume e formato com máscara frontal L/R confirmada. O centro iguala os canais ao maior nível atual. Extremos atenuam o lado oposto e preservam esse nível-base. Mono e mapeamento desconhecido deixam o balanço desabilitado com explicação. Erros de escrita desabilitam o controle afetado até atualizar ou selecionar novamente. O volume é o controle do endpoint do Windows.
 
-A suíte possui 240 casos de regras, simulações, armazenamento e WinForms STA e 12 integrações Windows. Captura/reprodução de teste e escritas automatizadas de áudio usam simulações. Nenhum teste automatizado aciona um stream do microfone real. Siga os [passos físicos dos incrementos](docs/TEST_PLAN.md).
+A suíte possui 271 casos de regras, simulações, armazenamento e WinForms STA e 12 integrações Windows. Captura/reprodução de teste e escritas automatizadas de áudio usam simulações. Nenhum teste automatizado aciona um stream do microfone real. Siga os [passos físicos dos incrementos](docs/TEST_PLAN.md).
 
 ## Preferências locais
 
