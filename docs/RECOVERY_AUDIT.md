@@ -46,3 +46,7 @@ Ordem: recuperação → F2-I6B1 → prova silenciosa autorizada → F2-I6B2 →
 ## 4. Cota
 
 Proprietário informa 35% restantes em 18/11/2026, não telemetria automática. Alto para tarefas ordinárias, Extra alto para recuperação complexa e transporte/COM quando necessário; avisar antes. Qualidade, segurança, testes e otimização necessária acima de economia. Reaproveitar alterações, evitar redundância e não repetir passos concluídos sem motivo. Se acabar, pausar em checkpoint seguro até renovação; não estimar data/percentual nem apressar fases. Desenvolver a parte funcional primeiro, design completo depois.
+
+## Resultado da recuperação — bed126c (18/11/2026)
+
+Codex reportou cópia integral 3182 arquivos verificados, diffs binários e fsck0; restaurou ICO exato e preservou oito caminhos staged ao sincronizar sete documentos. F2-I6B1 publicada, 644 testes Debug/Release; HEAD conferido remotamente. Prova física ainda pendente. Causa de exclusão do ICO e ocorrência de alocação EQ não determinadas. Ver PROJECT_STATUS e REVIEW. Proprietário quer uma única pasta ativa e GitHub como backup versionado: manter diretório oficial, inventariar arquivos exclusivos/ignorados dos backups e pastas antigas, sem nova cópia integral, sem remoção/movimentação sem verificação e autorização. GitHub não guarda dados privados, caches, artefatos ignorados e sessões Codex automaticamente.
