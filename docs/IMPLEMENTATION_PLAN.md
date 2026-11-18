@@ -1,5 +1,7 @@
 # Plano da v0.1.0 Alpha
 
+**Retomada 18/11/2026:** F2-I6A publicada (603 testes em cada configuração; preparação nativa sem Start). F2-I6B1 recuperada parcialmente no Git local, sem conclusão comprovada. Primeiro auditar recuperação, preservar index/arquivos, restaurar ICO original se exclusão indevida, verificar ambiente e regressão; [RECOVERY_AUDIT](RECOVERY_AUDIT.md). Saldo informado 35%, Extra alto quando necessário. Estado mais recente em PROJECT_STATUS/NEXT_TASK, seções antigas são histórico. F2-I6B2 e F3 seguem dependentes de prova/autorização; não antecipar efeitos em massa/design.
+
 EQ-PROFILE-1 em14/11/2026 acrescenta persistência local e perfis somente do EQ da gravação curta, reutilizando o armazenamento e DSP existentes. A diferença audível original/EQ foi relatada pelo proprietário; demais subcasos permanecem pendentes. [Uso e limites](EQ_PREVIEW.md), resultados no status e teste manualA14 no roteiro Alpha. Parar após publicação/revisão; F2-I6A continua próxima etapa técnica, sem backend contínuo, novos efeitos ou redesign nesta entrega.
 
 CHECKUP-1 em14/11/2026 corrige recursos/encerramento sobre a base EQ, sem expansão de funcionalidades. [Check-up e limites](GENERAL_CHECKUP.md), resultados no status. Parar para revisão antes de F2-I6A (HRESULT de clock público na mesma sessão, sem Start) e F2-I6B (transporte opt-in/guard/priming/checkpoint nativos). Testes físicos/Alpha e plano mestre preservados; nenhuma mudança de sequência de efeitos/mixer ou aparência.

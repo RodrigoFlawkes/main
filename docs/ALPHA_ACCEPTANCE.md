@@ -1,6 +1,6 @@
 # Aceitação da prévia v0.1.0 Alpha
 
-## EQ-PROFILE-1 — teste manual A14 pendente
+## EQ-PROFILE-1 — roteiro A14 (aprovado por relato geral em 14/11; ambiente reinstalado requer reconferência)
 
 Pacote local atualizado com persistência de ajustes/perfis, sem alterar áudio/headroom ou iniciar captura/playback automaticamente. Resultados técnicos e hashes atuais no PROJECT_STATUS; pacotes abaixo são históricos. A diferença audível original/EQ foi relatada pelo proprietário, sem aprovação automática dos demais subcasos A13.
 
@@ -10,7 +10,7 @@ Pacote local atualizado com persistência de ajustes/perfis, sem alterar áudio/
 
 Pacote local atualizado na pasta habitual, com backup/hashes/startup no PROJECT_STATUS. Preserva EQ e A01–A13. Conferir fechamento normal após testar mic/EQ, durante parada e após troca/USB/suspensão por ação própria, em nível baixo. Se houver status de encerramento pendente, não presumir que o hardware parou: aguarde e tente fechar novamente; não forçar encerramento durante este roteiro. Recursos ativos não são descartados à força. A falha de parada não foi provocada em hardware pelo agente; testes de falha/timeout são simulados. Nenhuma aceitação automática da Alpha/Fase 2 ou Windows 11, sem novo monitoramento.
 
-## EQ-PREVIEW-1 — teste audível A13 pendente
+## EQ-PREVIEW-1 — roteiro A13 (diferença audível relatada; demais subcasos pendentes)
 
 O pacote local atualizado mantém A01–A12 e acrescenta somente EQ na reprodução explícita da gravação curta. [Instruções A/B e limites](EQ_PREVIEW.md); versão, hashes, startup e verificações desta publicação no PROJECT_STATUS. A identificação do pacote F2-I5 abaixo é histórica. Sem aceitação automática da Alpha/Fase 2, release pública ou novo monitoramento.
 
@@ -191,3 +191,7 @@ O proprietário especificou que os ajustes do equalizador da aba Testar microfon
 ## Retorno A14 — perfis do EQ
 
 14/11/2026: proprietário respondeu “sobre os teste tudo ok” após roteiro de perfis e salvamento de EQ-PROFILE-1. **A14 aprovado por relato geral do proprietário**, sem discriminação de subcasos, valores, layout ou logs. A gravação descartada ao fechar já era comportamento desejado; a diferença audível A13 foi confirmada separadamente. Não inferir aceitação completa da Alpha, outros casos físicos ou Windows 11. A próxima tarefa é F2-I6A sem Start, não transporte ativo.
+
+## Retomada após formatação — 18/11/2026
+
+Preservar evidências antigas como históricas. Conferir novo ambiente/Windows, seleção, níveis, medidores, diagnóstico/stop/close, USB e permissões antes de Start nativo. Não presumir os mesmos IDs de dispositivo. A14 e A13 relatados não equivalem a aceitação de todos os casos. Ver [RECOVERY_AUDIT](RECOVERY_AUDIT.md). Nenhuma captura ativa autorizada nesta retomada documental.

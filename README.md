@@ -68,7 +68,7 @@ A interface definitiva será organizada em seis áreas principais. Os recursos a
 | Área | Funcionalidades previstas |
 | --- | --- |
 | **Hub** | Meu Equipamento: catálogo visual expansível de headsets e microfones, imagens personalizadas, conexão, estado e bateria quando realmente disponível |
-| **Áudio** | Seletor e teste de saída, EQ gráfico e paramétrico, presets, graves, agudos, dinâmica, reverb, áudio espacial, Surround 7.1 e Virtual Speaker Shifter |
+| **Áudio** | Seletor e teste de saída, EQ básico (10 bandas), avançado (31) e personalizado/paramétrico, presets, graves, agudos, dinâmica, reverb, áudio espacial, Surround 7.1 e Virtual Speaker Shifter |
 | **Microfone** | Seletor e teste, EQ, boost, monitoramento, redução de ruído, isolamento de fala, compressor, gate, limiter, de-esser, saturação, AEC, AGC, efeitos de voz e Soundboard |
 | **Mixer** | Mesa digital, faders, master, game/chat balance, canais por fonte, mix pessoal/transmissão/chat/gravação, matriz de roteamento e gravação multifaixa |
 | **Reparos** | Diagnóstico de som, dispositivos e drivers; correções específicas, seguras e confirmadas pelo usuário |
@@ -95,7 +95,7 @@ Compatibilidade de bateria, formatos, surround e recursos específicos depende d
 | --- | --- |
 | 0 — Arquitetura e viabilidade | Documentada |
 | 1 — Base Windows e Alpha | Implementada; aceitação física pendente |
-| 2 — Motor de áudio | Em desenvolvimento; buffers, resampling, clocks simulados e consulta WASAPI implementados |
+| 2 — Motor de áudio | Em desenvolvimento; buffers, resampling, clock e preparação WASAPI sem áudio implementados; transporte ativo pendente |
 | Prévia EQ | Implementada; escuta A/B pendente |
 | 3 — Integração externa de áudio | Planejada; depende do transporte nativo |
 | 4–5 — Mesa digital, barramentos e roteamento | Planejadas |
@@ -175,7 +175,7 @@ WaveStudio.slnx
 
 ### Qualidade e validação
 
-A entrega EQ-PREVIEW-1 registrou **495 testes aprovados em Debug e 495 em Release**, com builds sem erros/avisos. Consulte o [status atualizado](PROJECT_STATUS.md) para os resultados mais recentes. Testes automatizados e simulações não equivalem à validação de áudio físico. O backend WASAPI contínuo ainda não está integrado à interface; a lacuna de precisão do relógio nativo está documentada.
+A última entrega publicada de código, F2-I6A, registrou **603 testes aprovados em Debug e 603 em Release**, com builds sem erros/avisos, além de uma prova explícita de preparação dos dispositivos sem iniciar áudio. A ponte de relógio preserva HRESULT; movimento e transporte contínuo ainda não validados. Consulte [PROJECT_STATUS.md](PROJECT_STATUS.md) para evidências e [auditoria de retomada](docs/RECOVERY_AUDIT.md) para a recuperação após formatação. O executável local anterior é EQ-PROFILE-1; o backend contínuo e DSP global ainda não estão disponíveis. Testes automatizados não equivalem à aceitação física.
 
 As correções CHECKUP-1 de ciclo de vida e encerramento passaram com **519 testes em cada configuração**, sem erros/avisos de build; [causas e limitações na auditoria geral](docs/GENERAL_CHECKUP.md). Não iniciar transporte contínuo antes de revisar segurança, relógios, formatos, quiescência e validação física.
 
