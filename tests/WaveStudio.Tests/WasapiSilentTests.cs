@@ -25,7 +25,8 @@ public sealed class WasapiSilentTests
         public uint Capacity = 1056, CaptureFlags = 2;
         public uint? PacketFrames, AdvertisedFrames, Padding, PaddingAfterStart, StartupFlags;
         public int PacketLimit = int.MaxValue;
-        public bool EmptyBeforeFirst;
+        public bool EmptyBeforeFirst, NominalPacketCadence;
+        public ulong SecondPacketOffset;
         public readonly ConcurrentQueue<uint> CaptureReleases = new();
         private int packetCount;
         public ulong? PacketQpc;
@@ -94,7 +95,12 @@ public sealed class WasapiSilentTests
         {
             public uint NextPacketSize()
             {
-                role.Step("Next"); if (!role.packetDue) { role.packetDue = true; return 0; }
+                role.Step("Next");
+                if (role.NominalPacketCadence)
+                    return role.packetCount < role.PacketLimit && WasapiTime.Now100ns() >= role.StartTime + (role.packetCount + 1L) * 100000
+                        ? role.PacketFrames ?? 480
+                        : 0;
+                if (!role.packetDue) { role.packetDue = true; return 0; }
                 if (role.packetCount >= role.PacketLimit) return 0;
                 role.packetDue = false;
                 return role.AdvertisedFrames ?? role.PacketFrames ?? 48;
@@ -110,7 +116,8 @@ public sealed class WasapiSilentTests
                 role.BufferHeld = true; uint frames = role.PacketFrames ?? 48; role.AcquiredFrames += frames;
                 var packet = new WasapiCaptureBuffer(0, role.NullData ? 0 : role.memory.AddrOfPinnedObject(), frames,
                     role.packetCount++ == 0 ? role.StartupFlags ?? role.CaptureFlags : role.CaptureFlags,
-                    role.packetPosition, role.PacketQpc ?? (ulong)WasapiTime.Now100ns());
+                    role.packetPosition + (role.packetCount == 2 ? role.SecondPacketOffset : 0),
+                    role.PacketQpc ?? (role.NominalPacketCadence ? (ulong)role.StartTime + (ulong)role.packetCount * 100000 : (ulong)WasapiTime.Now100ns()));
                 role.packetPosition += frames;
                 return packet;
             }
@@ -481,22 +488,24 @@ public sealed class WasapiSilentTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task FailedReleaseRetainsLeaseAndNeverRetriesPacketOrDisposesItsParents(bool startupDiscard)
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public async Task FailedReleaseRetainsLeaseAndNeverRetriesPacketOrDisposesItsParents(bool startupDiscard, bool windowed)
     {
         var route = WasapiContractTests.Route();
         var calls = new Calls(route);
         var guard = new TransportActivityGuard();
         if (startupDiscard) calls.Input.StartupFlags = 1;
         calls.Input.ReleaseResult = Invalidated;
-        var session = new WasapiSilentSession(route, guard, calls.Open, TimeSpan.FromSeconds(1));
+        var session = new WasapiSilentSession(route, guard, calls.Open, TimeSpan.FromSeconds(1), simulateCaptureTiming: windowed);
 
         var result = await session.RunAsync(Duration, TestContext.Current.CancellationToken);
 
         Assert.True(result.ResourcesRetained);
         Assert.False(result.Completed);
         Assert.True(result.Capture.BufferInFlight);
+        Assert.Null(result.Capture.CaptureTiming);
         Assert.True(result.Capture.StopConfirmed);
         Assert.Equal(Invalidated, result.Capture.ReleaseHResult);
         Assert.Equal(48u, Assert.Single(calls.Input.CaptureReleases));
@@ -509,8 +518,10 @@ public sealed class WasapiSilentTests
         Assert.Single(calls.Log, step => step.Input && step.Step == "ReleaseCapture");
     }
 
-    [Fact]
-    public async Task CancelWhileNativeCaptureIsInFlightRetainsLeaseUntilOwnerReturns()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CancelWhileNativeCaptureIsInFlightRetainsLeaseUntilOwnerReturns(bool windowed)
     {
         var route = WasapiContractTests.Route();
         var calls = new Calls(route);
@@ -524,7 +535,7 @@ public sealed class WasapiSilentTests
             entered.TrySetResult();
             Assert.True(release.Wait(TimeSpan.FromSeconds(8)));
         };
-        var session = new WasapiSilentSession(route, guard, calls.Open, TimeSpan.FromSeconds(1));
+        var session = new WasapiSilentSession(route, guard, calls.Open, TimeSpan.FromSeconds(1), simulateCaptureTiming: windowed);
         try
         {
             var running = session.RunAsync(TimeSpan.FromSeconds(3), cancel.Token);
@@ -568,6 +579,57 @@ public sealed class WasapiSilentTests
         Assert.False(result.Capture.StartAttempted);
         Assert.True(result.Playback.StopConfirmed);
         Assert.False(result.TransportObserved);
+    }
+
+    [Theory]
+    [InlineData(250, false)]
+    [InlineData(2600, true)]
+    public async Task WindowedSessionRequiresSustainedCorroboratedCapture(int milliseconds, bool expected)
+    {
+        var route = WasapiContractTests.Route();
+        var calls = new Calls(route);
+        calls.Input.PacketFrames = 480;
+        calls.Input.NominalPacketCadence = true;
+        calls.Input.StartupFlags = 3;
+        await using var session = new WasapiSilentSession(route, new(), calls.Open, simulateCaptureTiming: true);
+
+        var result = await session.RunAsync(TimeSpan.FromMilliseconds(milliseconds), TestContext.Current.CancellationToken);
+
+        Assert.True(result.Completed);
+        Assert.True(result.DurationReached);
+        Assert.Null(result.Failure);
+        Assert.Equal(expected, result.TransportObserved);
+        Assert.Equal(expected, result.Capture.CaptureTiming!.Confirmed);
+        Assert.Equal(result.Capture.PacketsAccepted, result.Capture.CaptureTiming.ContinuousPackets);
+        Assert.Equal(1, result.Capture.StartupDiscardedPackets);
+        Assert.Null(result.Playback.CaptureTiming);
+    }
+
+    [Fact]
+    public async Task WindowedSessionRejectsGapWithZeroReleaseAndKeepsTheGuardUntilCleanup()
+    {
+        var route = WasapiContractTests.Route();
+        var calls = new Calls(route);
+        var guard = new TransportActivityGuard();
+        calls.Input.PacketFrames = 480;
+        calls.Input.NominalPacketCadence = true;
+        calls.Input.SecondPacketOffset = 1;
+        calls.Input.OnStep = step =>
+        {
+            if (step == "ReleaseCapture") Assert.Null(guard.TryAcquire(AudioActivity.ShortDiagnostic));
+        };
+        await using var session = new WasapiSilentSession(route, guard, calls.Open, simulateCaptureTiming: true);
+
+        var result = await session.RunAsync(Duration, TestContext.Current.CancellationToken);
+
+        Assert.True(result.Completed);
+        Assert.False(result.TransportObserved);
+        Assert.Equal("Capture", result.Failure);
+        Assert.Equal("PacketPositionNotContiguous", result.Capture.CaptureTiming!.Failure);
+        Assert.Equal(new uint[] { 480, 0 }, calls.Input.CaptureReleases.ToArray());
+        Assert.Equal(1, result.Capture.PacketsAccepted);
+        using var lease = guard.TryAcquire(AudioActivity.ShortDiagnostic);
+        Assert.NotNull(lease);
     }
 
     [Fact]

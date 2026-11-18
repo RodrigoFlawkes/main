@@ -1,5 +1,11 @@
 # Plano de testes
 
+## F2-I6B1-CLOCK-WINDOW — replay e proteção contra desvios sustentados
+
+A fixture reproduz todos os pontos da prova 3. O teste vermelho confirmou a rejeição estrita da leitura 11. Com a política restrita à captura SILENT, a leitura fica provisória e o replay não confirma transporte. O render mantém o resultado estrito. As sequências marcadas como sintéticas validam recuperação em cinco segundos, tolerância curta inclusiva nos dois sentidos, orçamento inteiro em 44,1/48 kHz e diferentes períodos, falhas de taxa sustentada, envelope acumulado, corroboração insuficiente, frescor terminal, limites de integridade e lacunas/duplicações/sobreposição de pacotes. Fakes de sessão verificam contabilidade e descarte inicial, janela curta insuficiente, janela confirmada, falha de continuidade com release zero, cancelamento e retenção até cleanup.
+
+As regressões comuns excluem os dois testes Explicit. A prova física original não foi reclassificada nem repetida.
+
 ## F2-I6B1-CLOCK-DIAG — verificação automatizada
 
 Dois cenários com fakes retornam o mesmo `InvalidPosition` e exigem motivos distintos no JSON terminal, âncora e última leitura aceita preservadas, históricos de captura e render e ausência de IDs. Os dois falharam primeiro pela ausência do histórico e passaram com a instrumentação. Testes determinísticos cobrem a precedência e os motivos de rejeição, excesso e falta de avanço, bordas inclusivas, resto inteiro, posição repetida e prazo de progresso, startup sem âncora, timestamps, qualidade/S_FALSE, RequiresReset, overflow, sobrescrita circular e isolamento dos snapshots. O teste de cancelamento com chamada em voo verifica que o histórico dos owners não é copiado antes do join.

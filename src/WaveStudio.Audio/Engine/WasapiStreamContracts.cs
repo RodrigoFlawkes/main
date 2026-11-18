@@ -30,10 +30,11 @@ internal static class WasapiTime
     public static long Now100ns() => checked((long)((UInt128)(ulong)Stopwatch.GetTimestamp() * 10000000 / (ulong)Stopwatch.Frequency));
 }
 
-internal sealed class WasapiRunningClock(TransportEndpoint endpoint, int rate, long started100ns)
+internal sealed class WasapiRunningClock(TransportEndpoint endpoint, int rate, long started100ns,
+    WasapiCaptureTiming? captureTiming = null)
 {
     private const int HistoryCapacity = 64;
-    private readonly WasapiClockAdapter adapter = new(endpoint, rate);
+    private readonly WasapiClockAdapter adapter = new(endpoint, rate, captureTiming);
     private readonly NativeClockTrace[] readings = new NativeClockTrace[HistoryCapacity];
     private long readingCount;
     private NativeClockTrace? lastAccepted, rejection;
@@ -69,6 +70,7 @@ internal sealed class WasapiRunningClock(TransportEndpoint endpoint, int rate, l
             position = reading.Position;
             lastAccepted = entry;
         }
+        else if (result == NativeClockResult.Provisional) position = reading.Position;
         else if (validation.Reason != NativeClockReason.StartupWaiting) rejection ??= entry;
         return result;
     }
@@ -92,7 +94,8 @@ internal sealed record WasapiRoleSnapshot(bool Initialized, bool StartAttempted,
     ulong PacketPosition, ulong PacketQpc100ns, bool BufferInFlight, string? Error, string? CleanupError,
     int? StartHResult, int? StopHResult, int? AcquireHResult, int? ReleaseHResult, NativeClockResult? ClockStatus,
     long PacketsAccepted, long FramesAccepted, long StartupDiscardedPackets, long StartupDiscardedFrames,
-    uint StartupDiscardFlags, ulong StartupDiscardPosition, ulong StartupDiscardQpc100ns, NativeClockHistory? ClockHistory);
+    uint StartupDiscardFlags, ulong StartupDiscardPosition, ulong StartupDiscardQpc100ns, NativeClockHistory? ClockHistory,
+    WasapiCaptureTimingSnapshot? CaptureTiming = null);
 
 internal sealed record WasapiSilentSnapshot(WasapiRoleSnapshot Capture, WasapiRoleSnapshot Playback,
     bool Completed, bool ResourcesRetained, string? Failure, int? HResult,
@@ -101,7 +104,9 @@ internal sealed record WasapiSilentSnapshot(WasapiRoleSnapshot Capture, WasapiRo
     public bool AlwaysSilent => true;
     public bool DriftControlEnabled => false;
     public bool MovementProven => Completed && Failure is null && Capture.MovementSamples >= 2 && Playback.MovementSamples >= 2;
-    public bool TransportObserved => DurationReached && MovementProven && Capture.Started && Playback.Started &&
+    public bool TransportObserved => DurationReached && MovementProven && (Capture.CaptureTiming is null or { Confirmed: true } &&
+        (Capture.CaptureTiming is null || Capture.CaptureTiming.ContinuousPackets == Capture.PacketsAccepted)) &&
+        Capture.Started && Playback.Started &&
         Capture.StopConfirmed && Playback.StopConfirmed && Capture.Released && Playback.Released &&
         Capture.PacketsAccepted > 0 && Capture.FramesAccepted > 0 && ProducedFrames > 0 && ReadFrames > 0 &&
         Capture.PacketsAccepted + Capture.StartupDiscardedPackets == Capture.PacketsReleased &&

@@ -6,7 +6,7 @@ internal enum NativeClockQuality { Unavailable, Accurate, Uncertain }
 internal enum NativePositionUnit { Frames, DeviceUnits }
 internal readonly record struct NativeClockSample(TransportEndpoint Endpoint, ulong Position, ulong Frequency,
     ulong Qpc100ns, NativePositionUnit Unit, NativeClockQuality Quality, TransportPacketFlags Flags = TransportPacketFlags.None);
-internal enum NativeClockResult { Valid, InvalidIdentity, Unavailable, TimestampError, Discontinuity, InvalidTime, InvalidPosition, Stalled, Overflow, RequiresReset }
+internal enum NativeClockResult { Valid, InvalidIdentity, Unavailable, TimestampError, Discontinuity, InvalidTime, InvalidPosition, Stalled, Overflow, RequiresReset, Provisional }
 
 // No native clock call is made here. Caller must supply audited accuracy/unit evidence.
 internal sealed class WasapiClockAdapter
@@ -14,17 +14,20 @@ internal sealed class WasapiClockAdapter
     private readonly TransportEndpoint endpoint;
     private readonly int rate;
     private readonly AudioClock clock;
+    private readonly WasapiCaptureTiming? captureTiming;
     private bool anchored;
     private ulong nativePosition, nativeFrequency, qpc, lastProgressQpc, remainder;
     private NativePositionUnit unit;
     private long frames;
     public bool RequiresReset { get; private set; }
     public AudioClock Clock => clock;
-    public WasapiClockAdapter(TransportEndpoint endpoint, int rate)
+    public WasapiClockAdapter(TransportEndpoint endpoint, int rate, WasapiCaptureTiming? captureTiming = null)
     {
         endpoint.Validate();
         if (rate is not (44100 or 48000)) throw new ArgumentOutOfRangeException(nameof(rate));
-        this.endpoint = endpoint; this.rate = rate;
+        if (captureTiming is not null && endpoint.Direction != EndpointDirection.Capture)
+            throw new ArgumentException("A política temporal é exclusiva da captura.", nameof(captureTiming));
+        this.endpoint = endpoint; this.rate = rate; this.captureTiming = captureTiming;
         // Bounded identity for the estimator; native identity is checked in full above conversion.
         string identity = ConvertIdentity(endpoint);
         clock = new(identity, endpoint.Generation, rate, "WASAPI-QPC-100ns", 10000000);
@@ -106,16 +109,31 @@ internal sealed class WasapiClockAdapter
             validation.ExpectedFrames = expected;
             validation.AbsoluteErrorFrames = error;
             validation.ErrorLimitFrames = limit;
-            if (error > limit)
-                return Reject(NativeClockResult.InvalidPosition, NativeClockReason.AdvanceOutsideTolerance, ref validation);
+            if (captureTiming is null)
+            {
+                if (error > limit)
+                    return Reject(NativeClockResult.InvalidPosition, NativeClockReason.AdvanceOutsideTolerance, ref validation);
+            }
+            else
+            {
+                var reason = captureTiming.ObserveClock(sample.Qpc100ns, (ulong)(frames + (long)advance), ref validation);
+                if (reason != NativeClockReason.None)
+                    return Reject(NativeClockResult.InvalidPosition, reason, ref validation);
+            }
             frames += (long)advance;
             remainder = (ulong)(delta % frequency);
             validation.RemainderAfter = remainder;
             if (sample.Position != nativePosition) lastProgressQpc = sample.Qpc100ns;
         }
-        else { anchored = true; lastProgressQpc = sample.Qpc100ns; }
+        else
+        {
+            captureTiming?.ObserveClock(sample.Qpc100ns, 0, ref validation);
+            anchored = true;
+            lastProgressQpc = sample.Qpc100ns;
+        }
         nativePosition = sample.Position; nativeFrequency = frequency; qpc = sample.Qpc100ns; unit = sample.Unit;
-        observation = new(clock, frames, (long)qpc, ClockQuality.Monotonic);
+        if (validation.TemporalProvisional) return NativeClockResult.Provisional;
+        if (captureTiming is null) observation = new(clock, frames, (long)qpc, ClockQuality.Monotonic);
         return NativeClockResult.Valid;
     }
     private NativeClockResult Reject(NativeClockResult result, NativeClockReason reason, ref NativeClockValidation validation)

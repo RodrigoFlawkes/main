@@ -2,7 +2,14 @@
 
 Atualizado em 18/11/2026.
 
-## Estado atual — F2-I6B1-PROOF-3 não aprovada
+## Estado atual — F2-I6B1-CLOCK-WINDOW
+
+- Sincronização inicial por fast-forward a `38d3e5d`. O replay dos 11 pontos por papel reproduziu os −480,624 frames do intervalo rejeitado e −479,6592 frames desde a primeira leitura da captura. O desvio é compatível com variação de aproximadamente um período, sem explicação física comprovada. O replay classifica a última leitura como provisória; os dados da prova 3 continuam insuficientes para aprovação.
+- Implementação restrita à captura SILENT. Margem de até um período consultado no curto prazo e desde âncora fixa, com validação nominal em janelas móveis de 2–2,5 s e corroboração pelos deltas dos pacotes contíguos já liberados. A política estrita continua no render, na simulação e no estimador. [Análise, fórmula e limites](docs/WASAPI_BACKEND_PLAN.md).
+- Restore locked com auditoria NuGet aprovado. Builds Debug/Release x64 com zero erros ou avisos. Direcionados WASAPI: 214 aprovados. Regressões finais: 737 aprovados (696 anteriores + 41 casos), zero falhas e dois Explicit excluídos por configuração. Debug 71,183 s e Release 39,632 s, runner .NET direto com política Restricted, prazo 165 s e seeds 20261114/20261113. Logs em `artifacts/f2-i6b1-clock-window`. As primeiras rodadas mediram alocação inesperada em dois testes existentes (EQ em Debug, 6.040 bytes; consumo parcial do resampler nominal em Release, 3.992 bytes). Os casos passaram isoladamente e nas repetições completas, sem mudanças de código, parâmetros ou asserções entre execuções. A causa das ocorrências permanece indeterminada.
+- Nenhuma execução física, nova prévia ou ajuste do controlador de drift. Os sete testes manuais permanecem aprovados por relato. Prova 4 aguarda revisão e autorização específica. F2-I6B2/F3 seguem pendentes.
+
+## Histórico — F2-I6B1-PROOF-3 não aprovada
 
 - Sincronização inicial por fast-forward para `38d49d2`, com binário Release x64 existente da implementação `97b2c99`, SDK 10.0.404 e um único teste descoberto por filtro exato. O proprietário confirmou autorização de cinco segundos, headset conectado, Wave Studio fechado normalmente e ausência de chamadas/testes. Confirmados os dois endpoints ativos e únicos por direção, além da ausência do app e de outros runners. Os sete casos manuais permanecem aprovados por relato.
 - A tentativa única SILENT encerrou a observação após **1.110,3045 ms**. O clock da captura rejeitou a leitura 11 por `AdvanceOutsideTolerance`: 5.280 frames calculados para 120,013 ms de QPC, 5.760,624 esperados, erro de 480,624 contra limite de 30,80312. Ambos os HRESULTs nativos dessa leitura foram S_OK. A origem da diferença continua indeterminada, assim como o ramo específico da prova 2.

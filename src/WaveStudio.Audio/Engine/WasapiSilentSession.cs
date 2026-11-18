@@ -8,6 +8,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
     private readonly Func<TransportEndpoint, IWasapiPreparationDevice> open;
     private readonly TransportActivityGuard guard;
     private readonly TimeSpan timeout;
+    private readonly bool verifyCaptureTiming;
     private readonly object control = new(); // Never acquired by sample processing.
     private readonly SemaphoreSlim finalizing = new(1);
     private readonly ManualResetEventSlim stop = new();
@@ -22,11 +23,12 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
     private string? failure;
     private int? hresult;
     private int faultWritten;
-    private long observation100ns;
+    private long observation100ns, observationEnd100ns;
     private bool durationReached;
 
     public WasapiSilentSession(TransportRoute route, TransportActivityGuard? guard = null,
-        Func<TransportEndpoint, IWasapiPreparationDevice>? open = null, TimeSpan? timeout = null)
+        Func<TransportEndpoint, IWasapiPreparationDevice>? open = null, TimeSpan? timeout = null,
+        bool simulateCaptureTiming = false)
     {
         route.Validate();
         if (open is null && (route.Capture.Evidence != FormatEvidence.ExactCapability ||
@@ -34,6 +36,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             throw new ArgumentException("A prova nativa requer formatos consultados no Windows.", nameof(route));
         if (route.Capture.Endpoint.Generation == long.MaxValue) throw new ArgumentException("Geração sem espaço para limpeza.");
         this.route = route; this.guard = guard ?? TransportActivityGuard.Shared;
+        verifyCaptureTiming = open is null || simulateCaptureTiming;
         this.open = open ?? NativeWasapiPreparationDevice.Open; this.timeout = timeout ?? TimeSpan.FromSeconds(3);
         if (this.timeout <= TimeSpan.Zero || this.timeout > TimeSpan.FromSeconds(5)) throw new ArgumentOutOfRangeException(nameof(timeout));
         ticket = new(route); capture = new(this, route.Capture, true); playback = new(this, route.Playback, false);
@@ -89,7 +92,8 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                 using var delayCancellation = new CancellationTokenSource();
                 var limit = Task.Delay(duration, delayCancellation.Token);
                 durationReached = await Task.WhenAny(limit, stopped.Task) == limit && !stop.IsSet;
-                observation100ns = WasapiTime.Now100ns() - begin;
+                observationEnd100ns = WasapiTime.Now100ns();
+                observation100ns = observationEnd100ns - begin;
                 delayCancellation.Cancel();
             }
         }
@@ -151,6 +155,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
         private ulong packetPosition, packetQpc, startupDiscardPosition, startupDiscardQpc;
         private string? error, cleanup;
         private WasapiRunningClock? motion;
+        private WasapiCaptureTiming? captureTiming;
         private WasapiClockReading? lastClock;
         private int? startResult, stopResult, acquireResult, releaseResult;
         private long nextClock, startTime, startRequested100ns;
@@ -184,6 +189,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             Check(); device.ValidateIdentity(info.Endpoint); Check(); client.Initialize(); initialized = true; Check();
             (Capacity, latency) = client.ReadBufferInfo();
             if (Capacity is 0 or > 4096 || latency < 0) throw new NotSupportedException("Capacidade/latência fora do orçamento.");
+            if (input && session.verifyCaptureTiming) captureTiming = new(mix.SampleRate, Period, Capacity);
             padding = client.ReadPadding(); if (padding > Capacity) throw new InvalidOperationException("Padding inválido na preparação.");
             Check(); clock = resources.Add(client.OpenClock()); Check();
             if (input) packets = resources.Add(client.OpenCapture()); else render = resources.Add(client.OpenRender());
@@ -200,7 +206,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                 if (!input) { FillRender(prime: true); Check(); }
                 startRequested100ns = WasapiTime.Now100ns();
                 startAttempted = true; startResult = client!.Start(); WasapiCallException.RequireSuccess(startResult.Value, "IAudioClient.Start"); started = true;
-                startTime = WasapiTime.Now100ns(); motion = new(info.Endpoint, info.Mix!.SampleRate, startTime); nextClock = startTime + 1000000;
+                startTime = WasapiTime.Now100ns(); motion = new(info.Endpoint, info.Mix!.SampleRate, startTime, captureTiming); nextClock = startTime + 1000000;
                 Started.TrySetResult(); Check();
                 int pollMs = Math.Clamp((int)(Period / 20000), 1, 10);
                 while (!session.stop.IsSet)
@@ -212,7 +218,11 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                     }
                     else FillRender(prime: false);
                     long now = WasapiTime.Now100ns();
-                    if (session.ticket.IsValid && now >= nextClock) { ReadClock(); nextClock = now + 1000000; }
+                    if (session.ticket.IsValid)
+                    {
+                        captureTiming?.CheckProgress(now, startTime);
+                        if (now >= nextClock) { ReadClock(); nextClock = now + 1000000; }
+                    }
                     session.stop.Wait(pollMs);
                 }
             }
@@ -236,7 +246,8 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             var result = motion!.Observe(lastClock.Value, now);
             clockStatus = result;
             if (result == NativeClockResult.Stalled && lastClock.Value.Position == 0 && now - startTime <= 5000000) return;
-            if (result != NativeClockResult.Valid) throw new InvalidOperationException("Clock inválido: " + result);
+            if (result is not (NativeClockResult.Valid or NativeClockResult.Provisional))
+                throw new InvalidOperationException("Clock inválido: " + result);
         }
         private unsafe void DrainCapture()
         {
@@ -265,6 +276,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                     bool silent = (buffer.Flags & Silent) != 0;
                     if (!silent && buffer.Data == 0) throw new InvalidOperationException("Packet sem dados e sem SILENT.");
                     Check();
+                    if (!discardStartup) captureTiming?.ValidatePacket(buffer.Position, buffer.Frames, buffer.Qpc100ns);
                     var bytes = silent ? ReadOnlySpan<byte>.Empty : new ReadOnlySpan<byte>((void*)buffer.Data, checked((int)buffer.Frames * info.Mix!.BlockAlign));
                     if (discardStartup)
                     {
@@ -292,6 +304,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                     startupDiscardQpc = buffer.Qpc100ns;
                     continue;
                 }
+                captureTiming?.AcceptReleasedPacket(buffer.Position, consumed, buffer.Qpc100ns);
                 acceptedPackets++;
                 acceptedFrames += consumed;
                 session.path!.Produce((int)consumed, session.ticket);
@@ -346,6 +359,6 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             startResult, stopResult, acquireResult, releaseResult, Done.Task.IsCompleted ? clockStatus : null,
             Interlocked.Read(ref acceptedPackets), Interlocked.Read(ref acceptedFrames),
             Interlocked.Read(ref startupDiscardedPackets), Interlocked.Read(ref startupDiscardedFrames),
-            startupDiscardFlags, startupDiscardPosition, startupDiscardQpc, joined ? motion?.Snapshot() : null);
+            startupDiscardFlags, startupDiscardPosition, startupDiscardQpc, joined ? motion?.Snapshot() : null, joined ? captureTiming?.Snapshot(session.durationReached && session.failure is null ? session.observationEnd100ns : 0) : null);
     }
 }

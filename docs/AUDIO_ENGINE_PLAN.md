@@ -1,5 +1,9 @@
 # Motor de áudio — fundação, conversão e relógios
 
+## F2-I6B1-CLOCK-WINDOW — separação entre integridade e fase
+
+A captura nativa da prova SILENT usa margem provisória de um período apenas para variação de fase curta e desde uma âncora fixa. Aprovação exige janelas de taxa de 2–2,5 s sem margem de fase, continuidade dos pacotes liberados e corroboração dos deltas terminais. O modo estrito do render, o estimador simulado, o controlador de ±500 ppm e o FIR permanecem independentes dessa política. A prova física de cinco segundos permanece pendente de nova revisão. [Reprodução, contratos e critérios](WASAPI_BACKEND_PLAN.md#f2-i6b1-clock-window--validação-temporal-da-captura-silenciosa-18112026).
+
 ## F2-I6A — ponte de clock e preparação nativa sem Start
 
 Interop mínimo das interfaces públicas Windows preserva HRESULTs e UINT64 no mesmo cliente inicializado, com integração ao WasapiClockAdapter existente. Fonte NAudio3.1.0/IDL Microsoft auditadas, ownership MTA/source generation e limpeza inversa. Prova explícita autorizada: shared float32/48kHz mono/LR, buffer1056, clock/frequência consultados em repouso, nenhum Start/GetBuffer de áudio, recursos liberados. S_FALSE continua incerto, zero não significa progresso e StreamLatency reportada0 não significa latência acústica0. Guard compartilhado com diagnóstico real, sem transportar amostras nem ligar fake ao hardware. [Contrato completo, testes e limites](WASAPI_BACKEND_PLAN.md); resultados finais no status.

@@ -45,12 +45,12 @@ Também estão previstos integração com aplicativos externos, mix-minus e estu
 
 | Validação | Resultado |
 | --- | --- |
-| Testes automatizados | 696 em Debug e 696 em Release, conforme último relatório |
+| Testes automatizados | 737 em Debug e 737 em Release, conforme último relatório |
 | Aceitação manual | 7 casos aprovados; aceitação integral pendente |
 | WASAPI | Transporte silencioso implementado; prova física de 5 s ainda não aprovada |
-| Próxima etapa | Validação temporal do clock de captura (F2-I6B1-CLOCK-WINDOW) |
+| Próxima etapa | Revisão da validação temporal da captura, seguida de nova prova silenciosa após autorização |
 
-A terceira prova física confirmou o transporte real de amostras e a liberação dos recursos, mas foi interrompida por divergência temporal do clock de captura. O monitoramento audível e a integração externa dependem dessa validação.
+A terceira prova física confirmou o transporte real de amostras e a liberação dos recursos, mas foi interrompida por divergência temporal do clock de captura. A validação temporal e a continuidade de pacotes foram exercitadas em replay e simulação. O monitoramento audível e a integração externa ainda dependem da prova física.
 
 [Status detalhado](PROJECT_STATUS.md) · [Próxima tarefa](NEXT_TASK.md) · [Evidências WASAPI](docs/WASAPI_BACKEND_PLAN.md)
 

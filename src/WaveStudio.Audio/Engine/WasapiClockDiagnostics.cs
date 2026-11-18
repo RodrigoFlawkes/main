@@ -10,7 +10,8 @@ internal enum NativeClockReason
     InaccurateReading, ZeroFrequency, UnsupportedUnit, QpcOutOfRange, NegativeNow, FutureTimestamp,
     StaleTimestamp, NonIncreasingTimestamp, FrameFrequencyMismatch, UnitChanged, FrequencyChanged,
     PositionRegressed, ProgressExpired, AdvanceOverflow, TotalFramesOverflow, IntervalTooLong,
-    AdvanceOutsideTolerance, StartupWaiting, StartupMissingTimestamp, StartupExpired
+    AdvanceOutsideTolerance, StartupWaiting, StartupMissingTimestamp, StartupExpired,
+    AccumulatedPhaseOutsideTolerance, WindowRateOutsideTolerance, WindowExpired
 }
 
 internal readonly record struct NativeClockAnchor(NativePositionUnit Unit, ulong Frequency, ulong Position,
@@ -29,6 +30,9 @@ internal record struct NativeClockValidation(NativePositionUnit Unit, NativeCloc
     public double? AbsoluteErrorFrames { get; set; }
     public double? ErrorLimitFrames { get; set; }
     public ulong? RemainderAfter { get; set; }
+    public bool TemporalProvisional { get; set; }
+    public WasapiRateMeasurement? ClockAccumulated { get; set; }
+    public WasapiRateMeasurement? ClockRolling { get; set; }
 }
 
 internal readonly record struct NativeClockTrace(long Index, Int128 SinceStart100ns, WasapiClockReading Reading,

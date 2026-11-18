@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-18 — F2-I6B1-CLOCK-WINDOW
+
+- Captura da prova silenciosa com orçamento provisório ligado ao período consultado, âncora fixa, janelas móveis de taxa e confirmação por continuidade dos pacotes.
+- Replay da prova 3 reproduz o erro e classifica a última leitura como provisória. A janela física segue sem aprovação. O render e a simulação permanecem sob a política estrita.
+
 ### 2026-11-18 — terceira prova física F2-I6B1-PROOF-3
 
 - A prova silenciosa instrumentada descartou o pacote inicial e aceitou 111 pacotes. Os dois históricos ficaram disponíveis após a liberação dos streams.
