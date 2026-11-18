@@ -1,8 +1,18 @@
 # Status do Wave Studio
 
-Atualizado em 14/11/2026.
+Atualizado em 18/11/2026.
 
-## Estado atual — F2-I6A, clock WASAPI e preparação sem áudio
+## Estado atual — recuperação e F2-I6B1 sem execução física
+
+- Recuperação em Windows x64, build 19045, com Git 2.56.1.windows.1, SDK 10.0.404 e Desktop Runtime 10.0.15. A configuração Codex existe e a sessão opera com workspace-write e aprovação sob demanda. Autenticação/consulta e fetch do GitHub confirmados.
+- O backup integral fora do repositório contém 3.182 arquivos verificados por SHA-256, incluindo .git e arquivos ignorados. Os diffs binários de HEAD e do índice foram exportados à parte no mesmo backup. O `git fsck --full` terminou com código 0 e listou apenas objetos pendentes. O status inicial mostrou a exclusão preparada do ICO e oito arquivos preparados da F2-I6B1, sem alterações adicionais ou arquivos não rastreados. A origem da exclusão no índice ficou indeterminada.
+- Restaurado somente o ICO de HEAD, blob `636df116b2482feb97a1ae98cb415ab03dab14ce`, igual ao blob no GitHub. `main` avançou de `db0d83a` para `81f53c9` com fast-forward de sete documentos. Os oito caminhos preparados conservaram os mesmos blobs no índice durante a sincronização.
+- A F2-I6B1 reutiliza os oito arquivos recuperados. Priming/saída SILENT, ciclo de vida/packets por owner MTA, validação dos clocks, processamento fora dos buffers emprestados e retenção do guard quando Stop/Release permanecem incertos. O diagnóstico curto conserva o guard após falha de Dispose. Detalhes de ABI e limites no [plano WASAPI](docs/WASAPI_BACKEND_PLAN.md).
+- Restore locked com auditoria NuGet e erro para indisponibilidade da auditoria (NU1900) passou. Builds Debug/Release x64 recompilados com zero erros ou avisos. A política Restricted bloqueou o watchdog PowerShell. As regressões usaram o runner .NET/MTP diretamente com seeds 20261114/20261113, limite de 165 s e logs em `artifacts/recovery-final`, com a política preservada.
+- Regressões finais: 644 aprovados por configuração (603 anteriores + 41 novos), 0 falhas e 2 Explicit excluídos em cada uma. Debug 71,063 s e Release 39,794 s. A primeira Release teve 643 aprovados e uma falha no teste de alocação do EQ (7.192 bytes medidos, zero esperados). O teste passou isolado e a repetição completa passou sem mudança no código de EQ, fixture, prazo ou asserção. A causa da ocorrência permanece indeterminada.
+- A prova silenciosa `Explicit` aguarda autorização específica e pré-condições físicas. Nesta recuperação não houve Start nativo de áudio nem captura física ou reprodução contínua. Controle de drift em hardware, F2-I6B2, F3 e aceitação física seguem pendentes. A prévia instalada continua no pacote anterior. Dependências, locks, tarefa e revisão não editados por esta implementação.
+
+## Histórico — F2-I6A, clock WASAPI e preparação sem áudio
 
 Implementação, testes de preparação sem captura/reprodução, commit e push autorizados pelo proprietário. Árvore inicialmente limpa em c1d4c88; sincronizada por fast-forward com origin/main para8a9e116. Remoto Wave-Universal-Studio/main, .NET SDK10.0.404 e Git2.56.0 confirmados. AGENTS/NEXT_TASK/REVIEW e requisitos/arquitetura/status, planos WASAPI/motor/mestre e check-up consultados. Normativos, tarefa/revisão, dependências/locks, UI, EQ/perfis/headroom/FIR/SPSC e scripts preservados. **A14 aprovado por relato geral do proprietário**, conforme revisão sincronizada; não inventados valores/subcasos ou novas aprovações físicas.
 

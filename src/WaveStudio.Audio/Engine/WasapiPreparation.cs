@@ -49,10 +49,6 @@ internal sealed record WasapiPreparationResult(TransportEndpoint Endpoint, Wasap
 
 internal static class WasapiPreparation
 {
-    // An unconfirmed Release must not unlock another operation or allow a finalizer on another owner.
-    // No forced retry on a pool thread; keep failed resources rooted. Restart/review is required.
-    private static readonly List<PreparationLifetime> retained = [];
-
     public static Task<WasapiPreparationResult> PrepareAsync(TransportEndpoint endpoint, WasapiPcm expected,
         TransportActivityGuard guard, CancellationToken token = default,
         Func<TransportEndpoint, IWasapiPreparationDevice>? open = null)
@@ -66,7 +62,7 @@ internal static class WasapiPreparation
     {
         if (Thread.CurrentThread.GetApartmentState() != ApartmentState.MTA) throw new InvalidOperationException("Preparação exige MTA.");
         token.ThrowIfCancellationRequested();
-        using var lifetime = new PreparationLifetime(guard.TryAcquire(AudioActivity.NativePreparation)
+        using var lifetime = new WasapiResourceScope(guard.TryAcquire(AudioActivity.NativePreparation)
             ?? throw new InvalidOperationException("Outra operação de áudio está ativa. Preparação recusada."));
         WasapiPcm? mix = null; long? period = null, minimum = null, latency = null; uint? frames = null;
         WasapiClockReading? reading = null; bool initialized = false; string? failed = null; int? hr = null;
@@ -102,25 +98,4 @@ internal static class WasapiPreparation
             lifetime.CleanupError, lifetime.Released, Environment.CurrentManagedThreadId);
     }
 
-    private sealed class PreparationLifetime(IDisposable lease) : IDisposable
-    {
-        private readonly List<IDisposable> resources = [];
-        private bool attempted;
-        public bool Released { get; private set; }
-        public string? CleanupError { get; private set; }
-        public T Add<T>(T resource) where T : IDisposable { resources.Add(resource); return resource; }
-        public void Dispose()
-        {
-            if (attempted) return;
-            attempted = true;
-            for (int i = resources.Count - 1; i >= 0; i--)
-            {
-                try { resources[i].Dispose(); resources.RemoveAt(i); }
-                catch (Exception error) { CleanupError ??= error.GetType().Name; }
-                // A failed child release retains its parents too. Never release the owning client first.
-                if (CleanupError is not null) { lock (retained) retained.Add(this); return; }
-            }
-            lease.Dispose(); Released = true;
-        }
-    }
 }

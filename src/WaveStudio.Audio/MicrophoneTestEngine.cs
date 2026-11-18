@@ -28,8 +28,8 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
     internal MicrophoneTestState State { get; private set; }
     internal bool Busy => capture is not null || playback is not null;
     internal MicrophoneTestSnapshot Snapshot => new(State, clip?.Duration ?? TimeSpan.Zero, elapsed, message,
-        !Busy && captureId is not null && State != MicrophoneTestState.Disposed,
-        !Busy && clip?.Length > 0 && playbackId is not null && State != MicrophoneTestState.Disposed,
+        !Busy && cleanupError is null && captureId is not null && State != MicrophoneTestState.Disposed,
+        !Busy && cleanupError is null && clip?.Length > 0 && playbackId is not null && State != MicrophoneTestState.Disposed,
         Busy || clip is not null, clip?.Format.SampleRate,
         clip is not null && GraphicEqualizerSettings.SupportsRate(clip.Format.SampleRate), playbackMode,
         playbackSource?.LimitedSamples ?? limitedSamples, playbackSource?.SanitizedSamples ?? sanitizedSamples,
@@ -150,7 +150,12 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
     private void Finish()
     {
         if (Busy) throw new InvalidOperationException("Término exige quiescência do diagnóstico.");
-        activity?.Dispose(); activity = null;
+        // Completion establishes callback quiescence. A failed Dispose leaves native ownership uncertain.
+        if (cleanupError is null)
+        {
+            activity?.Dispose();
+            activity = null;
+        }
         Interlocked.Increment(ref deliveryEpoch);
         stopRequested = false;
         clip?.Seal();
@@ -168,6 +173,11 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
     }
     private bool AcquireActivity()
     {
+        if (cleanupError is not null)
+        {
+            message = FailureMessage();
+            return false;
+        }
         activity = activities.TryAcquire(AudioActivity.ShortDiagnostic);
         if (activity is not null) return true;
         message = "Outra operação de áudio está ativa. Aguarde o término antes de testar.";
@@ -192,15 +202,25 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
     private void ReleaseCapture()
     {
         var released = capture; capture = null; captureStarted = false;
-        try { released?.Dispose(); } catch (Exception error) { cleanupError ??= error; }
+        DisposeDiagnosticResource(released);
     }
     private void ReleasePlayback()
     {
         var released = playback; playback = null; playbackStarted = false;
-        try { released?.Dispose(); } catch (Exception error) { cleanupError ??= error; }
+        DisposeDiagnosticResource(released);
         limitedSamples = playbackSource?.LimitedSamples ?? limitedSamples;
         sanitizedSamples = playbackSource?.SanitizedSamples ?? sanitizedSamples;
         playbackSource = null;
+    }
+    private void DisposeDiagnosticResource(IDisposable? resource)
+    {
+        if (resource is null) return;
+        try { resource.Dispose(); }
+        catch (Exception error)
+        {
+            cleanupError ??= error;
+            WasapiResourceScope.Retain(resource);
+        }
     }
     private void ResetPlayback() { playbackSource = null; playbackMode = null; limitedSamples = sanitizedSamples = 0; }
     private void ResetFailure() { primaryError = cleanupError = null; stopRequested = discard = false; }
@@ -229,7 +249,7 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
         else Finish();
     }
     private string FailureMessage() => (primaryError is null ? "" : Describe(primaryError)) +
-        (cleanupError is null ? "" : " Falha ao liberar recurso concluído: " + Describe(cleanupError));
+        (cleanupError is null ? "" : " Liberação do dispositivo não confirmada. Reinicie o Wave Studio antes de iniciar outro teste. " + Describe(cleanupError));
     private static string Describe(Exception error) => error switch
         {
             NotSupportedException or InvalidOperationException => error.Message,

@@ -35,7 +35,7 @@ internal sealed class DeliveryTicket(TransportRoute route)
 internal delegate void CapturePacket(ReadOnlySpan<byte> bytes, int frames, NativeClockSample clock, long arrival100ns);
 internal delegate void RenderPacket(Span<byte> bytes, int frames, NativeClockSample clock, long arrival100ns);
 
-// Intentionally simulation-only. No production WASAPI Start/Initialize implementation exists.
+// Intentionally simulation-only. The native silent proof owns its own packet lifecycle.
 // Control methods belong to one MTA worker. Each callback has one separate, stable owner thread.
 // Borrowed spans expire on return. Submit is bounded, nonblocking and must revalidate ticket.
 internal interface ISimulatedAudioTransport : IDisposable

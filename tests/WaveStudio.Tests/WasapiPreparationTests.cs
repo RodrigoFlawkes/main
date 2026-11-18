@@ -192,6 +192,28 @@ public sealed class WasapiPreparationTests
         engine.MarkDisposed();
     }
     [Fact]
+    public void DiagnosticCompletionWithFailedDisposeRetainsGuardAfterClose()
+    {
+        var guard = new TransportActivityGuard();
+        var backend = new MicrophoneTestTests.FakeBackend();
+        backend.Capture.DisposeError = new InvalidOperationException("release failed");
+        var engine = new MicrophoneTestEngine(backend, _ => true, guard);
+        engine.Select("capture", "render", 1);
+        engine.Record(1, TimeSpan.Zero);
+        engine.Stop();
+        engine.Tick(TimeSpan.Zero);
+
+        Assert.False(engine.Busy);
+        Assert.False(engine.Snapshot.CanRecord);
+        Assert.NotNull(engine.Snapshot.CleanupError);
+        Assert.Null(guard.TryAcquire(AudioActivity.IsolatedTransport));
+        Assert.Null(guard.TryAcquire(AudioActivity.NativePreparation));
+        engine.MarkDisposed();
+        Assert.Equal(1, backend.Capture.Disposals);
+        Assert.Null(guard.TryAcquire(AudioActivity.IsolatedTransport));
+    }
+
+    [Fact]
     public async Task LeaseRemainsHeldDuringBlockedPrepareAndCancellationWaitsForOwnerReturn()
     {
         var fake = new Fake(); var guard = new TransportActivityGuard();

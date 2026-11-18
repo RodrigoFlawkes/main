@@ -67,7 +67,7 @@ internal sealed class NativeWasapiPreparationDevice(TransportEndpoint requested)
         disposed = true;
     }
 
-    private sealed class Client(NativeReference<IPreparationAudioClient> client) : IWasapiPreparationClient
+    private sealed class Client(NativeReference<IPreparationAudioClient> client) : IWasapiStreamClient
     {
         private nint format;
         private bool initialized;
@@ -115,6 +115,38 @@ internal sealed class NativeWasapiPreparationDevice(TransportEndpoint requested)
             int hr = client.Value.GetService(in iid, out nint pointer);
             return new Clock(NativeReference<IPreparationAudioClock>.Adopt(hr, pointer, "IAudioClient.GetService(IAudioClock)"));
         }
+        public int Start() => client.Value.Start();
+        public int Stop() => client.Value.Stop();
+        public void RevalidateFormat(WasapiPcm expected)
+        {
+            nint current = 0, closest = 0;
+            try
+            {
+                WasapiCallException.RequireSuccess(client.Value.GetMixFormat(out current), "IAudioClient.GetMixFormat(revalidate)");
+                if (current == 0 || WasapiPcm.From(WaveFormat.MarshalFromPtr(current)) != expected)
+                    throw new InvalidOperationException("Formato mudou antes de Start; sem fallback.");
+                WasapiCallException.RequireSuccess(client.Value.IsFormatSupported(0, current, out closest), "IAudioClient.IsFormatSupported(revalidate)");
+                if (closest != 0) throw new InvalidOperationException("Formato exato indisponível antes de Start.");
+            }
+            finally { Marshal.FreeCoTaskMem(closest); Marshal.FreeCoTaskMem(current); }
+        }
+        public uint ReadPadding()
+        {
+            WasapiCallException.RequireSuccess(client.Value.GetCurrentPadding(out uint frames), "IAudioClient.GetCurrentPadding");
+            return frames;
+        }
+        public IWasapiCapturePackets OpenCapture()
+        {
+            var iid = typeof(INativeCaptureClient).GUID;
+            int hr = client.Value.GetService(in iid, out nint pointer);
+            return new CapturePackets(NativeReference<INativeCaptureClient>.Adopt(hr, pointer, "GetService(IAudioCaptureClient)"));
+        }
+        public IWasapiRenderPackets OpenRender()
+        {
+            var iid = typeof(INativeRenderClient).GUID;
+            int hr = client.Value.GetService(in iid, out nint pointer);
+            return new RenderPackets(NativeReference<INativeRenderClient>.Adopt(hr, pointer, "GetService(IAudioRenderClient)"));
+        }
         public void Dispose()
         {
             if (format != 0) { _ = client.Value; Marshal.FreeCoTaskMem(format); format = 0; }
@@ -130,6 +162,31 @@ internal sealed class NativeWasapiPreparationDevice(TransportEndpoint requested)
             return new(fhr, frequency, phr, position, qpc);
         }
         public void Dispose() => clock.Dispose();
+    }
+    private sealed class CapturePackets(NativeReference<INativeCaptureClient> packets) : IWasapiCapturePackets
+    {
+        public uint NextPacketSize()
+        {
+            WasapiCallException.RequireSuccess(packets.Value.GetNextPacketSize(out uint frames), "IAudioCaptureClient.GetNextPacketSize");
+            return frames;
+        }
+        public WasapiCaptureBuffer GetBuffer()
+        {
+            int hr = packets.Value.GetBuffer(out nint data, out uint frames, out uint flags, out ulong position, out ulong qpc);
+            return new(hr, data, frames, flags, position, qpc);
+        }
+        public int ReleaseBuffer(uint framesRead) => packets.Value.ReleaseBuffer(framesRead);
+        public void Dispose() => packets.Dispose();
+    }
+    private sealed class RenderPackets(NativeReference<INativeRenderClient> packets) : IWasapiRenderPackets
+    {
+        public nint GetBuffer(uint frames)
+        {
+            WasapiCallException.RequireSuccess(packets.Value.GetBuffer(frames, out nint data), "IAudioRenderClient.GetBuffer");
+            return data;
+        }
+        public int ReleaseBuffer(uint framesWritten, uint flags) => packets.Value.ReleaseBuffer(framesWritten, flags);
+        public void Dispose() => packets.Dispose();
     }
 
     // Unique generated RCW + counted raw reference. Unlike classic RCW caching, each owner is independent.

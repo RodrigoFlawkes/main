@@ -1,5 +1,20 @@
 # Backend WASAPI — preparação sem áudio e base isolada
 
+## F2-I6B1 — caminho nativo silencioso, 18/11/2026
+
+A ponte de preparação foi reutilizada com `WasapiResourceScope`. O modo compartilhado continua com flags 0, duração/período 0 e GUID de sessão próprio. Os dois clientes revalidam o endpoint explícito e o formato antes do Start, consultam capacidade e padding efetivos e usam polling limitado a 1–10 ms conforme o período. A prova tem dois owners MTA estáveis, cada qual com seu dispositivo, cliente, clock e serviço de packets. [IDL do Windows SDK](https://github.com/microsoft/win32metadata/blob/main/generation/WinSDK/RecompiledIdlHeaders/um/Audioclient.idl).
+
+| Interface COM | IID | Métodos após IUnknown |
+| --- | --- | --- |
+| IAudioCaptureClient | C8ADBD64-E71E-48A0-A4DE-185C395CD317 | GetBuffer, ReleaseBuffer, GetNextPacketSize |
+| IAudioRenderClient | F294ACFC-3146-4483-A7BF-ADDCA7C260E2 | GetBuffer, ReleaseBuffer |
+
+`PreserveSig` conserva HRESULTs. Endereços usam `nint`, contagens e flags usam `uint`, posição e QPC de captura usam `ulong`. A captura drena até 32 packets por iteração, lê silêncio sem tocar no ponteiro e libera o packet inteiro ou zero frames quando rejeitado. BUFFER_EMPTY dispensa ReleaseBuffer. Flags de descontinuidade, erro de timestamp e bits desconhecidos encerram a observação. O render pede capacidade menos padding e libera exatamente o tamanho solicitado com SILENT, inclusive quando ocorre cancelamento ou falha após a aquisição. PCM fica em memória privada. FIR e consumo da SPSC ocorrem após o ReleaseBuffer de cada owner. [Captura](https://learn.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-iaudiocaptureclient-getbuffer), [padding](https://learn.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-iaudioclient-getcurrentpadding), [render](https://learn.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-iaudiorenderclient-releasebuffer).
+
+O render é primado por completo e inicia antes da captura. O coordenador habilita o ticket depois dos dois Starts. Stop invalida o ticket antes de acordar os owners. Cada owner encerra sua operação em voo, chama Stop se tentou Start e libera serviço → clock → cliente → endpoint/apartamento. O lease só é liberado após o join de ambos. Timeout conserva recursos/lease. Falha de Stop admite nova tentativa no mesmo owner durante descarte explícito. Falha de ReleaseBuffer ou de liberação COM conserva recursos/lease sem repetir a liberação incerta. O diagnóstico curto agora também conserva o lease quando completion foi observado e Dispose falha. [Contrato de Stop](https://learn.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-iaudioclient-stop).
+
+Clocks são consultados após Start na própria sessão, preservando frequência, posição, QPC e HRESULTs brutos. QPC local serve para idade e duração. A aceitação exige pelo menos dois avanços validados por papel, janela concluída, captura e render pós-priming com frames liberados e contabilidade coerente após join. Esse checkpoint terminal confirma apenas o encerramento e as contagens observadas. Média temporal, barreira intermediária de eventos, calibração de granularidade e controle de drift do hardware ficam para F2-I6B2 após a prova silenciosa. Drops e underruns da fila são contadores internos. A capacidade e latência reportadas pelo cliente não medem latência fim a fim.
+
 ## F2-I6A — preparação nativa, 14/11/2026
 
 Ponte mínima implementada em WasapiNativeInterfaces/NativeWasapiPreparationDevice, com coordenação em WasapiPreparation. NAudio.Core/Wasapi permanecem em3.1.0, sem dependências novas. A fonte fixada confirma que as interfaces COM do NAudio são internas e AudioClockClient.GetPosition trata−1, retornando true para S_FALSE/+1. Nenhum caminho público do wrapper expõe o HRESULT da mesma sessão. Escolhida interop mínima das interfaces públicas Windows, sem reflection, acesso privado, nova estimativa/FIR ou atualização de pacote. O bloqueio de representação do HRESULT está resolvido neste caminho; transporte ativo continua pendente.

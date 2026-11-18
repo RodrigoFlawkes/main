@@ -45,7 +45,7 @@ internal partial interface IPreparationAudioClient
     [PreserveSig] int IsFormatSupported(int shareMode, nint format, out nint closest);
     [PreserveSig] int GetMixFormat(out nint format);
     [PreserveSig] int GetDevicePeriod(out long default100ns, out long minimum100ns);
-    [PreserveSig] int Start(); // ABI slot only. Never called by preparation.
+    [PreserveSig] int Start(); // Preparation never calls this; active transport requires separate opt-in.
     [PreserveSig] int Stop();
     [PreserveSig] int Reset();
     [PreserveSig] int SetEventHandle(nint handle);
@@ -59,4 +59,21 @@ internal partial interface IPreparationAudioClock
     [PreserveSig] int GetFrequency(out ulong frequency);
     [PreserveSig] int GetPosition(out ulong position, out ulong qpc100ns);
     [PreserveSig] int GetCharacteristics(out uint characteristics);
+}
+
+[GeneratedComInterface(Options = ComInterfaceOptions.ComObjectWrapper)]
+[Guid("C8ADBD64-E71E-48A0-A4DE-185C395CD317")]
+internal partial interface INativeCaptureClient
+{
+    [PreserveSig] int GetBuffer(out nint data, out uint frames, out uint flags, out ulong position, out ulong qpc100ns);
+    [PreserveSig] int ReleaseBuffer(uint framesRead);
+    [PreserveSig] int GetNextPacketSize(out uint frames);
+}
+
+[GeneratedComInterface(Options = ComInterfaceOptions.ComObjectWrapper)]
+[Guid("F294ACFC-3146-4483-A7BF-ADDCA7C260E2")]
+internal partial interface INativeRenderClient
+{
+    [PreserveSig] int GetBuffer(uint frames, out nint data);
+    [PreserveSig] int ReleaseBuffer(uint framesWritten, uint flags);
 }

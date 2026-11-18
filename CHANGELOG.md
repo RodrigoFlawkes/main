@@ -2,6 +2,13 @@
 
 ## Em desenvolvimento
 
+### 2026-11-18 — recuperação e F2-I6B1, transporte WASAPI silencioso
+
+- Restaurado o ICO original versionado e integrado o commit documental remoto. Preservadas as alterações locais e o backup da recuperação.
+- Transporte WASAPI compartilhado com uma thread MTA por stream, priming e saída sempre SILENT, acesso a packets com posse delimitada e reuso de PCM/FIR/SPSC. Clocks da própria sessão e contadores separados por stream.
+- O diagnóstico curto conserva o guard quando a liberação do dispositivo falha após completion. O transporte mantém o guard em timeout ou liberação incerta.
+- Teste de hardware `Explicit` preparado e pendente. A evidência deste incremento vem de compilação e testes automatizados sem captura física ou reprodução contínua.
+
 ### 2026-11-14 — F2-I6A, clock e preparação WASAPI sem áudio
 
 - Ponte COM mínima auditada com PreserveSig, posição/frequência/QPC inteiros e HRESULTs originais; S_FALSE incerto, integrado ao adaptador de relógio existente sem estimador novo.

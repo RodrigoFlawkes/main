@@ -1,5 +1,11 @@
 # Plano de testes
 
+## F2-I6B1 — transporte silencioso e recuperação
+
+Os testes com fakes verificam owners MTA, ordem de aquisição e liberação, priming antes de Start, padding, buffers vazios/inválidos, flags, clocks incertos/parados/regressivos, cancelamento com chamada em voo, geração, Stop parcial, ReleaseBuffer falho e guard retido. O teste do diagnóstico confirma que completion e falha de Dispose conservam o bloqueio de outras operações.
+
+`WasapiNativeSilentTests` é `Explicit` e fica excluído da regressão. Uma execução futura requer autorização específica para Start e confirmação das pré-condições de `NEXT_TASK.md` e `REVIEW.md`. O teste exige as confirmações `WAVESTUDIO_SILENT_START_AUTHORIZED=1` e `WAVESTUDIO_SILENT_PREREQUISITES_CONFIRMED=1`, resolve os nomes exatos indicados por `WAVESTUDIO_SILENT_CAPTURE_NAME` e `WAVESTUDIO_SILENT_HEADSET_NAME` para um endpoint ativo em cada direção e verifica a prévia fechada. Após cinco segundos de observação registra formatos, capacidade, padding, priming, frames, flags, clocks/HRESULTs e Stop/Release em `artifacts/wasapi-silent`, sem guardar PCM, nomes ou IDs. Resultado físico pendente.
+
 ## F2-I6A — clock HRESULT e preparação parada
 
 46 testes automáticos novos de WasapiPreparationTests: S_OK/S_FALSE/−1/falhas HRESULT/sucesso desconhecido, frequência inválida, UINT64 acima de2^53 e deltas/unidades/overflow, identidade/geração e flags, zero parado, rejeição de formato/identidade divergente, sequência de preparação sem Start/buffer PCM, falhas em12 etapas, cancelamento em5 aquisições, liberação inversa no owner, falha de Dispose com pais/lease retidos e chamada bloqueada sem liberação prematura. Guard exercitado contra diagnóstico pendente e sessão pública de produção sem abrir endpoint inexistente. Mantidos os557 anteriores; DSP/fixtures existentes não alterados. Conjunto direcionado final189 aprovado.
