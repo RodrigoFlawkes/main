@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-18 — preparação de F2-I6B1-PROOF
+
+- Sincronizada a tarefa de prova nativa. O runner identificou o único teste explícito previsto. Execução física continua condicionada à confirmação do par de dispositivos e à validação física pertinente após a formatação.
+- Inventariados backup, clone legado, ZIP e originais da marca para manter uma única pasta de desenvolvimento ativa. As cópias históricas foram preservadas no local.
+
 ### 2026-11-18 — recuperação e F2-I6B1, transporte WASAPI silencioso
 
 - Restaurado o ICO original versionado e integrado o commit documental remoto. Preservadas as alterações locais e o backup da recuperação.

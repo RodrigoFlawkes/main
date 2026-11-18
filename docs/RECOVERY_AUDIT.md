@@ -50,3 +50,19 @@ Proprietário informa 35% restantes em 18/11/2026, não telemetria automática. 
 ## Resultado da recuperação — bed126c (18/11/2026)
 
 Codex reportou cópia integral 3182 arquivos verificados, diffs binários e fsck0; restaurou ICO exato e preservou oito caminhos staged ao sincronizar sete documentos. F2-I6B1 publicada, 644 testes Debug/Release; HEAD conferido remotamente. Prova física ainda pendente. Causa de exclusão do ICO e ocorrência de alocação EQ não determinadas. Ver PROJECT_STATUS e REVIEW. Proprietário quer uma única pasta ativa e GitHub como backup versionado: manter diretório oficial, inventariar arquivos exclusivos/ignorados dos backups e pastas antigas, sem nova cópia integral, sem remoção/movimentação sem verificação e autorização. GitHub não guarda dados privados, caches, artefatos ignorados e sessões Codex automaticamente.
+
+## Inventário para uma única pasta ativa — 18/11/2026
+
+A pasta oficial continua sendo `main wave studio/main`, sincronizada inicialmente por fast-forward a `07b625d`. A cópia antiga `main wave studio/Wave-Studio` é outro repositório, limpo e com apenas `README.md` e `.gitignore` versionados no commit raiz `ba5ec9e`. Seu remoto devolveu “Repository not found” com a autenticação disponível. O commit não consta do histórico oficial, e o README tem conteúdo diferente. Manter a pasta legada como arquivo histórico até que o commit e seu conteúdo estejam preservados separadamente e a movimentação seja autorizada.
+
+| Item | Resultado e destino proposto |
+| --- | --- |
+| `Art/Wave Studio.png` | Igual por SHA-256 a `assets/branding/original/WaveStudio.png`. Pode ser tratado como cópia redundante após autorização. |
+| `Art/WaveLogo2.png`, `Art/WaveLogo3.png` e `Art/WaveStudio Logo.png` | Sem cópia idêntica entre os PNGs versionados da marca. Preservar como originais de trabalho, fora da pasta ativa. |
+| `main wave studio/WaveStudio-Documentacao-Inicial.zip` | Contém `AGENTS.md` idêntico e uma versão diferente de `docs/REQUIREMENTS.md`. Preservar o ZIP como registro histórico. |
+| `main wave studio/Wave-Studio/.gitignore` | Mesmo conteúdo da cópia oficial. Manter junto ao repositório legado para preservar sua árvore. |
+| `recovery-backup-20261118-154428` | Manter como backup histórico, fora da pasta ativa. Excluindo o .git raiz, 2.468 arquivos têm o mesmo caminho e SHA-256 na pasta oficial, 318 diferem e 3 aparecem só no backup. Os patches `index.patch` e `working-tree-vs-HEAD.patch` têm SHA-256 igual e documentam o estado inicial. Parte dos arquivos divergentes é saída de compilação. Relatórios, artefatos e metadados ignorados requerem preservação local quando exclusivos. |
+
+O commit base do backup, `db0d83a`, é ancestral da main publicada. O índice original guarda quatro versões de arquivos com blobs ausentes da main publicada (`WasapiSilentPath.cs`, `WasapiSilentSession.cs`, `WasapiStreamContracts.cs` e `WasapiSilentTests.cs`). A implementação posterior está publicada em `bed126c`. Os registros de recuperação `5ea87eb` e `91ae1bd`, encontrados nos reflogs do oficial e do backup, também estão fora da main publicada e preservam versões de `README.md`, `PROJECT_STATUS.md` e `docs/IMPLEMENTATION_PLAN.md`. Conservar o .git do backup até haver arquivo verificado desses estados. Um clone da main por si só não reproduz o índice histórico, reflogs, arquivos ignorados ou preferências privadas.
+
+Para consolidar, usar a pasta oficial como a única aberta para desenvolvimento. Manter as demais como arquivos locais, identificados por finalidade. Antes de uma eventual limpeza, preservar os três originais de arte alternativos, o ZIP, o clone legado completo, o índice/patches e a história de recuperação, além de relatórios e preferências exclusivos. Verificar hashes e o histórico arquivado antes de pedir autorização para mover ou excluir qualquer item. A auditoria não moveu nem excluiu arquivos e não criou outra cópia integral.

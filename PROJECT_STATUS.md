@@ -2,6 +2,12 @@
 
 Atualizado em 18/11/2026.
 
+## F2-I6B1-PROOF — verificações antes da execução
+
+- Sincronização segura para `07b625d`. Esse commit alterou somente documentação em relação à implementação `bed126c`. Conferidos SDK 10.0.404, Desktop Runtime 10.0.15 e binário Release existente. A descoberta com filtro exato e `--explicit only` encontrou um teste. Nenhuma suíte foi repetida.
+- O proprietário autorizou especificamente a captura de cinco segundos com saída SILENT e sem armazenamento de voz. Nenhum processo Wave Studio apareceu na checagem. O Windows listou mais de uma entrada e saída. A confirmação de headset conectado, par exato de endpoints ativos, fechamento normal, ausência de chamadas/testes e resultados A01/A02/A03/A05/A09/A11/A12 no ambiente reinstalado ainda está pendente.
+- Resultado deste preflight: prova física pendente. Nenhum Start ou GetBuffer físico foi executado e nenhum resultado de clocks, frames, padding ou Stop/Release foi medido nesta etapa. [Inventário da recuperação e proposta de organização](docs/RECOVERY_AUDIT.md).
+
 ## Estado atual — recuperação e F2-I6B1 sem execução física
 
 - Recuperação em Windows x64, build 19045, com Git 2.56.1.windows.1, SDK 10.0.404 e Desktop Runtime 10.0.15. A configuração Codex existe e a sessão opera com workspace-write e aprovação sob demanda. Autenticação/consulta e fetch do GitHub confirmados.
