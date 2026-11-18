@@ -1,5 +1,9 @@
 # Arquitetura do Wave Studio
 
+## F2-I6B2A-CHECKPOINT — observação da FIFO WASAPI
+
+A sessão silenciosa admite um diário opt-in exercitado com streams injetados. O owner de captura e o de render publicam seus acumulados e intervalos locais em anéis separados. O coordenador aceita o snapshot se as duas versões comprovarem quiescência no mesmo corte, sem pausa dos owners nem chamada COM no coordenador. O ticket vincula a observação à seleção da sessão. A amostragem acompanha os buffers e o guard já existentes. [Protocolo, contabilidade e rejeições](WASAPI_BACKEND_PLAN.md#f2-i6b2a-checkpoint--corte-coerente-dos-dois-owners-mta).
+
 ## Implementação atual — F2-I6A, preparação WASAPI sem áudio
 
 Audio/Engine contém interop COM mínimo source-generated do SDK, PreserveSig e wrappers únicos próprios, sem acessar objetos internos NAudio. WasapiPreparation coordena uma operação síncrona MTA completa: endpoint explícito/ativo, mix exato validado, shared Initialize sem conversão/loopback, consultas de buffer/latência e IAudioClock do mesmo cliente, seguido de liberação inversa. Não expõe Start ou buffers PCM. WasapiClockReading preserva HRESULT/ulong e alimenta o WasapiClockAdapter existente; S_FALSE é incerto e não vira Accurate. A leitura parada é apenas evidência de preparação, não observação de drift em execução.

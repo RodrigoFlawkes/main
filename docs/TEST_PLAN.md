@@ -1,5 +1,11 @@
 # Plano de testes
 
+## F2-I6B2A-CHECKPOINT — corte coerente e contabilidade sem hardware
+
+Os casos com relógio determinístico verificam ocupação e área de referência, eventos simultâneos, versões modificadas durante a leitura, perda e wrap de histórico, confirmações ausentes ou tardias, clocks regressivos e futuros, geração e baseline incompatíveis, contagem inconsistente e overflow. A sessão com fake mono de 44,1 kHz e render estéreo de 48 kHz distingue frames nativos e frames de saída, priming, descarte inicial, drops e underruns. O fake render verifica SILENT e preservação dos bytes originais do buffer em cada ReleaseBuffer. Os cenários de Get/Release falho, cancelamento em voo, timeout e Stop verificam ausência de corte parcial e retenção ou liberação do guard.
+
+O orçamento automatizado mede alocação da fixture após aquecimento e zero bytes recorrentes no thread publicador. O caso faz 200 mil publicações sintéticas, com teto de 20 KiB para a fixture e cinco segundos para o lote, sem inferir tempo real físico. As duas provas Explicit permanecem excluídas. [Resultados e comandos](../PROJECT_STATUS.md#estado-atual--f2-i6b2a-checkpoint-18112026).
+
 ## F2-I6B1-CLOCK-WINDOW — replay e proteção contra desvios sustentados
 
 A fixture reproduz todos os pontos da prova 3. O teste vermelho confirmou a rejeição estrita da leitura 11. Com a política restrita à captura SILENT, a leitura fica provisória e o replay não confirma transporte. O render mantém o resultado estrito. As sequências marcadas como sintéticas validam recuperação em cinco segundos, tolerância curta inclusiva nos dois sentidos, orçamento inteiro em 44,1/48 kHz e diferentes períodos, falhas de taxa sustentada, envelope acumulado, corroboração insuficiente, frescor terminal, limites de integridade e lacunas/duplicações/sobreposição de pacotes. Fakes de sessão verificam contabilidade e descarte inicial, janela curta insuficiente, janela confirmada, falha de continuidade com release zero, cancelamento e retenção até cleanup.

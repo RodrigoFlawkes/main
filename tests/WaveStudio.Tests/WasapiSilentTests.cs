@@ -488,22 +488,24 @@ public sealed class WasapiSilentTests
     }
 
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(true, false)]
-    [InlineData(false, true)]
-    public async Task FailedReleaseRetainsLeaseAndNeverRetriesPacketOrDisposesItsParents(bool startupDiscard, bool windowed)
+    [InlineData(false, false, false)]
+    [InlineData(true, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(false, false, true)]
+    public async Task FailedReleaseRetainsLeaseAndNeverRetriesPacketOrDisposesItsParents(bool startupDiscard, bool windowed, bool checkpoints)
     {
         var route = WasapiContractTests.Route();
         var calls = new Calls(route);
         var guard = new TransportActivityGuard();
         if (startupDiscard) calls.Input.StartupFlags = 1;
         calls.Input.ReleaseResult = Invalidated;
-        var session = new WasapiSilentSession(route, guard, calls.Open, TimeSpan.FromSeconds(1), simulateCaptureTiming: windowed);
+        var session = new WasapiSilentSession(route, guard, calls.Open, TimeSpan.FromSeconds(1), simulateCaptureTiming: windowed, observeCheckpoints: checkpoints);
 
         var result = await session.RunAsync(Duration, TestContext.Current.CancellationToken);
 
         Assert.True(result.ResourcesRetained);
         Assert.False(result.Completed);
+        if (checkpoints) Assert.Equal(WasapiCheckpointStatus.Inactive, session.ReadCheckpoint(route.Capture.Endpoint.Generation).Status);
         Assert.True(result.Capture.BufferInFlight);
         Assert.Null(result.Capture.CaptureTiming);
         Assert.True(result.Capture.StopConfirmed);
@@ -519,9 +521,10 @@ public sealed class WasapiSilentTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task CancelWhileNativeCaptureIsInFlightRetainsLeaseUntilOwnerReturns(bool windowed)
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public async Task CancelWhileNativeCaptureIsInFlightRetainsLeaseUntilOwnerReturns(bool windowed, bool checkpoints)
     {
         var route = WasapiContractTests.Route();
         var calls = new Calls(route);
@@ -535,13 +538,17 @@ public sealed class WasapiSilentTests
             entered.TrySetResult();
             Assert.True(release.Wait(TimeSpan.FromSeconds(8)));
         };
-        var session = new WasapiSilentSession(route, guard, calls.Open, TimeSpan.FromSeconds(1), simulateCaptureTiming: windowed);
+        var session = new WasapiSilentSession(route, guard, calls.Open, TimeSpan.FromSeconds(1), simulateCaptureTiming: windowed, observeCheckpoints: checkpoints);
         try
         {
             var running = session.RunAsync(TimeSpan.FromSeconds(3), cancel.Token);
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            if (checkpoints)
+                Assert.Equal(WasapiCheckpointStatus.OwnerBusy, session.ReadCheckpoint(route.Capture.Endpoint.Generation).Status);
             cancel.Cancel();
             var result = await running;
+            if (checkpoints)
+                Assert.Equal(WasapiCheckpointStatus.Inactive, session.ReadCheckpoint(route.Capture.Endpoint.Generation).Status);
 
             Assert.True(result.ResourcesRetained);
             Assert.False(result.DurationReached);

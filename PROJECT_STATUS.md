@@ -2,7 +2,26 @@
 
 Atualizado em 18/11/2026.
 
-## Estado atual — COMENTARIOS-PTBR, 18/11/2026
+## Estado atual — F2-I6B2A-CHECKPOINT, 18/11/2026
+
+A execução partiu da pasta oficial, com árvore limpa e `main` sincronizada por fast-forward com `origin/main` em `6404985`. Git 2.56.1, SDK .NET 10.0.404. A segunda consulta ao remoto manteve essa base antes da publicação. `git fsck --connectivity-only --no-dangling` passou e o ICO segue versionado. O histórico da prova 4 e os sete casos manuais pós-formatação aprovados por relato foram preservados.
+
+O diário WASAPI integrado à sessão silenciosa é opt-in e exige backend injetado. Cada owner publica contagens e QPC locais na fronteira que sucede o ReleaseBuffer e a operação da FIFO. O coordenador aceita um corte se ambas as versões estáveis confirmarem que não havia buffer emprestado, com ticket válido e contabilidade compatível. A ocupação é em frames de saída. A média de um intervalo com histórico completo é apresentada em limites conservadores, pois os instantes individuais das mutações podem estar dentro de lotes sobrepostos. [Protocolo, ordenação, garantias e rejeições](docs/WASAPI_BACKEND_PLAN.md#f2-i6b2a-checkpoint--corte-coerente-dos-dois-owners-mta).
+
+O cenário com fakes de 44,1 kHz mono → 48 kHz estéreo confirma priming, descarte de startup, conversão, drops e underruns, sem escrita de amostras nos buffers de render. Os novos casos também verificam falhas de Get/Release, timeout, cancelamento e retenção do guard. A publicação passou no ensaio de 200 mil registros sintéticos com zero bytes recorrentes no thread medido, teto de 20 KiB de alocação da fixture e orçamento de cinco segundos. Os históricos pré-alocados da implementação consomem 16 KiB; o ensaio mede operação sintética, sem medir tempo real físico.
+
+O restore locked com auditoria passou com `dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1900`. Builds com `dotnet build WaveStudio.slnx -c <configuração> --no-restore --no-incremental` passaram em Debug e Release x64, com zero erros e avisos. O direcionado WASAPI em Debug teve 235 aprovados e dois Explicit excluídos em 23,158 s. A classe `WasapiCheckpointTests` passou em Release com 19 aprovações em 3,311 s. Duas variantes adicionais da suíte existente completam os 21 novos casos líquidos.
+
+| Regressão x64 | Aprovados | Falhas | Explicit excluídos | Duração |
+| --- | ---: | ---: | ---: | ---: |
+| Debug | 758 (737 + 21) | 0 | 2 | 75,658 s |
+| Release | 758 (737 + 21) | 0 | 2 | 41,239 s |
+
+As regressões passaram na primeira execução, sem reincidência das falhas intermitentes de alocação já documentadas. Comando `dotnet test --solution WaveStudio.slnx -c <configuração> --no-build -- --explicit off --seed <seed> --timeout 165s --long-running 10 --diagnostic --diagnostic-output-directory <pasta>`, com seeds 20261114 em Debug e 20261113 em Release. O runner .NET foi chamado diretamente sob a política Restricted. Logs em `artifacts/f2-i6b2a-checkpoint`, incluindo os subdiretórios `Debug`, `Release` e `target-final`. O filtro do direcionado WASAPI foi `--filter-class '*Wasapi*'` e o do diário, `--filter-class '*WasapiCheckpointTests'`.
+
+O caminho B1 continua com a instrumentação desativada, render SILENT e critérios de `TransportObserved` preservados. A etapa teve zero provas físicas. Os resultados se limitam à contabilidade e ao ciclo de vida com fakes. F2-I6B2B e F3 continuam pendentes de revisão e autorização.
+
+## Histórico — COMENTARIOS-PTBR, 18/11/2026
 
 A main foi sincronizada por fast-forward a `80a0f59` e, durante a validação, ao commit documental `79a6867`. Foram examinados 125 arquivos versionados de código, testes, scripts e configuração. Cada comentário alterado foi contado como uma unidade sintática, incluindo blocos e documentação XML.
 

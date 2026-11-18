@@ -8,7 +8,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
     private readonly Func<TransportEndpoint, IWasapiPreparationDevice> open;
     private readonly TransportActivityGuard guard;
     private readonly TimeSpan timeout;
-    private readonly bool verifyCaptureTiming;
+    private readonly bool verifyCaptureTiming, observeCheckpoints;
     private readonly object control = new(); // O processamento de amostras nunca adquire este lock.
     private readonly SemaphoreSlim finalizing = new(1);
     private readonly ManualResetEventSlim stop = new();
@@ -18,6 +18,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
     private IDisposable? lease;
     private CancellationTokenRegistration cancellation;
     private WasapiSilentPath? path;
+    private WasapiCheckpointLedger? checkpoints;
     private Task<WasapiSilentSnapshot>? run;
     private bool completed;
     private string? failure;
@@ -28,9 +29,12 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
 
     public WasapiSilentSession(TransportRoute route, TransportActivityGuard? guard = null,
         Func<TransportEndpoint, IWasapiPreparationDevice>? open = null, TimeSpan? timeout = null,
-        bool simulateCaptureTiming = false)
+        bool simulateCaptureTiming = false, bool observeCheckpoints = false)
     {
         route.Validate();
+        if (observeCheckpoints && open is null)
+            throw new ArgumentException("O diário é habilitado apenas com backend injetado neste checkpoint.", nameof(observeCheckpoints));
+        this.observeCheckpoints = observeCheckpoints;
         if (open is null && (route.Capture.Evidence != FormatEvidence.ExactCapability ||
             route.Playback.Evidence != FormatEvidence.ExactCapability))
             throw new ArgumentException("A prova nativa requer formatos consultados no Windows.", nameof(route));
@@ -55,6 +59,16 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             catch (Exception error) { Fail("OwnerLaunch", error); capture.NotLaunched(); playback.NotLaunched(); }
             return run = ControlAsync(duration);
         }
+    }
+    internal WasapiCheckpointResult ReadCheckpoint(long generation, WasapiCheckpoint? baseline = null)
+    {
+        if (!observeCheckpoints) return new(WasapiCheckpointStatus.Disabled);
+        var result = Volatile.Read(ref checkpoints)?.Read(generation, baseline) ?? new(WasapiCheckpointStatus.Inactive);
+        if (result.Status is WasapiCheckpointStatus.OwnerStale or WasapiCheckpointStatus.InvalidTime or
+            WasapiCheckpointStatus.InvalidAccounting or WasapiCheckpointStatus.InvalidSequence or
+            WasapiCheckpointStatus.Overflow or WasapiCheckpointStatus.OwnerFault)
+            Fail("Checkpoint/" + result.Status);
+        return result;
     }
     public void RequestStop()
     {
@@ -82,6 +96,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             if (!stop.IsSet)
             {
                 path = new(route, capture.Capacity, playback.Capacity, capture.Period, playback.Period);
+                if (observeCheckpoints) Volatile.Write(ref checkpoints, new(ticket, path.CapacityFrames));
                 playback.Go.Set(); await playback.Started.Task.WaitAsync(timeout);
             }
             if (!stop.IsSet) { capture.Go.Set(); await capture.Started.Task.WaitAsync(timeout); }
@@ -149,7 +164,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
         private int ownerId;
         public uint Capacity;
         public long Period;
-        private long latency, acquired, released, acquiredFrames, releasedFrames, primed;
+        private long latency, acquired, released, acquiredFrames, releasedFrames, primed, preTicketRenderFrames;
         private long acceptedPackets, acceptedFrames, startupDiscardedPackets, startupDiscardedFrames;
         private uint padding, flags, startupDiscardFlags;
         private ulong packetPosition, packetQpc, startupDiscardPosition, startupDiscardQpc;
@@ -203,7 +218,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                 Prepare(); Ready.TrySetResult();
                 while (!Go.IsSet && !session.stop.Wait(2)) { }
                 Check(); device!.ValidateIdentity(info.Endpoint); client!.RevalidateFormat(info.Mix!); Check();
-                if (!input) { FillRender(prime: true); Check(); }
+                if (!input) { ProcessBoundary(prime: true); Check(); }
                 startRequested100ns = WasapiTime.Now100ns();
                 startAttempted = true; startResult = client!.Start(); WasapiCallException.RequireSuccess(startResult.Value, "IAudioClient.Start"); started = true;
                 startTime = WasapiTime.Now100ns(); motion = new(info.Endpoint, info.Mix!.SampleRate, startTime, captureTiming); nextClock = startTime + 1000000;
@@ -211,12 +226,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                 int pollMs = Math.Clamp((int)(Period / 20000), 1, 10);
                 while (!session.stop.IsSet)
                 {
-                    if (input)
-                    {
-                        padding = client.ReadPadding(); if (padding > Capacity) throw new InvalidOperationException("Padding de captura inválido.");
-                        if (session.ticket.IsValid) DrainCapture();
-                    }
-                    else FillRender(prime: false);
+                    ProcessBoundary(prime: false);
                     long now = WasapiTime.Now100ns();
                     if (session.ticket.IsValid)
                     {
@@ -238,6 +248,42 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                     Retry.Wait(); Retry.Reset();
                 }
             }
+        }
+        private void ProcessBoundary(bool prime)
+        {
+            var ledger = session.checkpoints;
+            var journal = input ? ledger?.Capture : ledger?.Render;
+            if (journal is null) { ProcessAudio(prime); return; }
+
+            journal.Begin();
+            try { ProcessAudio(prime); }
+            catch
+            {
+                // Uma operação sem confirmação de liberação não forma fronteira válida.
+                session.ticket.Invalidate();
+                journal.Abort();
+                throw;
+            }
+            if (session.stop.IsSet) { journal.Abort(); return; }
+            if (bufferInFlight || bufferUncertain)
+            {
+                journal.Abort();
+                session.Fail("Checkpoint/OwnerFault");
+                return;
+            }
+
+            var path = session.path!;
+            var status = journal.Complete(new(acquired, released, acquiredFrames, releasedFrames,
+                acceptedPackets, acceptedFrames, startupDiscardedPackets, startupDiscardedFrames,
+                input ? path.Produced : path.Read, input ? path.Dropped : path.Underrun, primed, preTicketRenderFrames));
+            if (status != WasapiCheckpointStatus.Available) session.Fail("Checkpoint/" + status);
+        }
+        private void ProcessAudio(bool prime)
+        {
+            if (!input) { FillRender(prime); return; }
+            padding = client!.ReadPadding();
+            if (padding > Capacity) throw new InvalidOperationException("Padding de captura inválido.");
+            if (session.ticket.IsValid) DrainCapture();
         }
         private void ReadClock()
         {
@@ -332,7 +378,11 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                 if (hr != 0) { bufferUncertain = true; throw new WasapiCallException("IAudioRenderClient.ReleaseBuffer", hr); }
                 bufferInFlight = false; released++; releasedFrames += frames; if (prime) primed += frames;
             }
-            if (!prime && session.ticket.IsValid) session.path!.Consume((int)frames, session.ticket);
+            if (!prime)
+            {
+                if (session.ticket.IsValid) session.path!.Consume((int)frames, session.ticket);
+                else if (session.observeCheckpoints) preTicketRenderFrames += frames;
+            }
         }
         private bool TryCleanup()
         {

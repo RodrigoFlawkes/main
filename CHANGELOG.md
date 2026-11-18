@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-18 — F2-I6B2A-CHECKPOINT
+
+- Diário WASAPI opt-in com contabilidade em frames de saída, confirmação de corte dos dois owners e limites conservadores para ocupação média.
+- Cobertura automatizada com fakes para concorrência, wrap, contabilidade, erros nativos, cancelamento e retenção do guard. A prova silenciosa existente mantém seus critérios.
+
 ### 2026-11-18 — COMENTARIOS-PTBR
 
 - Traduzidos 209 comentários próprios em 74 arquivos C#, PowerShell e XML. A verificação por parser preservou tokens, sintaxe, strings e diretivas.

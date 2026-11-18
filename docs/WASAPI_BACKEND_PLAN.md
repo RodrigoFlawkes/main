@@ -1,5 +1,34 @@
 # Backend WASAPI — preparação sem áudio e base isolada
 
+## F2-I6B2A-CHECKPOINT — corte coerente dos dois owners MTA
+
+`WasapiSilentSession` pode habilitar `WasapiCheckpointLedger` explicitamente com um backend injetado. A prova B1 usa a opção padrão desativada. O diário observa a mesma fila e as mesmas chamadas que já existem na sessão. Ele não copia ou guarda amostras, não altera o FIR, não alimenta estimador ou controlador e não participa de `TransportObserved`. O render continua liberando os buffers com SILENT.
+
+Cada owner escreve em seu próprio diário. A identidade do ledger corresponde a um único ticket, à geração da seleção e ao par de endpoints imutável daquele ticket. Cada lote abrange até 32 pacotes de captura ou um preenchimento de render, incluindo o priming antes de Start. A sequência de eventos avança a cada alteração da contabilidade. Uma passagem sem alteração atualiza somente a última confirmação. O QPC local das fronteiras é medido em unidades de 100 ns. As marcas de `GetBuffer` da captura e de `IAudioClock` continuam nas suas séries originais.
+
+| Ordem do corte | Condição observada |
+| --- | --- |
+| 1. Owner abre o lote | A versão passa a ímpar antes de consultar padding ou adquirir um buffer. O QPC de abertura precede as mutações da FIFO. |
+| 2. Owner fecha o lote | Confirma o ReleaseBuffer, conclui a produção ou o consumo e registra contadores e QPC final. A versão volta a par depois da publicação. Liberação incerta ou falha aborta a confirmação. |
+| 3. Coordenador indica o corte | Lê as duas versões pares, toma o QPC do corte e lê os estados e, se solicitado, os eventos do intervalo. |
+| 4. Coordenador confirma | Uma barreira de memória precede a releitura das versões. Aceita se ambas continuarem iguais e o ticket ainda estiver válido. |
+
+A abertura e o fechamento usam operações interlocked. Para cada papel, as duas leituras da versão cercam o instante escolhido no passo 3. Uma operação que tenha cruzado esse instante teria mantido a versão ímpar ou alterado a versão entre as leituras. Assim, um corte aceito contém as operações concluídas de ambos os papéis, sem buffer emprestado. Eventos que começam depois de uma confirmação podem pertencer ao próximo corte. O QPC tem resolução finita, então uma marca igual à do corte pode aparecer no início do lote seguinte sem que o lote tenha ocorrido antes do corte lógico. A contagem e as versões resolvem essa inclusão. O coordenador faz até três tentativas, não invoca COM, não espera pelos owners e não impõe um watermark ao WASAPI. Os owners não aguardam o coordenador.
+
+| Contabilidade | Unidade e relação |
+| --- | --- |
+| Captura nativa | Pacotes e frames da entrada adquiridos e liberados. Na fronteira válida, adquiridos = liberados e liberados = aceitos + descarte inicial, em ambas as unidades. |
+| Produção FIFO | Frames no formato de saída efetivamente escritos. A tentativa é a soma de escritos e drops. Um pacote aceito alimenta a conversão e pode produzir uma quantidade diferente de frames de saída. |
+| Consumo FIFO | Frames de saída efetivamente lidos. A tentativa é a soma de lidos e underruns da FIFO. |
+| Render nativo | Pacotes e frames de saída liberados. Frames liberados = priming + render silencioso que não consultou a FIFO antes do ticket + tentativas de leitura. O priming não popula a FIFO. |
+| Ocupação | Frames escritos menos lidos em um corte coerente, entre zero e a capacidade. |
+
+**Intervalo e média temporal.** A consulta pontual entrega apenas ocupação. Para a média, os dois cortes precisam ser do mesmo ledger e o histórico precisa conter todas as sequências entre eles. Cada lote informa um intervalo `[início, conclusão]` que contém as mutações reais da FIFO. A área começa com `ocupação inicial × duração`. Uma escrita adiciona `frames × (fim − instante da mutação)` e uma leitura subtrai a mesma expressão. Para obter o limite inferior, aplicam-se as escritas no fim dos respectivos lotes e as leituras no início. O limite superior faz o inverso. Isso contém a área de qualquer interleaving, inclusive lotes simultâneos, e o intervalo é limitado por `[0, capacidade × duração]`. O resultado expõe os dois limites na unidade frame × 100 ns e o denominador na unidade 100 ns. Limites iguais determinam a média na escala discreta do QPC. Limites distintos preservam a incerteza sobre a ordem e o instante das mutações.
+
+**Ausência de evidência e falhas.** Owner em operação ou sem primeira confirmação deixa o corte indisponível. Uma confirmação com mais de 500 ms de idade, incluindo confirmação ausente após esse prazo, é identificada na leitura estável e encerra a sessão opt-in. Esse prazo é somente diagnóstico. Sequência inválida, tempo regressivo ou futuro, contabilidade incompatível, overflow ou falha de operação invalidam a observação. Uma falha de integridade observada invalida o ticket e usa a parada existente. Get/Release falho mantém a causa original da operação. O guard continua retido até os dois owners encerrarem com liberação confirmada. Release incerto preserva recursos e lease e não dispara uma nova tentativa de Release. Stop, cancelamento e invalidação da seleção encerram imediatamente a possibilidade de publicar novos cortes. Um intervalo com histórico sobrescrito, baseline incompatível ou geração errada é recusado sem retornar dados parciais. Uma nova consulta pontual pode usar os acumulados se a sessão continuar válida.
+
+**Orçamento.** Cada anel tem 256 entradas numéricas de 32 bytes, totalizando 16 KiB para os dois históricos. Sem alocação recorrente, I/O ou lock bloqueante na publicação dos owners. Uma consulta bem-sucedida cria um snapshot imutável no coordenador. A leitura do intervalo percorre no máximo 256 entradas por papel e por tentativa. A capacidade, os períodos e os limites dos buffers da prova B1 seguem os mesmos. A validação desta etapa usa relógio determinístico e owners MTA com fakes. Os números da prova 4 continuam cumulativos e não permitem reconstruir retrospectivamente uma média de ocupação, latência fim a fim ou drift físico.
+
 ## F2-I6B1-PROOF-4 — resultado físico, 18/11/2026
 
 Única tentativa autorizada, Release x64 de `f72304e`, preflight em `d41a6f7`, SDK 10.0.404. O proprietário confirmou headset conectado, fechamento normal e ausência de chamadas e testes. Os endpoints foram verificados ativos e únicos por direção. O apphost executou somente `WaveStudio.Tests.WasapiNativeSilentTests.AuthorizedHeadsetAndMicrophoneRunBoundedSilentTransport`, com `--explicit only --filter-method` e opt-in restrito ao processo. A política Restricted foi preservada. Runner código 0, um teste aprovado, 5,595 s totais. `DurationReached=true` indica conclusão do temporizador configurado para 5 s. O QPC mediu 49.997.441 × 100 ns (4,9997441 s), 0,2559 ms abaixo de 5 s exatos.

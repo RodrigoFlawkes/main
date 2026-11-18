@@ -1,5 +1,9 @@
 # Motor de áudio — fundação, conversão e relógios
 
+## F2-I6B2A-CHECKPOINT — ocupação na unidade de saída
+
+O diário opcional observa a FIFO real do caminho SILENT usando os contadores emitidos após a conversão e o consumo. Os frames nativos de captura, o descarte de startup, o priming e as liberações nativas ficam em campos próprios. A ocupação pontual exige um corte comum confirmado pelos dois owners. Para um intervalo com histórico completo, o relatório calcula limites conservadores da área da ocupação, mesmo quando lotes se sobrepõem. A integração foi testada com fakes. [Demonstração e limites](WASAPI_BACKEND_PLAN.md#f2-i6b2a-checkpoint--corte-coerente-dos-dois-owners-mta).
+
 ## F2-I6B1-CLOCK-WINDOW — separação entre integridade e fase
 
 A captura nativa da prova SILENT usa margem provisória de um período apenas para variação de fase curta e desde uma âncora fixa. Aprovação exige janelas de taxa de 2–2,5 s sem margem de fase, continuidade dos pacotes liberados e corroboração dos deltas terminais. O modo estrito do render, o estimador simulado, o controlador de ±500 ppm e o FIR permanecem independentes dessa política. A prova física de cinco segundos permanece pendente de nova revisão. [Reprodução, contratos e critérios](WASAPI_BACKEND_PLAN.md#f2-i6b1-clock-window--validação-temporal-da-captura-silenciosa-18112026).
