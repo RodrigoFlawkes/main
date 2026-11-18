@@ -173,8 +173,8 @@ Se o limite ocorrer sem aviso, o próximo chat deve reconstruir a passagem usand
 | Data | Base e ponto de retomada | Próxima tarefa |
 | --- | --- | --- |
 | 18/11/2026 | WaveStudio P1 → novo chat; prova 4 em 54e3c1c, revisão e tarefa em 80a0f59; sem B2/F3 | COMENTARIOS-PTBR, Alto; revisar resultado antes de B2 |
-
 | 18/11/2026 | COMENTARIOS-PTBR aprovado em feaf15a; 125 arquivos examinados, 74 traduzidos, 209 comentários, 737/737 regressões comuns sem falhas, 2 Explicit excluídos por configuração; prova 4 preservada. Revisão estática, logs locais não inspecionados. Guia atualizado a cada prompt por decisão do proprietário. | F2-I6B2A-CHECKPOINT, Extra alto; fundação de ledger e checkpoint coerente com fakes, sem Start físico ou ppm ativo; revisar antes de B2B/F3 |
+| 18/11/2026 | B2A aprovado em b3504bd; 758/758 comuns (21 novos), 235 WASAPI Debug, 19 diário Release, 2 Explicit excluídos, 16 KiB e zero alocação recorrente em ensaio sintético. Ledger por versões com cortes coerentes e média intervalar; somente fakes, sem prova física; logs locais não verificados. Proprietário sinalizou demora da fase inicial, estratégia geral acelerada ainda não aprovada. | F2-I6B2B-DRIFT, Extra alto: agrupar evidência de clock, ocupação, controlador em fakes e preparar prova SILENT específica, sem executá-la; revisar antes de Start, monitoramento e F3 |
 
 ## 12. Prompt para abrir o próximo chat ChatGPT
 
