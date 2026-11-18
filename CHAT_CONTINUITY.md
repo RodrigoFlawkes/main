@@ -158,7 +158,7 @@ Nunca reset/clean/force push, sobrescrever trabalho local, stash automático, ex
 
 ## 11. Manutenção deste próprio guia (obrigatória)
 
-Este arquivo é para o próximo ChatGPT, não para executar a etapa do Codex. Não deixar instruções importantes apenas em conversas. A cada revisão/planejamento, verificar se novas decisões precisam ser registradas em AGENTS, REQUIREMENTS, plano mestre, REVIEW, NEXT_TASK ou neste guia. Atualizar este guia quando houver mudança permanente de fluxo, escopo, prioridade, ambiente ou restrição. Antes de encerrar um chat por limite ou trocar de chat, acrescentar uma entrada datada na seção de passagem abaixo com:
+Este arquivo é **exclusivamente para transferência entre chats do ChatGPT**; não é leitura de rotina nem tarefa do Codex. O ChatGPT deve mantê-lo atualizado **a cada novo prompt de andamento/checkpoint**, inclusive revisões, bloqueios e mudanças de decisão, no mesmo commit documental de REVIEW/NEXT_TASK sempre que possível. Registrar uma nova entrada na seção de passagens e preservar as anteriores. Não deixar informações importantes apenas em conversas. Registrar decisões permanentes também em AGENTS, REQUIREMENTS ou plano mestre conforme pertinente. O Codex não modifica este guia. Antes de encerrar um chat por limite ou trocar de chat, acrescentar uma entrada datada na seção de passagem abaixo com:
 
 - HEAD atual e último commit funcional; tarefa/estado e última revisão;
 - testes e validações aprovados, pendências, riscos/bloqueios e limites de evidência;
@@ -173,6 +173,8 @@ Se o limite ocorrer sem aviso, o próximo chat deve reconstruir a passagem usand
 | Data | Base e ponto de retomada | Próxima tarefa |
 | --- | --- | --- |
 | 18/11/2026 | WaveStudio P1 → novo chat; prova 4 em 54e3c1c, revisão e tarefa em 80a0f59; sem B2/F3 | COMENTARIOS-PTBR, Alto; revisar resultado antes de B2 |
+
+| 18/11/2026 | COMENTARIOS-PTBR aprovado em feaf15a; 125 arquivos examinados, 74 traduzidos, 209 comentários, 737/737 regressões comuns sem falhas, 2 Explicit excluídos por configuração; prova 4 preservada. Revisão estática, logs locais não inspecionados. Guia atualizado a cada prompt por decisão do proprietário. | F2-I6B2A-CHECKPOINT, Extra alto; fundação de ledger e checkpoint coerente com fakes, sem Start físico ou ppm ativo; revisar antes de B2B/F3 |
 
 ## 12. Prompt para abrir o próximo chat ChatGPT
 
