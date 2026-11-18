@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-18 — terceira prova física F2-I6B1-PROOF-3
+
+- A prova silenciosa instrumentada descartou o pacote inicial e aceitou 111 pacotes. Os dois históricos ficaram disponíveis após a liberação dos streams.
+- O validador interrompeu a prova aos 1.110,3045 ms por `AdvanceOutsideTolerance` no clock de captura. O cálculo foi reproduzido com as leituras brutas. A prova continua sem aprovação. Nenhuma voz foi armazenada.
+
 ### 2026-11-18 — F2-I6B1-CLOCK-DIAG
 
 - Diagnóstico numérico por leitura e por stream com motivo específico, âncora, deltas e valores da decisão. A evidência da rejeição e da última leitura aceita é preservada junto do histórico limitado.

@@ -206,3 +206,7 @@ A validação manual de A01/A02/A03/A05/A09/A11/A12 permanece aprovada por relat
 ## Segunda tentativa física F2-I6B1-PROOF-2 — 18/11/2026
 
 O resultado dos sete casos manuais pós-formatação permanece aprovado por relato. A prova separada descartou o pacote inicial com descontinuidade e aceitou os seguintes. A observação parou em 412,5004 ms com `InvalidPosition` no clock da captura. Os dois streams foram liberados, a saída permaneceu SILENT e nenhuma voz foi armazenada. A prova física de cinco segundos segue sem aprovação. [Evidências técnicas](WASAPI_BACKEND_PLAN.md#f2-i6b1-proof-2--resultado-físico-18112026).
+
+## Terceira tentativa física F2-I6B1-PROOF-3 — 18/11/2026
+
+Os sete casos manuais pós-formatação permanecem aprovados por relato. A prova nativa separada descartou o primeiro pacote marcado e aceitou 111 pacotes seguintes. A captura encerrou a janela aos 1.110,3045 ms por `AdvanceOutsideTolerance` no clock. Os dois streams foram liberados, a saída permaneceu SILENT e nenhuma voz foi armazenada. A prova de cinco segundos permanece sem aprovação. [Histórico e cálculo](WASAPI_BACKEND_PLAN.md#f2-i6b1-proof-3--resultado-físico-18112026).

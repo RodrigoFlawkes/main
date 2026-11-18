@@ -1,5 +1,61 @@
 # Backend WASAPI — preparação sem áudio e base isolada
 
+## F2-I6B1-PROOF-3 — resultado físico, 18/11/2026
+
+Tentativa física única autorizada, Release x64 de `97b2c99`, preflight em `38d49d2`, .NET SDK 10.0.404. O proprietário confirmou as condições imediatas. A seleção foi verificada ativa e única por direção, com app e outros runners ausentes. O apphost executou apenas `WaveStudio.Tests.WasapiNativeSilentTests.AuthorizedHeadsetAndMicrophoneRunBoundedSilentTransport` com `--explicit only --filter-method`, usando as variáveis opt-in somente no processo. A política Restricted foi preservada. O runner reportou um teste, uma falha, código 2 e duração total de 1.721 ms. A observação do transporte foi de 11.103.045 × 100 ns (1.110,3045 ms).
+
+| Evidência | Captura | Render SILENT |
+| --- | --- | --- |
+| Mix exato | Float32 / 48 kHz / mono, máscara 4, 4 bytes/frame | Float32 / 48 kHz / LR, máscara 3, 8 bytes/frame |
+| Capacidade / padding final | 1.056 / 480 frames | 1.056 / 576 frames |
+| Período padrão / latência reportada | 100.000 / 0 × 100 ns | 100.000 / 0 × 100 ns |
+| Initialize / Start / último GetBuffer / último ReleaseBuffer / Stop | Confirmado / S_OK / S_OK / S_OK / S_OK | Confirmado / S_OK / S_OK / S_OK / S_OK |
+| Pacotes adquiridos / liberados | 112 / 112 | 112 / 112 |
+| Frames adquiridos / liberados | 53.760 / 53.760 | 54.336 / 54.336 |
+| Aceitos / descarte inicial | 111 pacotes, 53.280 frames / 1 pacote, 480 frames | Não se aplica |
+| Flags agregadas / descarte inicial | 0x1 / 0x1 DATA_DISCONTINUITY | Sempre SILENT |
+| Posição e QPC do descarte inicial | 189.703.200 frames, 140.008.828.289 × 100 ns | Não se aplica |
+| Último pacote de captura | 189.756.480 frames, 140.019.928.187 × 100 ns | Não se aplica |
+| Priming | 0 | 1.056 frames |
+| Histórico total / sobrescritas | 11 / 0 | 11 / 0 |
+| Leituras válidas / avanços válidos | 10 / 9 | 11 / 10 |
+| Última posição / frequência de IAudioClock | 215.040 unidades / 192.000 unidades/s (rejeitada) | 418.240 unidades / 384.000 unidades/s (aceita) |
+| Último QPC de IAudioClock | 140.020.118.187 × 100 ns | 140.020.048.887 × 100 ns |
+| Últimos GetFrequency / GetPosition | S_OK / S_OK | S_OK / S_OK |
+| Liberação / buffer em voo / erro de limpeza | Confirmada / não / nenhum | Confirmada / não / nenhum |
+
+O JSON tem índices consecutivos de 1 a 11 nos dois papéis. Todos os HRESULTs de relógio foram S_OK, com qualidade Accurate e flags de clock zero. A reconstituição offline confirmou os vínculos de âncora, deltas, restos e decisões do histórico. Entre as leituras aceitas, o maior erro na captura foi 0,5472 frame com limite de 25,997264 (índice 6). No render, foi 1,368 frame com limite de 26,02184 (índice 11). O render reportou `Rejection=null`. O maior erro absoluto da captura incluindo a rejeição foi 480,624 frames.
+
+### Leitura rejeitada e sua âncora
+
+| Campo | Captura 10, última aceita | Captura 11, rejeitada |
+| --- | --- | --- |
+| Desde Start (× 100 ns) | 10.090.083 | 11.093.846 |
+| Posição / frequência | 193.920 / 192.000, DeviceUnits | 215.040 / 192.000, DeviceUnits |
+| QPC da leitura (× 100 ns) | 140.018.918.057 | 140.020.118.187 |
+| QPC local / idade (× 100 ns) | 140.019.118.061 / 200.004 | 140.020.121.824 / 3.637 |
+| GetFrequency / GetPosition | S_OK / S_OK | S_OK / S_OK |
+| Unidade / qualidade / flags de clock | DeviceUnits / Accurate / 0 | DeviceUnits / Accurate / 0 |
+| Posição e QPC da âncora | 174.720 / 140.017.918.128 | 193.920 / 140.018.918.057 |
+| Último QPC de avanço na âncora (× 100 ns) | 140.017.918.128 | 140.018.918.057 |
+| Frames acumulados / resto na âncora | 38.400 / 0 | 43.200 / 0 |
+| Delta posição / delta QPC (× 100 ns) | 19.200 / 999.929 | 21.120 / 1.200.130 |
+| Avanço / esperado / erro absoluto (frames) | 4.800 / 4.799,6592 / 0,3408 | 5.280 / 5.760,624 / 480,624 |
+| Limite / resto após aceitar | 25,998296 / 0 | 30,80312 / não aplicado |
+| Resultado | Valid | InvalidPosition / AdvanceOutsideTolerance |
+
+Reprodução offline da rejeição com os valores do adaptador:
+
+- Posição avançada: `215040 - 193920 = 21120` unidades. Conversão inteira: `(21120 × 48000 + 0) / 192000 = 5280` frames.
+- QPC avançado: `140020118187 - 140018918057 = 1200130` ticks de 100 ns. Intervalo: `0,120013 s`. Avanço esperado: `48000 × 0,120013 = 5760,624` frames.
+- Erro: `|5280 - 5760,624| = 480,624` frames. Limite aplicado: `0,005 × 5760,624 + 2 = 30,80312`. A comparação reproduz `AdvanceOutsideTolerance`.
+
+Entre as duas leituras, o QPC local avançou 100,3763 ms, o QPC reportado avançou 120,013 ms e o incremento da posição equivaleu a 110 ms pela frequência reportada. A idade caiu de 20,0004 ms para 0,3637 ms. O teste confirma a divergência naquele intervalo, sem identificar sua origem, nem o motivo exato da prova 2. A posição de pacote de `GetBuffer` é em frames e permanece separada da posição em DeviceUnits de `IAudioClock`.
+
+O estágio `Capture` registrou `InvalidOperationException` sem HRESULT de falha. A captura fecha em 111 + 1 = 112 pacotes e 53.280 + 480 = 53.760 frames. A FIFO nominal de 4.096 frames registrou 53.280 produzidos, 52.320 lidos, 0 drops e 960 de underrun, sem medida de latência fim a fim ou controle de drift. `Completed=true`, `ResourcesRetained=false`, `DurationReached=false`, `MovementProven=false` e `TransportObserved=false`. A prova de cinco segundos permanece sem aprovação.
+
+O JSON original permanece local em `artifacts/wasapi-silent`, ignorado pelo Git, sem nomes, IDs ou PCM. A análise offline usou os dados da única tentativa. Código, parâmetros e proteções foram preservados, sem nova tentativa ou regressão completa. A análise da diferença de clock precede qualquer mudança de política ou avanço para F2-I6B2.
+
 ## F2-I6B1-CLOCK-DIAG — motivos e histórico por stream, 18/11/2026
 
 Na prova 2, a captura apresentou dois avanços válidos antes de `InvalidPosition`. O último `GetPosition` retornou S_OK, posição 80.640, frequência 192.000 e QPC 122.054.762.600 × 100 ns. A hipótese de espera de startup sem âncora fica excluída pelos avanços já aceitos. Faltam a leitura anterior, o resto e o delta usados para distinguir mudança de unidade/frequência, regressão, intervalo acima de 2 s e avanço fora da tolerância. A posição do último pacote de captura, 103.522.080 frames, pertence ao `GetBuffer` e não substitui essa leitura anterior.

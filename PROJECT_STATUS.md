@@ -2,7 +2,15 @@
 
 Atualizado em 18/11/2026.
 
-## Estado atual — F2-I6B1-CLOCK-DIAG
+## Estado atual — F2-I6B1-PROOF-3 não aprovada
+
+- Sincronização inicial por fast-forward para `38d49d2`, com binário Release x64 existente da implementação `97b2c99`, SDK 10.0.404 e um único teste descoberto por filtro exato. O proprietário confirmou autorização de cinco segundos, headset conectado, Wave Studio fechado normalmente e ausência de chamadas/testes. Confirmados os dois endpoints ativos e únicos por direção, além da ausência do app e de outros runners. Os sete casos manuais permanecem aprovados por relato.
+- A tentativa única SILENT encerrou a observação após **1.110,3045 ms**. O clock da captura rejeitou a leitura 11 por `AdvanceOutsideTolerance`: 5.280 frames calculados para 120,013 ms de QPC, 5.760,624 esperados, erro de 480,624 contra limite de 30,80312. Ambos os HRESULTs nativos dessa leitura foram S_OK. A origem da diferença continua indeterminada, assim como o ramo específico da prova 2.
+- O descarte inicial consumiu 480 frames do primeiro pacote com DATA_DISCONTINUITY. A captura aceitou 111 pacotes e 53.280 frames. A FIFO produziu 53.280 e leu 52.320 frames. Os dois históricos terminais contêm 11 leituras, sem sobrescrita, com nove avanços válidos na captura e dez no render. O render encerrou sem rejeição de clock.
+- Ambos Start/Stop retornaram S_OK, com liberação confirmada, sem recursos retidos ou buffers em voo. Saída sempre SILENT, sem armazenamento de voz. `DurationReached=false`, `MovementProven=false` e `TransportObserved=false`, um teste, uma falha e código 2. [Histórico e cálculo reproduzido](docs/WASAPI_BACKEND_PLAN.md#f2-i6b1-proof-3--resultado-físico-18112026).
+- Código, limites e parâmetros preservados. Nenhuma repetição da prova, regressão completa ou alteração dos backups. F2-I6B2 e F3 permanecem pendentes.
+
+## Histórico — F2-I6B1-CLOCK-DIAG
 
 - Sincronização inicial por fast-forward a `139a8e4`. A investigação partiu do JSON local da prova 2 e dos contratos do WASAPI. Os avanços aceitos excluem a espera de startup. A ausência de leituras anteriores impede identificar qual regra gerou `InvalidPosition`. A posição de pacote não serve para reconstruir o delta de `IAudioClock`.
 - Implementados motivos precisos e histórico de 64 leituras por owner, com última leitura aceita e primeira rejeitada em campos próprios. O relatório terminal contém âncora, deltas, resto, avanço, expectativa, erro e limite aplicado quando disponíveis. A cópia ocorre após join; o histórico fica ausente enquanto a liberação está pendente. Sem IDs, nomes ou PCM. [Análise e critérios](docs/WASAPI_BACKEND_PLAN.md).
