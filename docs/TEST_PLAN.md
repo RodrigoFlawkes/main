@@ -1,5 +1,11 @@
 # Plano de testes
 
+## F2-I6B1-CLOCK-DIAG — verificação automatizada
+
+Dois cenários com fakes retornam o mesmo `InvalidPosition` e exigem motivos distintos no JSON terminal, âncora e última leitura aceita preservadas, históricos de captura e render e ausência de IDs. Os dois falharam primeiro pela ausência do histórico e passaram com a instrumentação. Testes determinísticos cobrem a precedência e os motivos de rejeição, excesso e falta de avanço, bordas inclusivas, resto inteiro, posição repetida e prazo de progresso, startup sem âncora, timestamps, qualidade/S_FALSE, RequiresReset, overflow, sobrescrita circular e isolamento dos snapshots. O teste de cancelamento com chamada em voo verifica que o histórico dos owners não é copiado antes do join.
+
+Os cenários simulam ramos do validador. A prova física 2 não contém os deltas necessários para reproduzir sua rejeição; não houve Start físico nesta etapa.
+
 ## F2-I6B1-FIX — primeira descontinuidade
 
 Os fakes exercitam descarte integral de flags 0x1/0x3 seguido de transporte válido, primeiro pacote limpo, BUFFER_EMPTY anterior, segunda descontinuidade mesmo dentro da janela, pacote tardio, bits inválidos com descontinuidade, tamanho divergente/zero/excessivo, ponteiro ausente e QPC obsoleto/futuro. As asserções verificam liberação inteira ou zero conforme o consumo, contadores, cancelamento antes ou depois do consumo, manutenção do guard após ReleaseBuffer falho e ausência de produção quando só houve descarte. A proteção de render SILENT continua sendo verificada em cada liberação fake. Clocks em movimento com descarte exclusivo e S_FALSE após descarte são insuficientes para aprovar a prova.

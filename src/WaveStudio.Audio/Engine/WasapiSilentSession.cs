@@ -125,7 +125,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
         var result = await FinishAsync(retryStop: true);
         if (result.ResourcesRetained) throw new InvalidOperationException("Encerramento nativo não confirmado; recursos e bloqueio preservados.");
     }
-    private WasapiSilentSnapshot Snapshot() => new(capture.Snapshot(), playback.Snapshot(), completed, lease is not null,
+    private WasapiSilentSnapshot Snapshot() => new(capture.Snapshot(completed), playback.Snapshot(completed), completed, lease is not null,
         failure, hresult, path?.CapacityFrames ?? 0, path?.Produced ?? 0, path?.Read ?? 0, path?.Dropped ?? 0, path?.Underrun ?? 0,
         observation100ns, durationReached);
 
@@ -339,13 +339,13 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             if (!resources.Released) { session.Fail(input ? "CaptureRelease" : "RenderRelease"); return false; }
             return true;
         }
-        public WasapiRoleSnapshot Snapshot() => new(initialized, startAttempted, started, stopConfirmed, resources.Released, ownerId,
+        public WasapiRoleSnapshot Snapshot(bool joined) => new(initialized, startAttempted, started, stopConfirmed, resources.Released, ownerId,
             Capacity, Period, latency, Interlocked.Read(ref acquired), Interlocked.Read(ref released), Interlocked.Read(ref acquiredFrames),
             Interlocked.Read(ref releasedFrames), Interlocked.Read(ref primed), padding, motion?.MovementSamples ?? 0,
             Done.Task.IsCompleted ? lastClock : null, flags, packetPosition, packetQpc, bufferInFlight, error, cleanup,
             startResult, stopResult, acquireResult, releaseResult, Done.Task.IsCompleted ? clockStatus : null,
             Interlocked.Read(ref acceptedPackets), Interlocked.Read(ref acceptedFrames),
             Interlocked.Read(ref startupDiscardedPackets), Interlocked.Read(ref startupDiscardedFrames),
-            startupDiscardFlags, startupDiscardPosition, startupDiscardQpc);
+            startupDiscardFlags, startupDiscardPosition, startupDiscardQpc, joined ? motion?.Snapshot() : null);
     }
 }

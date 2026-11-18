@@ -29,34 +29,88 @@ internal sealed class WasapiClockAdapter
         string identity = ConvertIdentity(endpoint);
         clock = new(identity, endpoint.Generation, rate, "WASAPI-QPC-100ns", 10000000);
     }
-    public NativeClockResult Convert(NativeClockSample sample, long now100ns, out ClockObservation observation)
+    public NativeClockResult Convert(NativeClockSample sample, long now100ns, out ClockObservation observation) =>
+        Convert(sample, now100ns, out observation, out _);
+
+    public NativeClockResult Convert(NativeClockSample sample, long now100ns, out ClockObservation observation,
+        out NativeClockValidation validation)
     {
         observation = default;
-        if (sample.Endpoint != endpoint) return NativeClockResult.InvalidIdentity;
-        if (RequiresReset) return NativeClockResult.RequiresReset;
-        NativeClockResult Reject(NativeClockResult result) { RequiresReset = true; return result; }
-        if ((sample.Flags & TransportPacketFlags.Discontinuity) != 0) return Reject(NativeClockResult.Discontinuity);
-        if ((sample.Flags & TransportPacketFlags.TimestampError) != 0) return Reject(NativeClockResult.TimestampError);
+        validation = new(sample.Unit, sample.Quality, sample.Flags, now100ns, SampleAge(sample.Qpc100ns, now100ns),
+            anchored ? new(unit, nativeFrequency, nativePosition, qpc, lastProgressQpc, frames, remainder) : null);
+        if (sample.Endpoint != endpoint)
+        {
+            validation.Reason = NativeClockReason.IdentityMismatch;
+            return NativeClockResult.InvalidIdentity;
+        }
+        if (RequiresReset)
+        {
+            validation.Reason = NativeClockReason.ResetRequired;
+            return NativeClockResult.RequiresReset;
+        }
+        if ((sample.Flags & TransportPacketFlags.Discontinuity) != 0)
+            return Reject(NativeClockResult.Discontinuity, NativeClockReason.PacketDiscontinuity, ref validation);
+        if ((sample.Flags & TransportPacketFlags.TimestampError) != 0)
+            return Reject(NativeClockResult.TimestampError, NativeClockReason.PacketTimestampError, ref validation);
         if ((sample.Flags & ~(TransportPacketFlags.Discontinuity | TransportPacketFlags.TimestampError | TransportPacketFlags.Silent)) != 0)
-            return Reject(NativeClockResult.Unavailable);
-        if (sample.Quality != NativeClockQuality.Accurate || sample.Frequency == 0 || sample.Unit is not (NativePositionUnit.Frames or NativePositionUnit.DeviceUnits))
-            return Reject(NativeClockResult.Unavailable);
-        if (sample.Qpc100ns > long.MaxValue || now100ns < 0 || sample.Qpc100ns > (ulong)now100ns ||
-            (ulong)now100ns - sample.Qpc100ns > 5000000 || (anchored && sample.Qpc100ns <= qpc))
-            return Reject(NativeClockResult.InvalidTime);
-        ulong frequency = sample.Unit == NativePositionUnit.Frames ? (ulong)rate : sample.Frequency;
-        if (sample.Unit == NativePositionUnit.Frames && sample.Frequency != (ulong)rate) return Reject(NativeClockResult.Unavailable);
+            return Reject(NativeClockResult.Unavailable, NativeClockReason.UnknownFlags, ref validation);
+        if (sample.Quality != NativeClockQuality.Accurate)
+            return Reject(NativeClockResult.Unavailable, NativeClockReason.InaccurateReading, ref validation);
+        if (sample.Frequency == 0)
+            return Reject(NativeClockResult.Unavailable, NativeClockReason.ZeroFrequency, ref validation);
+        if (sample.Unit is not (NativePositionUnit.Frames or NativePositionUnit.DeviceUnits))
+            return Reject(NativeClockResult.Unavailable, NativeClockReason.UnsupportedUnit, ref validation);
+        if (sample.Qpc100ns > long.MaxValue)
+            return Reject(NativeClockResult.InvalidTime, NativeClockReason.QpcOutOfRange, ref validation);
+        if (now100ns < 0)
+            return Reject(NativeClockResult.InvalidTime, NativeClockReason.NegativeNow, ref validation);
+        if (sample.Qpc100ns > (ulong)now100ns)
+            return Reject(NativeClockResult.InvalidTime, NativeClockReason.FutureTimestamp, ref validation);
+        if ((ulong)now100ns - sample.Qpc100ns > 5000000)
+            return Reject(NativeClockResult.InvalidTime, NativeClockReason.StaleTimestamp, ref validation);
         if (anchored)
         {
-            if (sample.Unit != unit || frequency != nativeFrequency || sample.Position < nativePosition) return Reject(NativeClockResult.InvalidPosition);
-            if (sample.Position == nativePosition && sample.Qpc100ns - lastProgressQpc > 5000000) return Reject(NativeClockResult.Stalled);
+            validation.DeltaQpc100ns = (long)sample.Qpc100ns - (long)qpc;
+            if (sample.Qpc100ns <= qpc)
+                return Reject(NativeClockResult.InvalidTime, NativeClockReason.NonIncreasingTimestamp, ref validation);
+        }
+        ulong frequency = sample.Unit == NativePositionUnit.Frames ? (ulong)rate : sample.Frequency;
+        if (sample.Unit == NativePositionUnit.Frames && sample.Frequency != (ulong)rate)
+            return Reject(NativeClockResult.Unavailable, NativeClockReason.FrameFrequencyMismatch, ref validation);
+        if (anchored)
+        {
+            if (sample.Unit != unit)
+                return Reject(NativeClockResult.InvalidPosition, NativeClockReason.UnitChanged, ref validation);
+            if (frequency != nativeFrequency)
+                return Reject(NativeClockResult.InvalidPosition, NativeClockReason.FrequencyChanged, ref validation);
+            validation.DeltaPosition = (Int128)sample.Position - nativePosition;
+            if (sample.Position < nativePosition)
+                return Reject(NativeClockResult.InvalidPosition, NativeClockReason.PositionRegressed, ref validation);
+            if (sample.Position == nativePosition && sample.Qpc100ns - lastProgressQpc > 5000000)
+                return Reject(NativeClockResult.Stalled, NativeClockReason.ProgressExpired, ref validation);
+
             UInt128 delta = (UInt128)(sample.Position - nativePosition) * (uint)rate + remainder;
             UInt128 advance = delta / frequency;
-            if (advance > long.MaxValue || advance > (UInt128)(ulong)(long.MaxValue - frames)) return Reject(NativeClockResult.Overflow);
+            validation.AdvancedFrames = advance;
+            if (advance > long.MaxValue)
+                return Reject(NativeClockResult.Overflow, NativeClockReason.AdvanceOverflow, ref validation);
+            if (advance > (UInt128)(ulong)(long.MaxValue - frames))
+                return Reject(NativeClockResult.Overflow, NativeClockReason.TotalFramesOverflow, ref validation);
             double seconds = (sample.Qpc100ns - qpc) / 10000000d;
-            if (seconds > 2 || Math.Abs((double)advance - rate * seconds) > rate * seconds * .005 + 2)
-                return Reject(NativeClockResult.InvalidPosition);
-            frames += (long)advance; remainder = (ulong)(delta % frequency);
+            validation.IntervalSeconds = seconds;
+            if (seconds > 2)
+                return Reject(NativeClockResult.InvalidPosition, NativeClockReason.IntervalTooLong, ref validation);
+            double expected = rate * seconds;
+            double error = Math.Abs((double)advance - expected);
+            double limit = expected * .005 + 2;
+            validation.ExpectedFrames = expected;
+            validation.AbsoluteErrorFrames = error;
+            validation.ErrorLimitFrames = limit;
+            if (error > limit)
+                return Reject(NativeClockResult.InvalidPosition, NativeClockReason.AdvanceOutsideTolerance, ref validation);
+            frames += (long)advance;
+            remainder = (ulong)(delta % frequency);
+            validation.RemainderAfter = remainder;
             if (sample.Position != nativePosition) lastProgressQpc = sample.Qpc100ns;
         }
         else { anchored = true; lastProgressQpc = sample.Qpc100ns; }
@@ -64,6 +118,16 @@ internal sealed class WasapiClockAdapter
         observation = new(clock, frames, (long)qpc, ClockQuality.Monotonic);
         return NativeClockResult.Valid;
     }
+    private NativeClockResult Reject(NativeClockResult result, NativeClockReason reason, ref NativeClockValidation validation)
+    {
+        validation.Reason = reason;
+        RequiresReset = true;
+        return result;
+    }
+
+    internal static long? SampleAge(ulong timestamp, long now100ns) =>
+        now100ns >= 0 && timestamp <= long.MaxValue ? now100ns - (long)timestamp : null;
+
     public NativeClockResult Convert(TransportEndpoint source, WasapiClockReading reading, long now100ns,
         out ClockObservation observation, TransportPacketFlags flags = 0) => Convert(reading.ToSample(source, flags), now100ns, out observation);
     private static string ConvertIdentity(TransportEndpoint endpoint) =>

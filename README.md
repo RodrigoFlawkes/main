@@ -26,7 +26,7 @@
 ## Estado atual
 
 <p align="center">
-  <strong>663 testes em Debug</strong> · <strong>663 testes em Release</strong> · <strong>7/7 casos manuais pós-formatação</strong>
+  <strong>696 testes em Debug</strong> · <strong>696 testes em Release</strong> · <strong>7/7 casos manuais pós-formatação</strong>
 </p>
 
 | Marco | Situação |
@@ -202,9 +202,9 @@ WaveStudio.slnx
 
 ### Qualidade e validação
 
-A F2-I6B1-FIX registrou **663 testes aprovados por configuração**, restore locked auditado e builds x64 sem erros ou avisos. Os dois testes físicos Explicit ficaram fora das verificações automatizadas. O histórico da falha intermitente de alocação do EQ na F2-I6B1 está no [status do projeto](PROJECT_STATUS.md).
+A F2-I6B1-CLOCK-DIAG registrou **696 testes aprovados por configuração**, restore locked auditado e builds x64 sem erros ou avisos. Os dois testes físicos Explicit ficaram fora das verificações automatizadas. O histórico da falha intermitente de alocação do EQ na F2-I6B1 está no [status do projeto](PROJECT_STATUS.md).
 
-A preparação nativa F2-I6A validou captura mono e saída estéreo em float32/48 kHz sem Start. A F2-I6B1 reutiliza os recursos existentes e implementa transporte com saída sempre silenciosa, owners MTA, priming, validação de relógios e retenção do bloqueio quando a liberação dos recursos não é confirmada. **Primeira prova física ativa não aprovada (18/11/2026):** ambos os Start e Stop retornaram S_OK, mas o primeiro pacote de captura sinalizou DATA_DISCONTINUITY, levando à parada segura antes dos cinco segundos. A segunda prova descartou o pacote inicial, aceitou 41 pacotes seguintes e parou em 412,5004 ms com InvalidPosition no clock de captura. O resultado segue sem aprovação. [Evidências](docs/WASAPI_BACKEND_PLAN.md#f2-i6b1-proof-2--resultado-físico-18112026). Não há alegação de latência fim a fim, drift controlado em hardware ou áudio global.
+A preparação nativa F2-I6A validou captura mono e saída estéreo em float32/48 kHz sem Start. A F2-I6B1 reutiliza os recursos existentes e implementa transporte com saída sempre silenciosa, owners MTA, priming, validação de relógios e retenção do bloqueio quando a liberação dos recursos não é confirmada. **Primeira prova física ativa não aprovada (18/11/2026):** ambos os Start e Stop retornaram S_OK, mas o primeiro pacote de captura sinalizou DATA_DISCONTINUITY, levando à parada segura antes dos cinco segundos. A segunda prova descartou o pacote inicial, aceitou 41 pacotes seguintes e parou em 412,5004 ms com InvalidPosition no clock de captura. O resultado segue sem aprovação. A F2-I6B1-CLOCK-DIAG acrescenta um histórico limitado por stream para identificar a próxima rejeição sem alterar os critérios. [Evidências](docs/WASAPI_BACKEND_PLAN.md#f2-i6b1-proof-2--resultado-físico-18112026). Não há alegação de latência fim a fim, drift controlado em hardware ou áudio global.
 
 O histórico de estabilidade inclui CHECKUP-1 (519 testes) e EQ-PROFILE-1 (557 testes por configuração). As sete verificações manuais pós-formatação foram aprovadas pelo proprietário; testes automatizados, relato manual e prova nativa são evidências distintas.
 

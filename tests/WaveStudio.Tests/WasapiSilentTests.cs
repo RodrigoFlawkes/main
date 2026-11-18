@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using WaveStudio.Audio;
 using WaveStudio.Audio.Engine;
 using Xunit;
@@ -20,6 +21,7 @@ public sealed class WasapiSilentTests
     {
         public string? FailStep;
         public Action<string>? OnStep;
+        public Func<int, WasapiClockReading>? ReadClockOverride;
         public uint Capacity = 1056, CaptureFlags = 2;
         public uint? PacketFrames, AdvertisedFrames, Padding, PaddingAfterStart, StartupFlags;
         public int PacketLimit = int.MaxValue;
@@ -78,6 +80,7 @@ public sealed class WasapiSilentTests
             public WasapiClockReading Read()
             {
                 role.Step("ReadClock"); Assert.True(role.Started);
+                if (role.ReadClockOverride is { } scripted) return scripted(role.clockSamples++);
                 ulong qpc = (ulong)WasapiTime.Now100ns();
                 ulong frequency = (ulong)info.Mix!.AverageBytesPerSecond;
                 ulong position = (ulong)((UInt128)(qpc - (ulong)role.StartTime) * frequency / 10000000);
@@ -383,6 +386,37 @@ public sealed class WasapiSilentTests
         var result = await session.RunAsync(TimeSpan.FromMilliseconds(700), TestContext.Current.CancellationToken);
         Assert.NotNull(result.Failure); Assert.False(result.MovementProven); Assert.True(result.Completed);
     }
+    [Theory]
+    [InlineData("PositionRegressed")]
+    [InlineData("AdvanceOutsideTolerance")]
+    public async Task TerminalReportDistinguishesClockRejectionsThatShareInvalidPosition(string reason)
+    {
+        var route = WasapiContractTests.Route();
+        var calls = new Calls(route);
+        calls.Input.ReadClockOverride = index => new(0, 192000, 0, index switch
+        {
+            0 => 19200,
+            1 => 38400,
+            _ => reason == "PositionRegressed" ? 1u : 60000u
+        }, (ulong)calls.Input.StartTime + (ulong)index * 1_000_000);
+        await using var session = new WasapiSilentSession(route, new(), calls.Open);
+
+        var result = await session.RunAsync(TimeSpan.FromSeconds(1), TestContext.Current.CancellationToken);
+
+        Assert.True(result.Completed);
+        Assert.False(result.TransportObserved);
+        Assert.Equal(NativeClockResult.InvalidPosition, result.Capture.ClockStatus);
+        string json = JsonSerializer.Serialize(result);
+        using var document = JsonDocument.Parse(json);
+        var capture = document.RootElement.GetProperty("Capture");
+        Assert.True(capture.TryGetProperty("ClockHistory", out var history), "A rejeição precisa de histórico numérico no relatório terminal.");
+        Assert.Equal(reason, history.GetProperty("Rejection").GetProperty("Validation").GetProperty("Reason").GetString());
+        Assert.Equal(38400UL, history.GetProperty("LastAccepted").GetProperty("Reading").GetProperty("Position").GetUInt64());
+        Assert.True(document.RootElement.GetProperty("Playback").GetProperty("ClockHistory").GetProperty("Readings").GetArrayLength() > 0);
+        Assert.DoesNotContain(route.Capture.Endpoint.Id, json);
+        Assert.DoesNotContain(route.Playback.Endpoint.Id, json);
+    }
+
     [Fact]
     public async Task CancellationAfterRenderAcquireStillReleasesSilentAndStopsBeforeCaptureStart()
     {
@@ -500,6 +534,8 @@ public sealed class WasapiSilentTests
 
             Assert.True(result.ResourcesRetained);
             Assert.False(result.DurationReached);
+            Assert.Null(result.Capture.ClockHistory);
+            Assert.Null(result.Playback.ClockHistory);
             Assert.Null(guard.TryAcquire(AudioActivity.NativePreparation));
         }
         finally

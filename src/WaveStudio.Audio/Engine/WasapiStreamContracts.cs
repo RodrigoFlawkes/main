@@ -32,21 +32,56 @@ internal static class WasapiTime
 
 internal sealed class WasapiRunningClock(TransportEndpoint endpoint, int rate, long started100ns)
 {
+    private const int HistoryCapacity = 64;
     private readonly WasapiClockAdapter adapter = new(endpoint, rate);
+    private readonly NativeClockTrace[] readings = new NativeClockTrace[HistoryCapacity];
+    private long readingCount;
+    private NativeClockTrace? lastAccepted, rejection;
     private ulong position;
     private bool anchored;
     public long MovementSamples { get; private set; }
     public NativeClockResult Observe(WasapiClockReading reading, long now100ns)
     {
-        if (reading.Quality != NativeClockQuality.Accurate)
-            return adapter.Convert(endpoint, reading, now100ns, out _);
-        if (!anchored && (reading.Position == 0 || reading.Qpc100ns == 0))
-            return now100ns - started100ns <= 5000000 ? NativeClockResult.Stalled : NativeClockResult.InvalidPosition;
-        var result = adapter.Convert(endpoint, reading, now100ns, out _);
-        if (result != NativeClockResult.Valid) return result;
-        if (anchored && reading.Position > position) MovementSamples++;
-        anchored = true; position = reading.Position;
-        return NativeClockResult.Valid;
+        var sample = reading.ToSample(endpoint);
+        NativeClockResult result;
+        NativeClockValidation validation;
+        if (reading.Quality == NativeClockQuality.Accurate && !anchored && (reading.Position == 0 || reading.Qpc100ns == 0))
+        {
+            bool inStartupWindow = now100ns - started100ns <= 5000000;
+            result = inStartupWindow ? NativeClockResult.Stalled : NativeClockResult.InvalidPosition;
+            validation = new(sample.Unit, sample.Quality, sample.Flags, now100ns, WasapiClockAdapter.SampleAge(sample.Qpc100ns, now100ns), null)
+            {
+                Reason = !inStartupWindow ? NativeClockReason.StartupExpired
+                    : reading.Position == 0 ? NativeClockReason.StartupWaiting
+                    : NativeClockReason.StartupMissingTimestamp
+            };
+        }
+        else result = adapter.Convert(sample, now100ns, out _, out validation);
+
+        var entry = new NativeClockTrace(readingCount + 1, (Int128)now100ns - started100ns, reading, result, validation);
+        readings[(int)(readingCount % HistoryCapacity)] = entry;
+        readingCount++;
+
+        if (result == NativeClockResult.Valid)
+        {
+            if (anchored && reading.Position > position) MovementSamples++;
+            anchored = true;
+            position = reading.Position;
+            lastAccepted = entry;
+        }
+        else if (validation.Reason != NativeClockReason.StartupWaiting) rejection ??= entry;
+        return result;
+    }
+
+    // Called by the coordinator after the owner has joined.
+    public NativeClockHistory Snapshot()
+    {
+        int length = (int)Math.Min(readingCount, HistoryCapacity);
+        long overwritten = readingCount - length;
+        var ordered = new NativeClockTrace[length];
+        for (int i = 0; i < length; i++)
+            ordered[i] = readings[(int)((overwritten + i) % HistoryCapacity)];
+        return new(readingCount, overwritten, Array.AsReadOnly(ordered), lastAccepted, rejection);
     }
 }
 
@@ -57,7 +92,7 @@ internal sealed record WasapiRoleSnapshot(bool Initialized, bool StartAttempted,
     ulong PacketPosition, ulong PacketQpc100ns, bool BufferInFlight, string? Error, string? CleanupError,
     int? StartHResult, int? StopHResult, int? AcquireHResult, int? ReleaseHResult, NativeClockResult? ClockStatus,
     long PacketsAccepted, long FramesAccepted, long StartupDiscardedPackets, long StartupDiscardedFrames,
-    uint StartupDiscardFlags, ulong StartupDiscardPosition, ulong StartupDiscardQpc100ns);
+    uint StartupDiscardFlags, ulong StartupDiscardPosition, ulong StartupDiscardQpc100ns, NativeClockHistory? ClockHistory);
 
 internal sealed record WasapiSilentSnapshot(WasapiRoleSnapshot Capture, WasapiRoleSnapshot Playback,
     bool Completed, bool ResourcesRetained, string? Failure, int? HResult,

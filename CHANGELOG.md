@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-18 — F2-I6B1-CLOCK-DIAG
+
+- Diagnóstico numérico por leitura e por stream com motivo específico, âncora, deltas e valores da decisão. A evidência da rejeição e da última leitura aceita é preservada junto do histórico limitado.
+- Mantidos os critérios de clock e de encerramento. A prova 2 continua sem causa identificada e a futura prova instrumentada aguarda revisão e autorização.
+
 ### 2026-11-18 — segunda prova física F2-I6B1-PROOF-2
 
 - O primeiro pacote descontínuo foi descartado por inteiro. O transporte aceitou 41 pacotes seguintes e produziu e leu frames na FIFO com saída SILENT.

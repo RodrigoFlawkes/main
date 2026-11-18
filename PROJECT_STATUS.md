@@ -2,7 +2,14 @@
 
 Atualizado em 18/11/2026.
 
-## Estado atual — F2-I6B1-PROOF-2 não aprovada
+## Estado atual — F2-I6B1-CLOCK-DIAG
+
+- Sincronização inicial por fast-forward a `139a8e4`. A investigação partiu do JSON local da prova 2 e dos contratos do WASAPI. Os avanços aceitos excluem a espera de startup. A ausência de leituras anteriores impede identificar qual regra gerou `InvalidPosition`. A posição de pacote não serve para reconstruir o delta de `IAudioClock`.
+- Implementados motivos precisos e histórico de 64 leituras por owner, com última leitura aceita e primeira rejeitada em campos próprios. O relatório terminal contém âncora, deltas, resto, avanço, expectativa, erro e limite aplicado quando disponíveis. A cópia ocorre após join; o histórico fica ausente enquanto a liberação está pendente. Sem IDs, nomes ou PCM. [Análise e critérios](docs/WASAPI_BACKEND_PLAN.md).
+- Restore locked com auditoria NuGet aprovado. Builds Debug/Release x64 com zero erros ou avisos. 173 testes direcionados passaram. Regressões completas: 696 aprovados (663 anteriores + 33 novos), zero falhas e dois Explicit excluídos por configuração. Debug 71,651 s e Release 42,344 s. Runner .NET direto com política Restricted preservada, prazo de 165 s, seeds 20261114/20261113 e logs em `artifacts/f2-i6b1-clock-diag`. Nenhuma prova física executada.
+- As decisões de validação e os limites existentes foram preservados. A prova 2 permanece sem aprovação. A prova 3 aguarda revisão e autorização específica, e a F2-I6B2 segue pendente. Os sete testes manuais já aprovados permanecem registrados.
+
+## Histórico — F2-I6B1-PROOF-2 não aprovada
 
 - Sincronização inicial por fast-forward para `212a60c`. Binários Release x64 existentes da correção `c7ff2c9`, SDK 10.0.404 e descoberta de um único teste com filtro exato conferidos. Autorização específica registrada. O proprietário confirmou headset conectado, Wave Studio fechado normalmente e ausência de chamadas ou testes. Verificados endpoints exatos, únicos e ativos por direção, além da ausência do app e de outros runners. A01/A02/A03/A05/A09/A11/A12 permanecem aprovados por relato.
 - Uma execução `Explicit`, com saída sempre SILENT. O primeiro pacote foi descartado integralmente (480 frames, DATA_DISCONTINUITY, 0x1). A captura aceitou 41 pacotes seguintes, com 19.680 frames produzidos e 18.720 lidos na FIFO. O descarte inicial funcionou nesta tentativa.
