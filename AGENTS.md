@@ -3,6 +3,8 @@
 ## Missão e contexto
 Wave Studio é uma aplicação desktop de gerenciamento, processamento e mixagem de áudio para Windows, com compatibilidade independente de fabricante. Repositório: Wave-Universal-Studio/main. Leia `docs/REQUIREMENTS.md` antes de planejar ou implementar. O proprietário tem conhecimentos básicos de Java e JavaScript e está aprendendo C#; comunique-se em português do Brasil e explique comandos e decisões de forma acessível.
 
+Para retomadas em novos chats do ChatGPT, consultar [CHAT_CONTINUITY.md](CHAT_CONTINUITY.md). O guia documenta o fluxo e a passagem de contexto, sem substituir estas regras ou conceder autorização de execução.
+
 ## Stack e decisões iniciais
 - C# / .NET 10 LTS, Windows Forms, x64, NAudio e Windows Core Audio/WASAPI. JSON versionado para configurações; Git e xUnit para versionamento e testes. Use C++/WDK apenas quando a arquitetura de APO/driver exigir. Priorize Windows 11; valide a viabilidade de Windows 10 separadamente, sem prometer suporte a versões fora do suporte do sistema/.NET.
 - Inspecione o SDK, Git e arquivos existentes antes de criar a solução. Use versões estáveis e compatíveis de dependências; verifique documentação oficial e licença. Não invente APIs.

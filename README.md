@@ -12,6 +12,9 @@
 > [!IMPORTANT]
 > **Alpha experimental.** Os controles do Windows e o teste de microfone já funcionam na prévia. Equalização global, monitoramento contínuo, microfone virtual e roteamento externo ainda estão em desenvolvimento. Não há instalador ou release pública.
 
+> [!NOTE]
+> **Continuidade entre chats do ChatGPT:** leia [CHAT_CONTINUITY.md](CHAT_CONTINUITY.md) antes de retomar o projeto. O guia reúne o fluxo, as decisões, os checkpoints e o protocolo de recuperação.
+
 ## Recursos
 
 ### Disponíveis na prévia
@@ -108,6 +111,7 @@ Os testes físicos Explicit são separados das regressões e exigem autorizaçã
 | Planejamento | [Implementação](docs/IMPLEMENTATION_PLAN.md) · [Efeitos futuros](docs/FUTURE_AUDIO_FEATURES.md) · [Próxima tarefa](NEXT_TASK.md) |
 | Progresso | [Status](PROJECT_STATUS.md) · [Changelog](CHANGELOG.md) · [Revisões](REVIEW.md) |
 | Qualidade | [Testes](docs/TEST_PLAN.md) · [Aceitação](docs/ALPHA_ACCEPTANCE.md) · [Auditoria](docs/GENERAL_CHECKUP.md) · [Recuperação](docs/RECOVERY_AUDIT.md) |
+| Continuidade | [Guia para o próximo chat](CHAT_CONTINUITY.md) |
 | Projeto | [Identidade visual](assets/branding/README.md) · [Licenças de terceiros](docs/THIRD_PARTY_NOTICES.md) · [Agentes](AGENTS.md) |
 
 ---
