@@ -1,5 +1,11 @@
 # Plano de testes
 
+## F2-I6B2B-DRIFT — integração automatizada e preparo físico
+
+A simulação usa dois owners MTA do `WasapiSilentSession`, o FIR/FIFO de `WasapiSilentPath`, clock virtual, cadência determinística e amostras PCM finitas. Cobre 44,1 ↔ 48 kHz e 48 ↔ 48 kHz, drift zero e nos dois sentidos, fase de ±1 período, granulação, jitter, latência até aplicar comandos, convergência, saturação e ausência de correção com incerteza insuficiente. O ensaio de 45 s virtuais compara razão nominal e adaptativa pela distância de ocupação ao alvo no trecho final.
+
+Os casos de falha cobrem clock rejeitado, wrap do histórico entre cortes, comando expirado, owner com buffer em voo, mudança de seleção, perda na FIFO e falhas em Get, Release e Stop. O fake de render confere SILENT e cada byte do buffer nativo preexistente. Após aquecimento, o ensaio do produtor mede aplicação do comando, FIR, FIFO e publicação de contadores no thread exercitado. A coleta diagnóstica física foi compilada e identificada entre os três Explicit excluídos. [Resultados e comandos](../PROJECT_STATUS.md).
+
 ## F2-I6B2A-CHECKPOINT — corte coerente e contabilidade sem hardware
 
 Os casos com relógio determinístico verificam ocupação e área de referência, eventos simultâneos, versões modificadas durante a leitura, perda e wrap de histórico, confirmações ausentes ou tardias, clocks regressivos e futuros, geração e baseline incompatíveis, contagem inconsistente e overflow. A sessão com fake mono de 44,1 kHz e render estéreo de 48 kHz distingue frames nativos e frames de saída, priming, descarte inicial, drops e underruns. O fake render verifica SILENT e preservação dos bytes originais do buffer em cada ReleaseBuffer. Os cenários de Get/Release falho, cancelamento em voo, timeout e Stop verificam ausência de corte parcial e retenção ou liberação do guard.

@@ -2,7 +2,32 @@
 
 Atualizado em 18/11/2026.
 
-## Estado atual — F2-I6B2A-CHECKPOINT, 18/11/2026
+## Estado atual — F2-I6B2B-DRIFT, 18/11/2026
+
+A pasta oficial partiu limpa e a `main` avançou por fast-forward para `d80a5a1`. HEAD e `origin/main` foram conferidos, com Git 2.56.1, SDK .NET 10.0.404 e `git fsck --connectivity-only --no-dangling` aprovado. A prova silenciosa 4 e os sete casos manuais pós-formatação aprovados por relato foram preservados.
+
+O caminho WASAPI foi integrado ao controle com fakes. A captura e o render publicam evidências de clock no corte do diário e o coordenador combina os intervalos de razão e ocupação. Somente o produtor aplica ppm, com geração, validade de até 500 ms, limites ±500 ppm e slew de 25 ppm/s. O render mantém SILENT. O aquecimento preenche a FIFO em razão nominal e contabiliza separadamente o priming do endpoint, as liberações antes do ticket e as liberações enquanto a FIFO aquece. Três segundos de janela, sobreposição de 2,5 s e faixa de até 200 ppm sustentam Tracking nos fakes com incerteza conhecida. Falhas de fronteira, informação perdida e comando expirado preservam o encerramento sem reativação.
+
+No ensaio comparativo de 45 s virtuais a 48 kHz e +300 ppm no relógio da captura, a distância média da ocupação ao alvo nos últimos cinco segundos foi de 536,98 frames com razão nominal e 46,02 com correção adaptativa. O ppm aplicado terminou em −321,10 e a execução adaptativa terminou sem drops ou underruns. No ensaio de mil lotes do produtor, os dois builds registraram zero bytes recorrentes; os tempos da amostra foram 53,064 ms (Debug) e 9,688 ms (Release). Esses ensaios medem o caminho simulado e não caracterizam tempo real físico. Métricas numéricas em `artifacts/f2-i6b2b-drift`.
+
+O restore passou com `dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1900`. Os builds `dotnet build WaveStudio.slnx -c <configuração> --no-restore --no-incremental` terminaram com zero erros ou avisos em Debug e Release x64.
+
+| Validação x64 | Aprovados | Falhas | Explicit excluídos | Duração |
+| --- | ---: | ---: | ---: | ---: |
+| WASAPI, clocks e DSP adaptativo em Release | 311 | 0 | 3 | 35,220 s |
+| Regressão Debug, semente 20261114 | 780 (758 + 22) | 0 | 3 | 73,302 s |
+| Regressão Release, semente 20261114 | 780 (758 + 22) | 0 | 3 | 40,071 s |
+| Reprodução filtrada dos casos de alocação em Release | 4 | 0 | 0 | 1,133 s |
+
+O primeiro direcionado com as proteções finais encontrou 21/22 casos. O fake do wrap avançava dez blocos de captura em um ciclo e provocava um drop antes de sobrescrever o diário. Foi corrigida a cadência do fake, preservando ambas as proteções e as asserções. O log inicial está em `targeted-final-only-drift.log`.
+
+As execuções completas Release com semente 20261113 registraram 778, 778 e 779 aprovações de 780 comuns. A primeira acusou 6.856 bytes no ensaio do diário e 3.992 no resampler adaptativo. A segunda registrou 2.632 bytes no EQ e 3.992 no resampler nominal. A terceira registrou 5.640 bytes no EQ. Os quatro casos passaram filtrados e na regressão completa com a semente alternativa, sem mudanças de código, asserções, configuração do runtime ou limites entre as execuções. A causa das alocações intermitentes segue indeterminada. Logs de falha preservados em `Release`, `Release-repeat` e `Release-third`, com a execução aprovada em `Release-alternate-seed`.
+
+Os testes usaram o runner .NET direto, com política Restricted preservada. Comando da regressão `dotnet test --solution WaveStudio.slnx -c <configuração> --no-build -- --explicit off --seed <seed> --timeout 165s --long-running 10 --diagnostic --diagnostic-output-directory <pasta>`. O direcionado acrescentou os filtros `--filter-class '*Wasapi*' --filter-class '*Clock*' --filter-class '*Adaptive*'` e usou a semente 20261113. Os logs e diagnósticos ficam em `artifacts/f2-i6b2b-drift`.
+
+O apphost Release descobriu um único teste futuro com `--list-tests text --filter-method 'WaveStudio.Tests.WasapiNativeSilentTests.AuthorizedEndpointsCollectSilentDriftEvidenceAtNominalRatio'`, sem executá-lo. A próxima coleta está preparada para dez segundos em SILENT e razão nominal, com trava de autorização específica e relatório sem voz ou identificadores de endpoint. A margem observada nas provas anteriores impede autorizar controle físico com a evidência atual. A coleta física, o monitoramento audível e F3 aguardam revisão. [Protocolo, incerteza e critérios da coleta](docs/WASAPI_BACKEND_PLAN.md#f2-i6b2b-drift--controle-com-evidência-intervalar-e-diagnóstico-silent).
+
+## Histórico — F2-I6B2A-CHECKPOINT, 18/11/2026
 
 A execução partiu da pasta oficial, com árvore limpa e `main` sincronizada por fast-forward com `origin/main` em `6404985`. Git 2.56.1, SDK .NET 10.0.404. A segunda consulta ao remoto manteve essa base antes da publicação. `git fsck --connectivity-only --no-dangling` passou e o ICO segue versionado. O histórico da prova 4 e os sete casos manuais pós-formatação aprovados por relato foram preservados.
 

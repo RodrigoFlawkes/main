@@ -1,5 +1,9 @@
 # Arquitetura do Wave Studio
 
+## F2-I6B2B-DRIFT — ponte temporal e autoridade do produtor
+
+O checkpoint WASAPI opt-in inclui clock e metadados de pacote publicados pelo mesmo owner que encerrou o lote. Um coordenador combina a faixa de razão entre os clocks com os limites de ocupação e publica um comando expirável vinculado à geração. A captura é proprietária do FIR e aplica o comando entre operações. O render continua SILENT. O ajuste foi exercitado com fakes, e a próxima prova física foi preparada em razão nominal para medir a incerteza que impede habilitar o ajuste no hardware. [Protocolo e critérios da coleta](WASAPI_BACKEND_PLAN.md#f2-i6b2b-drift--controle-com-evidência-intervalar-e-diagnóstico-silent).
+
 ## F2-I6B2A-CHECKPOINT — observação da FIFO WASAPI
 
 A sessão silenciosa admite um diário opt-in exercitado com streams injetados. O owner de captura e o de render publicam seus acumulados e intervalos locais em anéis separados. O coordenador aceita o snapshot se as duas versões comprovarem quiescência no mesmo corte, sem pausa dos owners nem chamada COM no coordenador. O ticket vincula a observação à seleção da sessão. A amostragem acompanha os buffers e o guard já existentes. [Protocolo, contabilidade e rejeições](WASAPI_BACKEND_PLAN.md#f2-i6b2a-checkpoint--corte-coerente-dos-dois-owners-mta).

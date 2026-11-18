@@ -34,6 +34,7 @@ internal sealed class WasapiCaptureTiming
     }
 
     public int PhaseBudgetFrames { get; }
+    public bool HasRateWindows => clock.Rolling is { WithinLimit: true } && packets.Rolling is { WithinLimit: true };
 
     public NativeClockReason ObserveClock(ulong qpc, ulong frames, ref NativeClockValidation validation)
     {

@@ -1,5 +1,9 @@
 # Motor de áudio — fundação, conversão e relógios
 
+## F2-I6B2B-DRIFT — controle com limites de observação
+
+O preenchimento da FIFO precede o consumo adaptativo e fica separado do priming nativo. O coordenador usa duas extremidades da ocupação média e da razão estimada. O erro cuja faixa contém zero não impõe uma direção. Somente o produtor aplica o comando de ±500 ppm, com slew de 25 ppm/s e prazo de 500 ms. Faixas imprecisas adiam Tracking durante o aquecimento nominal. Fronteiras reais ou evidência insuficiente após ativação interrompem a entrega. [Modelo de incerteza e prova diagnóstica](WASAPI_BACKEND_PLAN.md#f2-i6b2b-drift--controle-com-evidência-intervalar-e-diagnóstico-silent).
+
 ## F2-I6B2A-CHECKPOINT — ocupação na unidade de saída
 
 O diário opcional observa a FIFO real do caminho SILENT usando os contadores emitidos após a conversão e o consumo. Os frames nativos de captura, o descarte de startup, o priming e as liberações nativas ficam em campos próprios. A ocupação pontual exige um corte comum confirmado pelos dois owners. Para um intervalo com histórico completo, o relatório calcula limites conservadores da área da ocupação, mesmo quando lotes se sobrepõem. A integração foi testada com fakes. [Demonstração e limites](WASAPI_BACKEND_PLAN.md#f2-i6b2a-checkpoint--corte-coerente-dos-dois-owners-mta).

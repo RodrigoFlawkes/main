@@ -22,6 +22,8 @@ public sealed class WasapiSilentTests
         public string? FailStep;
         public Action<string>? OnStep;
         public Func<int, WasapiClockReading>? ReadClockOverride;
+        public Func<uint>? PacketSizeOverride, RenderPaddingOverride;
+        public Func<WasapiCaptureBuffer>? CaptureBufferOverride;
         public uint Capacity = 1056, CaptureFlags = 2;
         public uint? PacketFrames, AdvertisedFrames, Padding, PaddingAfterStart, StartupFlags;
         public int PacketLimit = int.MaxValue;
@@ -40,6 +42,7 @@ public sealed class WasapiSilentTests
         private ulong packetPosition;
         private int clockSamples;
         private bool packetDue = true;
+        private uint borrowedCaptureFrames;
         private GCHandle memory;
         public readonly byte[] Data = Enumerable.Repeat((byte)0x5a, 4096 * 8).ToArray();
         private void Step(string step)
@@ -66,7 +69,12 @@ public sealed class WasapiSilentTests
             public (long, long) ReadPeriods() { role.Step("Periods"); return (100000, 30000); }
             public void Initialize() => role.Step("Initialize");
             public (uint, long) ReadBufferInfo() { role.Step("Capacity"); return (role.Capacity, 100000); }
-            public uint ReadPadding() { role.Step("Padding"); return (role.Started ? role.PaddingAfterStart : null) ?? role.Padding ?? 0; }
+            public uint ReadPadding()
+            {
+                role.Step("Padding");
+                if (role.Started && role.RenderPaddingOverride is { } scripted) return scripted();
+                return (role.Started ? role.PaddingAfterStart : null) ?? role.Padding ?? 0;
+            }
             public IWasapiPreparationClock OpenClock() { role.Step("Clock"); return new Clock(role, info); }
             public IWasapiCapturePackets OpenCapture() { role.Step("CaptureService"); return new Capture(role); }
             public IWasapiRenderPackets OpenRender() { role.Step("RenderService"); return new Render(role); }
@@ -96,6 +104,7 @@ public sealed class WasapiSilentTests
             public uint NextPacketSize()
             {
                 role.Step("Next");
+                if (role.PacketSizeOverride is { } scripted) return scripted();
                 if (role.NominalPacketCadence)
                     return role.packetCount < role.PacketLimit && WasapiTime.Now100ns() >= role.StartTime + (role.packetCount + 1L) * 100000
                         ? role.PacketFrames ?? 480
@@ -113,7 +122,16 @@ public sealed class WasapiSilentTests
                     role.EmptyBeforeFirst = false;
                     return new(0x08890001, 0, 0, 0, 0, 0);
                 }
-                role.BufferHeld = true; uint frames = role.PacketFrames ?? 48; role.AcquiredFrames += frames;
+                role.BufferHeld = true;
+                if (role.CaptureBufferOverride is { } scripted)
+                {
+                    var buffer = scripted();
+                    role.borrowedCaptureFrames = buffer.Frames;
+                    role.AcquiredFrames += buffer.Frames;
+                    return buffer with { Data = role.memory.AddrOfPinnedObject() };
+                }
+                uint frames = role.borrowedCaptureFrames = role.PacketFrames ?? 48;
+                role.AcquiredFrames += frames;
                 var packet = new WasapiCaptureBuffer(0, role.NullData ? 0 : role.memory.AddrOfPinnedObject(), frames,
                     role.packetCount++ == 0 ? role.StartupFlags ?? role.CaptureFlags : role.CaptureFlags,
                     role.packetPosition + (role.packetCount == 2 ? role.SecondPacketOffset : 0),
@@ -123,7 +141,7 @@ public sealed class WasapiSilentTests
             }
             public int ReleaseBuffer(uint framesRead)
             {
-                role.Step("ReleaseCapture"); Assert.True(role.BufferHeld); Assert.True(framesRead == 0 || framesRead == (role.PacketFrames ?? 48));
+                role.Step("ReleaseCapture"); Assert.True(role.BufferHeld); Assert.True(framesRead == 0 || framesRead == role.borrowedCaptureFrames);
                 role.CaptureReleases.Enqueue(framesRead);
                 if (role.ReleaseResult == 0) role.BufferHeld = false; role.ReleasedFrames += framesRead; return role.ReleaseResult;
             }
@@ -141,7 +159,7 @@ public sealed class WasapiSilentTests
             {
                 role.Step("ReleaseRender"); Assert.True(role.BufferHeld); Assert.Equal(2u, flags);
                 Assert.InRange(framesWritten, 1u, role.Capacity);
-                Assert.All(role.Data, value => Assert.Equal(0x5a, value)); // O transporte nunca grava amostras na saída WASAPI.
+                Assert.Equal(-1, role.Data.AsSpan().IndexOfAnyExcept((byte)0x5a)); // O transporte nunca grava amostras na saída WASAPI.
                 if (role.ReleaseResult == 0) role.BufferHeld = false; role.ReleasedFrames += framesWritten; return role.ReleaseResult;
             }
             public void Dispose() { role.Step("DisposeRender"); Assert.False(role.BufferHeld); }

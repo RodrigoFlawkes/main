@@ -12,6 +12,10 @@ internal sealed class WasapiSilentPath : IDisposable
     private readonly PcmEncoding captureEncoding;
     public int CapacityFrames { get; }
     public long Produced, Read, Dropped, Underrun;
+    private long fifoPrimingFrames;
+    public long FifoPrimingFrames => Volatile.Read(ref fifoPrimingFrames);
+    public double AppliedPpm => resampler.CurrentPpm;
+    public bool SetTargetPpm(long generation, double ppm) => resampler.SetTargetPpm(generation, ppm);
 
     public static int Budget(WasapiPcm input, WasapiPcm output, uint captureCapacity, uint renderCapacity, long capturePeriod, long renderPeriod)
     {
@@ -52,7 +56,7 @@ internal sealed class WasapiSilentPath : IDisposable
         finally { floats.Clear(); }
     }
 
-    public void Produce(int frames, DeliveryTicket ticket)
+    public void Produce(int frames, DeliveryTicket ticket, bool prefill = false)
     {
         if (!ticket.IsValid) return;
         var floats = input.AsSpan(0, checked(frames * capture.Channels));
@@ -65,6 +69,9 @@ internal sealed class WasapiSilentPath : IDisposable
             int accepted = pipe.Produce(pipeGeneration, converted.AsSpan(offset * playback.Channels, count * playback.Channels));
             Produced += accepted; Dropped += count - accepted; offset += count;
         }
+        // Antes da primeira leitura, os frames escritos são exatamente o preenchimento da FIFO.
+        if (prefill && fifoPrimingFrames == 0 && Produced >= CapacityFrames / 2)
+            Volatile.Write(ref fifoPrimingFrames, Produced);
     }
     // Somente o proprietário do render. Os dados são consumidos e protegidos em memória de trabalho privada, sem cópia para o buffer WASAPI.
     public void Consume(int frames, DeliveryTicket ticket)

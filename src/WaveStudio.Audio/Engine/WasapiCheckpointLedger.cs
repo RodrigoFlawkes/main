@@ -10,12 +10,12 @@ internal enum WasapiCheckpointStatus
 internal readonly record struct WasapiCheckpointCounts(
     long PacketsAcquired, long PacketsReleased, long FramesAcquired, long FramesReleased,
     long PacketsAccepted, long FramesAccepted, long StartupDiscardedPackets, long StartupDiscardedFrames,
-    long FifoFrames, long FifoMissingFrames, long PrimedFrames, long PreTicketRenderFrames = 0)
+    long FifoFrames, long FifoMissingFrames, long PrimedFrames, long PreTicketRenderFrames = 0, long WarmupRenderFrames = 0)
 {
     public long FifoAttemptedFrames => checked(FifoFrames + FifoMissingFrames);
 }
 
-internal readonly record struct WasapiCheckpointOwner(long Sequence, long Completed100ns, WasapiCheckpointCounts Counts);
+internal readonly record struct WasapiCheckpointOwner(long Sequence, long Completed100ns, WasapiCheckpointCounts Counts, WasapiDriftOwner Evidence = default);
 internal readonly record struct WasapiOccupancyBounds(Int128 MinimumFrameTicks, Int128 MaximumFrameTicks, long Duration100ns);
 internal sealed record WasapiCheckpoint(object LedgerIdentity, long Cut100ns,
     WasapiCheckpointOwner Capture, WasapiCheckpointOwner Render, long QueuedFrames, WasapiOccupancyBounds? Mean);
@@ -140,7 +140,7 @@ internal sealed class WasapiCheckpointLedger
             begin = now();
         }
 
-        public WasapiCheckpointStatus Complete(WasapiCheckpointCounts counts)
+        public WasapiCheckpointStatus Complete(WasapiCheckpointCounts counts, WasapiDriftOwner evidence = default)
         {
             if (Fault != WasapiCheckpointStatus.Available) return Fault;
             if ((Version & 1) == 0) return Abort(WasapiCheckpointStatus.InvalidSequence);
@@ -150,7 +150,7 @@ internal sealed class WasapiCheckpointLedger
             if (!Consistent(previous, counts)) return Abort(WasapiCheckpointStatus.InvalidAccounting);
             if (counts.FifoFrames > long.MaxValue - counts.FifoMissingFrames)
                 return Abort(WasapiCheckpointStatus.Overflow);
-            if (!input && counts.FifoAttemptedFrames != counts.FramesReleased - counts.PrimedFrames - counts.PreTicketRenderFrames)
+            if (!input && counts.FifoAttemptedFrames != counts.FramesReleased - counts.PrimedFrames - counts.PreTicketRenderFrames - counts.WarmupRenderFrames)
                 return Abort(WasapiCheckpointStatus.InvalidAccounting);
 
             long sequence = State.Sequence;
@@ -161,7 +161,7 @@ internal sealed class WasapiCheckpointLedger
                 sequence++;
                 events[(int)((sequence - 1) % events.Length)] = new(sequence, begin, end, counts.FifoFrames - previous.FifoFrames);
             }
-            State = new(sequence, end, counts);
+            State = new(sequence, end, counts, evidence);
             Volatile.Write(ref completed, end);
             Interlocked.Increment(ref version);
             return WasapiCheckpointStatus.Available;
@@ -191,11 +191,11 @@ internal sealed class WasapiCheckpointLedger
                 current.FifoFrames < old.FifoFrames || current.FifoMissingFrames < old.FifoMissingFrames ||
                 current.PacketsAccepted < old.PacketsAccepted || current.FramesAccepted < old.FramesAccepted ||
                 current.StartupDiscardedPackets < old.StartupDiscardedPackets || current.StartupDiscardedFrames < old.StartupDiscardedFrames ||
-                current.PrimedFrames < old.PrimedFrames || current.PreTicketRenderFrames < old.PreTicketRenderFrames)
+                current.PrimedFrames < old.PrimedFrames || current.PreTicketRenderFrames < old.PreTicketRenderFrames || current.WarmupRenderFrames < old.WarmupRenderFrames)
                 return false;
 
             if (input)
-                return current.PrimedFrames == 0 && current.PreTicketRenderFrames == 0 &&
+                return current.PrimedFrames == 0 && current.PreTicketRenderFrames == 0 && current.WarmupRenderFrames == 0 &&
                     current.StartupDiscardedPackets <= current.PacketsReleased && current.StartupDiscardedFrames <= current.FramesReleased &&
                     current.PacketsAccepted == current.PacketsReleased - current.StartupDiscardedPackets &&
                     current.FramesAccepted == current.FramesReleased - current.StartupDiscardedFrames &&
@@ -206,7 +206,8 @@ internal sealed class WasapiCheckpointLedger
             return current.PacketsAccepted == 0 && current.FramesAccepted == 0 &&
                 current.StartupDiscardedPackets == 0 && current.StartupDiscardedFrames == 0 &&
                 current.PrimedFrames <= current.FramesReleased &&
-                current.PreTicketRenderFrames <= current.FramesReleased - current.PrimedFrames;
+                current.PreTicketRenderFrames <= current.FramesReleased - current.PrimedFrames &&
+                current.WarmupRenderFrames <= current.FramesReleased - current.PrimedFrames - current.PreTicketRenderFrames;
         }
 
         public WasapiCheckpointStatus Accumulate(WasapiCheckpointOwner baseline, WasapiCheckpointOwner final,

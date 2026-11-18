@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-18 — F2-I6B2B-DRIFT
+
+- Ponte de clocks e pacotes sobre cortes coerentes, controle intervalar exercitado no caminho WASAPI com fakes e preenchimento da FIFO separado do priming do endpoint.
+- Preparada coleta física diagnóstica SILENT de dez segundos em razão nominal, com autorização própria e relatório sanitizado. A ativação do controle no hardware depende de evidência adicional.
+
 ### 2026-11-18 — F2-I6B2A-CHECKPOINT
 
 - Diário WASAPI opt-in com contabilidade em frames de saída, confirmação de corte dos dois owners e limites conservadores para ocupação média.

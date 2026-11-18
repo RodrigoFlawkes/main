@@ -16,9 +16,50 @@ public sealed class WasapiNativeSilentTests(ITestOutputHelper output)
             "A prova ativa exige autorização específica de Start.");
         Assert.True(Environment.GetEnvironmentVariable("WAVESTUDIO_SILENT_PREREQUISITES_CONFIRMED") == "1",
             "Confirme a validação física pertinente, o headset e a ausência de testes/chamadas em andamento.");
-        AssertNoPreviewProcess();
+        var token = TestContext.Current.CancellationToken;
+        var route = await Preflight("WAVESTUDIO_SILENT_CAPTURE_NAME", "WAVESTUDIO_SILENT_HEADSET_NAME", token);
+        await using var session = new WasapiSilentSession(route);
+        var result = await session.RunAsync(TimeSpan.FromSeconds(5), token);
+        Save("wasapi-silent", "native-silent", new { CaptureFormat = route.Capture.Mix, PlaybackFormat = route.Playback.Mix, Result = result });
+        Assert.True(result.TransportObserved, "A prova não confirmou transporte silencioso, movimento e liberação dos dois streams.");
+    }
+
+    [Fact(Explicit = true)]
+    [Trait("Category", "NativeSilentDriftDiagnostic")]
+    public async Task AuthorizedEndpointsCollectSilentDriftEvidenceAtNominalRatio()
+    {
+        Assert.Equal("1", Environment.GetEnvironmentVariable("WAVESTUDIO_DRIFT_DIAGNOSTIC_START_AUTHORIZED"));
+        Assert.Equal("1", Environment.GetEnvironmentVariable("WAVESTUDIO_DRIFT_DIAGNOSTIC_PREREQUISITES_CONFIRMED"));
 
         var token = TestContext.Current.CancellationToken;
+        var route = await Preflight("WAVESTUDIO_DRIFT_DIAGNOSTIC_CAPTURE_NAME", "WAVESTUDIO_DRIFT_DIAGNOSTIC_HEADSET_NAME", token);
+        await using var session = new WasapiSilentSession(route, nativeDriftDiagnostic: true);
+        var result = await session.RunAsync(TimeSpan.FromSeconds(10), token);
+        var diagnostic = session.ReadDriftReport();
+        Save("wasapi-drift-diagnostic", "native-drift", new
+        {
+            CaptureFormat = route.Capture.Mix, PlaybackFormat = route.Playback.Mix, Result = result, Diagnostic = diagnostic
+        });
+
+        Assert.True(result.TransportObserved && result.Capture.CaptureTiming is { Confirmed: true },
+            "A coleta precisa confirmar transporte silencioso, continuidade, duração e limpeza.");
+        Assert.NotNull(diagnostic);
+        Assert.False(diagnostic.CorrectionEnabled);
+        Assert.Equal(0, diagnostic.TrackingUpdates);
+        Assert.True(diagnostic.AvailableCuts >= 60, "A coleta precisa de pelo menos 60 cortes coerentes.");
+        var windows = diagnostic.Recent.Where(s => s.CorrectionInterval is not null).ToArray();
+        Assert.True(windows.Length >= 10 && windows[^1].Cut100ns - windows[0].Cut100ns >= 40_000_000,
+            "A coleta precisa de janelas em trechos separados por pelo menos quatro segundos.");
+        Assert.All(diagnostic.Recent, s =>
+        {
+            Assert.Null(s.RequestedPpm);
+            Assert.Equal(0, s.Capture.Evidence.AppliedPpm);
+        });
+    }
+
+    private static async Task<TransportRoute> Preflight(string captureName, string playbackName, CancellationToken token)
+    {
+        AssertNoPreviewProcess();
         var catalog = await new CoreAudioDeviceService().QueryAsync(token);
         async Task<WasapiEndpointInfo> Probe(EndpointDirection direction, string variable)
         {
@@ -34,20 +75,20 @@ public sealed class WasapiNativeSilentTests(ITestOutputHelper output)
             return probe;
         }
 
-        var capture = await Probe(EndpointDirection.Capture, "WAVESTUDIO_SILENT_CAPTURE_NAME");
-        var playback = await Probe(EndpointDirection.Playback, "WAVESTUDIO_SILENT_HEADSET_NAME");
+        var capture = await Probe(EndpointDirection.Capture, captureName);
+        var playback = await Probe(EndpointDirection.Playback, playbackName);
         AssertNoPreviewProcess();
-        await using var session = new WasapiSilentSession(new TransportRoute(capture, playback));
-        var result = await session.RunAsync(TimeSpan.FromSeconds(5), token);
+        return new(capture, playback);
+    }
 
-        // O snapshot contém evidências numéricas e nomes fixos de etapas, sem IDs de endpoints ou PCM.
-        var report = JsonSerializer.Serialize(new { CaptureFormat = capture.Mix, PlaybackFormat = playback.Mix, Result = result },
-            new JsonSerializerOptions { WriteIndented = true });
+    private void Save(string folder, string prefix, object evidence)
+    {
+        // O relatório registra somente formatos, evidências numéricas e rótulos fixos.
+        var report = JsonSerializer.Serialize(evidence, new JsonSerializerOptions { WriteIndented = true });
         output.WriteLine(report);
-        string directory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../artifacts/wasapi-silent"));
+        string directory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../artifacts", folder));
         Directory.CreateDirectory(directory);
-        File.WriteAllText(Path.Combine(directory, $"native-silent-{Guid.NewGuid():N}.json"), report);
-        Assert.True(result.TransportObserved, "A prova não confirmou transporte silencioso, movimento e liberação dos dois streams.");
+        File.WriteAllText(Path.Combine(directory, $"{prefix}-{Guid.NewGuid():N}.json"), report);
     }
 
     private static void AssertNoPreviewProcess()
