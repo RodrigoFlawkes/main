@@ -45,6 +45,13 @@ internal sealed class WasapiSilentPath : IDisposable
         if (silent) floats.Clear(); else PcmFloatConverter.Decode(bytes, floats, captureFormat, captureEncoding);
     }
 
+    public void DiscardCapture(ReadOnlySpan<byte> bytes, int frames)
+    {
+        var floats = input.AsSpan(0, checked(frames * capture.Channels));
+        try { PcmFloatConverter.Decode(bytes, floats, captureFormat, captureEncoding); }
+        finally { floats.Clear(); }
+    }
+
     public void Produce(int frames, DeliveryTicket ticket)
     {
         if (!ticket.IsValid) return;

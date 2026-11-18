@@ -146,14 +146,17 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
         public uint Capacity;
         public long Period;
         private long latency, acquired, released, acquiredFrames, releasedFrames, primed;
-        private uint padding, flags;
-        private ulong packetPosition, packetQpc;
+        private long acceptedPackets, acceptedFrames, startupDiscardedPackets, startupDiscardedFrames;
+        private uint padding, flags, startupDiscardFlags;
+        private ulong packetPosition, packetQpc, startupDiscardPosition, startupDiscardQpc;
         private string? error, cleanup;
         private WasapiRunningClock? motion;
         private WasapiClockReading? lastClock;
         private int? startResult, stopResult, acquireResult, releaseResult;
-        private long nextClock, startTime;
+        private long nextClock, startTime, startRequested100ns;
         private NativeClockResult? clockStatus;
+        private const long StartupDiscardWindow100ns = 5_000_000; // Bound by the existing packet freshness budget.
+        private const uint Discontinuity = (uint)TransportPacketFlags.Discontinuity;
         private const uint Silent = (uint)TransportPacketFlags.Silent;
         private const int BufferEmpty = 0x08890001;
         public readonly TaskCompletionSource Ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -195,6 +198,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                 while (!Go.IsSet && !session.stop.Wait(2)) { }
                 Check(); device!.ValidateIdentity(info.Endpoint); client!.RevalidateFormat(info.Mix!); Check();
                 if (!input) { FillRender(prime: true); Check(); }
+                startRequested100ns = WasapiTime.Now100ns();
                 startAttempted = true; startResult = client!.Start(); WasapiCallException.RequireSuccess(startResult.Value, "IAudioClient.Start"); started = true;
                 startTime = WasapiTime.Now100ns(); motion = new(info.Endpoint, info.Mix!.SampleRate, startTime); nextClock = startTime + 1000000;
                 Started.TrySetResult(); Check();
@@ -246,19 +250,29 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                 if (buffer.HResult == BufferEmpty) return; // AUDCLNT_S_BUFFER_EMPTY: no packet acquired, no Release.
                 WasapiCallException.RequireSuccess(buffer.HResult, "IAudioCaptureClient.GetBuffer");
                 bufferInFlight = true; acquired++; acquiredFrames += buffer.Frames; uint consumed = 0;
+                bool discardStartup = (buffer.Flags & Discontinuity) != 0;
                 try
                 {
                     flags |= buffer.Flags; packetPosition = buffer.Position; packetQpc = buffer.Qpc100ns;
-                    if (buffer.Frames != nextFrames || buffer.Frames > Capacity || (buffer.Flags & ~Silent) != 0)
-                        throw new InvalidOperationException("Packet inválido/descontínuo ou timestamp incerto.");
                     long now = WasapiTime.Now100ns();
+                    // BUFFER_EMPTY never reaches here. A valid first packet uses up the one-shot exception, too.
+                    if (buffer.Frames != nextFrames || buffer.Frames > Capacity ||
+                        (buffer.Flags & ~(Silent | Discontinuity)) != 0 ||
+                        (discardStartup && (acquired != 1 || now - startRequested100ns > StartupDiscardWindow100ns)))
+                        throw new InvalidOperationException("Packet inválido/descontínuo ou timestamp incerto.");
                     if (buffer.Qpc100ns == 0 || buffer.Qpc100ns > (ulong)now || (ulong)now - buffer.Qpc100ns > 5000000)
                         throw new InvalidOperationException("Timestamp do packet indisponível/obsoleto.");
                     bool silent = (buffer.Flags & Silent) != 0;
                     if (!silent && buffer.Data == 0) throw new InvalidOperationException("Packet sem dados e sem SILENT.");
                     Check();
                     var bytes = silent ? ReadOnlySpan<byte>.Empty : new ReadOnlySpan<byte>((void*)buffer.Data, checked((int)buffer.Frames * info.Mix!.BlockAlign));
-                    session.path!.CopyCapture(bytes, (int)buffer.Frames, silent);
+                    if (discardStartup)
+                    {
+                        // ReleaseBuffer(0) would return this same packet next time. Consume the whole packet
+                        // before advancing, with no sample read for SILENT and no input to the FIR for either case.
+                        if (!silent) session.path!.DiscardCapture(bytes, (int)buffer.Frames);
+                    }
+                    else session.path!.CopyCapture(bytes, (int)buffer.Frames, silent);
                     consumed = buffer.Frames;
                 }
                 finally
@@ -269,6 +283,17 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                     if (hr != 0) { bufferUncertain = true; throw new WasapiCallException("IAudioCaptureClient.ReleaseBuffer", hr); }
                     bufferInFlight = false; released++; releasedFrames += consumed;
                 }
+                if (discardStartup)
+                {
+                    startupDiscardedPackets++;
+                    startupDiscardedFrames += consumed;
+                    startupDiscardFlags = buffer.Flags;
+                    startupDiscardPosition = buffer.Position;
+                    startupDiscardQpc = buffer.Qpc100ns;
+                    continue;
+                }
+                acceptedPackets++;
+                acceptedFrames += consumed;
                 session.path!.Produce((int)consumed, session.ticket);
             }
         }
@@ -318,6 +343,9 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             Capacity, Period, latency, Interlocked.Read(ref acquired), Interlocked.Read(ref released), Interlocked.Read(ref acquiredFrames),
             Interlocked.Read(ref releasedFrames), Interlocked.Read(ref primed), padding, motion?.MovementSamples ?? 0,
             Done.Task.IsCompleted ? lastClock : null, flags, packetPosition, packetQpc, bufferInFlight, error, cleanup,
-            startResult, stopResult, acquireResult, releaseResult, Done.Task.IsCompleted ? clockStatus : null);
+            startResult, stopResult, acquireResult, releaseResult, Done.Task.IsCompleted ? clockStatus : null,
+            Interlocked.Read(ref acceptedPackets), Interlocked.Read(ref acceptedFrames),
+            Interlocked.Read(ref startupDiscardedPackets), Interlocked.Read(ref startupDiscardedFrames),
+            startupDiscardFlags, startupDiscardPosition, startupDiscardQpc);
     }
 }

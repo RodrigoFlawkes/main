@@ -2,7 +2,14 @@
 
 Atualizado em 18/11/2026.
 
-## F2-I6B1-PROOF — tentativa física e parada antecipada
+## Estado atual — F2-I6B1-FIX
+
+- Sincronização inicial por fast-forward até `ea1d499`. O transporte agora descarta apenas o primeiro pacote não vazio com DATA_DISCONTINUITY, isolada ou combinada com SILENT, se chegar dentro de 500 ms a partir da chamada a Start e passar as validações existentes. O pacote é consumido por inteiro e descartado antes do FIR/FIFO. A exceção não se aplica a perdas posteriores.
+- Contabilidade de captura distingue adquirido, liberado, aceito e descartado no startup. A aprovação exige produção e leitura efetivas da FIFO, clocks válidos dos dois streams, janela completa e encerramento confirmado. Detalhes e contratos em [WASAPI_BACKEND_PLAN](docs/WASAPI_BACKEND_PLAN.md).
+- Restore locked com auditoria NuGet e erro para indisponibilidade (NU1900) aprovado. Builds x64 Debug/Release sem avisos ou erros. Testes direcionados WASAPI: 140 aprovados. Regressões: 663 aprovados (644 anteriores + 19 casos líquidos) e dois Explicit excluídos por configuração, zero falhas. Debug 70,669 s e Release 39,645 s. Runner .NET direto com política Restricted preservada, limite de 165 s, seeds 20261114/20261113 e logs em `artifacts/f2-i6b1-fix`. A primeira compilação identificou uma incompatibilidade de tipos numa asserção nova, corrigida para comparar uint.
+- A primeira prova física continua sem aprovação. Nenhum teste Explicit ou caso manual foi repetido nesta correção. F2-I6B1-PROOF-2 depende de nova revisão e autorização específica. F2-I6B2 permanece pendente.
+
+## Histórico — F2-I6B1-PROOF, tentativa física e parada antecipada
 
 - Sincronizado por fast-forward até `dd2e376`. A01, A02, A03, A05, A09, A11 e A12 aprovados por relato do proprietário após a formatação. O proprietário confirmou a autorização de cinco segundos, headset USB conectado, fechamento normal do Wave Studio e ausência de chamadas e testes em andamento. A checagem local confirmou ausência do app e de outro runner, e um endpoint ativo com o nome exato em cada direção.
 - Executado uma vez em Release, SDK 10.0.404, por filtro exato de `WasapiNativeSilentTests.AuthorizedHeadsetAndMicrophoneRunBoundedSilentTransport` e `--explicit only`. O processo de teste foi o único a receber as variáveis opt-in. O código e os binários conferidos correspondem à implementação `bed126c`. Nenhuma regressão ou teste manual foi repetido.

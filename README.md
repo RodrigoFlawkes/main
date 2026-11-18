@@ -26,7 +26,7 @@
 ## Estado atual
 
 <p align="center">
-  <strong>644 testes em Debug</strong> · <strong>644 testes em Release</strong> · <strong>7/7 casos manuais pós-formatação</strong>
+  <strong>663 testes em Debug</strong> · <strong>663 testes em Release</strong> · <strong>7/7 casos manuais pós-formatação</strong>
 </p>
 
 | Marco | Situação |
@@ -36,7 +36,7 @@
 | Recuperação do projeto | Concluída; código sincronizado e ícone original restaurado |
 | F2-I6A — preparação WASAPI | Validada em dispositivos reais, sem iniciar áudio |
 | F2-I6B1 — transporte nativo silencioso | Implementado e publicado em [bed126c](https://github.com/Wave-Universal-Studio/main/commit/bed126c1cd9ad8342bcf01d78c4aec69cbdb8026); testes automatizados aprovados |
-| F2-I6B1-PROOF — primeira prova física silenciosa | Primeira tentativa interrompida na descontinuidade inicial; encerramento seguro confirmado, revisão/correção pendentes |
+| F2-I6B1-PROOF — primeira prova física silenciosa | Primeira tentativa interrompida na descontinuidade inicial; encerramento seguro confirmado, correção de startup validada em testes automatizados; nova prova física pendente |
 | F2-I6B2 — monitoramento audível e sincronização em hardware | Próxima etapa após a prova |
 | Fase 3 — integração com aplicativos externos | Planejada |
 
@@ -202,9 +202,9 @@ WaveStudio.slnx
 
 ### Qualidade e validação
 
-A última implementação publicada, **F2-I6B1**, registrou **644 testes aprovados em Debug e 644 em Release**, com restore locked auditado e builds x64 sem erros ou avisos. Dois testes físicos Explicit ficaram fora das regressões automáticas. Uma falha intermitente de alocação do EQ na primeira rodada Release passou isoladamente e na repetição completa; a causa permanece indeterminada.
+A F2-I6B1-FIX registrou **663 testes aprovados por configuração**, restore locked auditado e builds x64 sem erros ou avisos. Os dois testes físicos Explicit ficaram fora das verificações automatizadas. O histórico da falha intermitente de alocação do EQ na F2-I6B1 está no [status do projeto](PROJECT_STATUS.md).
 
-A preparação nativa F2-I6A validou captura mono e saída estéreo em float32/48 kHz sem Start. A F2-I6B1 reutiliza os recursos existentes e implementa transporte com saída sempre silenciosa, owners MTA, priming, validação de relógios e retenção do bloqueio quando a liberação dos recursos não é confirmada. **Primeira prova física ativa não aprovada (18/11/2026):** ambos os Start e Stop retornaram S_OK, mas o primeiro pacote de captura sinalizou DATA_DISCONTINUITY, levando à parada segura antes dos cinco segundos. Correção pontual de startup e nova validação estão pendentes. [Evidências](docs/WASAPI_BACKEND_PLAN.md#f2-i6b1-proof--resultado-físico-18112026). Não há alegação de latência fim a fim, drift controlado em hardware ou áudio global.
+A preparação nativa F2-I6A validou captura mono e saída estéreo em float32/48 kHz sem Start. A F2-I6B1 reutiliza os recursos existentes e implementa transporte com saída sempre silenciosa, owners MTA, priming, validação de relógios e retenção do bloqueio quando a liberação dos recursos não é confirmada. **Primeira prova física ativa não aprovada (18/11/2026):** ambos os Start e Stop retornaram S_OK, mas o primeiro pacote de captura sinalizou DATA_DISCONTINUITY, levando à parada segura antes dos cinco segundos. A F2-I6B1-FIX limita o descarte ao primeiro pacote elegível e foi validada em testes automatizados. A nova prova física aguarda revisão e autorização. [Evidências](docs/WASAPI_BACKEND_PLAN.md#f2-i6b1-proof--resultado-físico-18112026). Não há alegação de latência fim a fim, drift controlado em hardware ou áudio global.
 
 O histórico de estabilidade inclui CHECKUP-1 (519 testes) e EQ-PROFILE-1 (557 testes por configuração). As sete verificações manuais pós-formatação foram aprovadas pelo proprietário; testes automatizados, relato manual e prova nativa são evidências distintas.
 

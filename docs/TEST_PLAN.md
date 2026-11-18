@@ -1,5 +1,11 @@
 # Plano de testes
 
+## F2-I6B1-FIX — primeira descontinuidade
+
+Os fakes exercitam descarte integral de flags 0x1/0x3 seguido de transporte válido, primeiro pacote limpo, BUFFER_EMPTY anterior, segunda descontinuidade mesmo dentro da janela, pacote tardio, bits inválidos com descontinuidade, tamanho divergente/zero/excessivo, ponteiro ausente e QPC obsoleto/futuro. As asserções verificam liberação inteira ou zero conforme o consumo, contadores, cancelamento antes ou depois do consumo, manutenção do guard após ReleaseBuffer falho e ausência de produção quando só houve descarte. A proteção de render SILENT continua sendo verificada em cada liberação fake. Clocks em movimento com descarte exclusivo e S_FALSE após descarte são insuficientes para aprovar a prova.
+
+O teste físico continua Explicit e excluído das verificações automatizadas desta correção. A nova tentativa requer revisão e autorização específica.
+
 ## F2-I6B1 — transporte silencioso e recuperação
 
 Os testes com fakes verificam owners MTA, ordem de aquisição e liberação, priming antes de Start, padding, buffers vazios/inválidos, flags, clocks incertos/parados/regressivos, cancelamento com chamada em voo, geração, Stop parcial, ReleaseBuffer falho e guard retido. O teste do diagnóstico confirma que completion e falha de Dispose conservam o bloqueio de outras operações.

@@ -55,7 +55,9 @@ internal sealed record WasapiRoleSnapshot(bool Initialized, bool StartAttempted,
     long PacketsAcquired, long PacketsReleased, long FramesAcquired, long FramesReleased, long PrimedFrames,
     uint Padding, long MovementSamples, WasapiClockReading? LastClock, uint PacketFlags,
     ulong PacketPosition, ulong PacketQpc100ns, bool BufferInFlight, string? Error, string? CleanupError,
-    int? StartHResult, int? StopHResult, int? AcquireHResult, int? ReleaseHResult, NativeClockResult? ClockStatus);
+    int? StartHResult, int? StopHResult, int? AcquireHResult, int? ReleaseHResult, NativeClockResult? ClockStatus,
+    long PacketsAccepted, long FramesAccepted, long StartupDiscardedPackets, long StartupDiscardedFrames,
+    uint StartupDiscardFlags, ulong StartupDiscardPosition, ulong StartupDiscardQpc100ns);
 
 internal sealed record WasapiSilentSnapshot(WasapiRoleSnapshot Capture, WasapiRoleSnapshot Playback,
     bool Completed, bool ResourcesRetained, string? Failure, int? HResult,
@@ -66,7 +68,10 @@ internal sealed record WasapiSilentSnapshot(WasapiRoleSnapshot Capture, WasapiRo
     public bool MovementProven => Completed && Failure is null && Capture.MovementSamples >= 2 && Playback.MovementSamples >= 2;
     public bool TransportObserved => DurationReached && MovementProven && Capture.Started && Playback.Started &&
         Capture.StopConfirmed && Playback.StopConfirmed && Capture.Released && Playback.Released &&
-        Capture.FramesReleased > 0 && Playback.PrimedFrames == Playback.CapacityFrames &&
+        Capture.PacketsAccepted > 0 && Capture.FramesAccepted > 0 && ProducedFrames > 0 && ReadFrames > 0 &&
+        Capture.PacketsAccepted + Capture.StartupDiscardedPackets == Capture.PacketsReleased &&
+        Capture.FramesAccepted + Capture.StartupDiscardedFrames == Capture.FramesReleased &&
+        Playback.PrimedFrames == Playback.CapacityFrames &&
         Playback.FramesReleased > Playback.PrimedFrames &&
         Capture.PacketsAcquired == Capture.PacketsReleased && Playback.PacketsAcquired == Playback.PacketsReleased &&
         Capture.FramesAcquired == Capture.FramesReleased && Playback.FramesAcquired == Playback.FramesReleased;
