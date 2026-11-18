@@ -33,7 +33,7 @@ O EQ atual atua **somente sobre a gravação curta reproduzida dentro do Wave St
 | **Microfone** | EQ, boost, redução de ruído, tratamento vocal, alteração de voz e Soundboard |
 | **Mixer** | Mesa digital, faders, canais, barramentos, game/chat balance e gravação |
 | **Reparos** | Diagnóstico e correções seguras de áudio e dispositivos |
-| **Config** | Temas, cores, wallpaper, animações, perfis e atalhos |
+| **Config** | Idiomas, temas, cores, wallpaper, animações, perfis e atalhos |
 
 Também estão previstos integração com aplicativos externos, mix-minus e estudos de compatibilidade com VST3, Equalizer APO e AutoEQ. O acesso Apoiar será voluntário e não bloqueará recursos.
 
@@ -48,7 +48,7 @@ Também estão previstos integração com aplicativos externos, mix-minus e estu
 | Testes automatizados | 737 em Debug e 737 em Release, conforme último relatório |
 | Aceitação manual | 7 casos aprovados; aceitação integral pendente |
 | WASAPI | Transporte silencioso implementado; prova física de 5 s ainda não aprovada |
-| Próxima etapa | Revisão da validação temporal da captura, seguida de nova prova silenciosa após autorização |
+| Próxima etapa | Prova silenciosa instrumentada (F2-I6B1-PROOF-4), após autorização |
 
 A terceira prova física confirmou o transporte real de amostras e a liberação dos recursos, mas foi interrompida por divergência temporal do clock de captura. A validação temporal e a continuidade de pacotes foram exercitadas em replay e simulação. O monitoramento audível e a integração externa ainda dependem da prova física.
 
@@ -97,7 +97,7 @@ dotnet test --solution WaveStudio.slnx -c Debug --no-build
 
 `src/` — aplicação e motor · `tests/` — testes · `assets/` — identidade visual · `docs/` — documentação
 
-Os testes físicos Explicit são separados das regressões e exigem autorização específica.
+Os testes físicos Explicit são separados das regressões e exigem autorização específica. Comentários do código próprio em português brasileiro; internacionalização da UI planejada em Config → Idioma.
 
 ## Documentação
 

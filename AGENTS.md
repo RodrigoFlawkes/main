@@ -9,6 +9,10 @@ Wave Studio é uma aplicação desktop de gerenciamento, processamento e mixagem
 - Comece com poucos projetos e responsabilidades claras; separe UI, abstrações/modelos, acesso ao áudio, DSP e mixagem quando necessário. Não crie bibliotecas vazias apenas para reproduzir uma árvore sugerida.
 - Mantenha processamento de áudio independente da UI, sem I/O bloqueante, alocações desnecessárias ou rede no callback de áudio. Trate cancelamento, descarte, desconexão e mudança de dispositivo.
 
+## Idioma do código e da aplicação — decisão do proprietário (18/11/2026)
+- Todo comentário explicativo escrito pelo projeto em código, testes, scripts e documentação XML deve ser em português brasileiro, inclusive novos arquivos. Preservar identificadores/API, códigos de diagnóstico, contratos de serialização, diretivas, comandos, exemplos literais, licenças e fontes geradas ou de terceiros. Não traduzir strings funcionais inadvertidamente. Traduzir comentários existentes em checkpoint exclusivamente textual separado, com comparação de tokens/sintaxe e regressão; não misturar com correções do motor.
+- UI padrão pt-BR; internacionalização obrigatória em Config → Idioma, com recursos locais por cultura e escolha persistida/seguir Windows. Expor apenas traduções completas verificadas. Ao desenvolver UI após F3, extrair textos para recursos reutilizáveis desde a primeira alteração; não adiar internacionalização para depois do redesign. Ver requisitos. Não alterar motor ou formato de dados por mudança de idioma.
+
 ## Fluxo obrigatório
 1. Leia este arquivo, `docs/REQUIREMENTS.md`, `docs/ARCHITECTURE.md` e `PROJECT_STATUS.md` (crie os dois últimos se ainda não existirem). Inspecione `git status` e preserve alterações do usuário.
 2. Trabalhe em uma etapa pequena do roadmap. Informe objetivo, plano e limitações; implemente a etapa quando autorizado. Não tente implementar todo o produto em um turno.
