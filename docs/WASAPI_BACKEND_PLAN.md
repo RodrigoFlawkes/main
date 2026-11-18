@@ -1,5 +1,27 @@
 # Backend WASAPI — preparação sem áudio e base isolada
 
+## F2-I6B1-PROOF — resultado físico, 18/11/2026
+
+Única tentativa autorizada após validação manual pós-formatação relatada pelo proprietário. Conferidos fechamento do app, isolamento da prova e entrada/saída únicas, ativas e de direção explícita. O apphost Release da implementação `bed126c` executou somente `WaveStudio.Tests.WasapiNativeSilentTests.AuthorizedHeadsetAndMicrophoneRunBoundedSilentTransport` com `--explicit only --filter-method` e o nome completo do método. O runner retornou código 2 e registrou uma falha em 546 ms de execução total.
+
+| Evidência | Captura | Render SILENT |
+| --- | --- | --- |
+| Mix exato | Float32 / 48 kHz / mono, máscara 4, 4 bytes/frame | Float32 / 48 kHz / LR, máscara 3, 8 bytes/frame |
+| Capacidade / padding no snapshot | 1.056 / 480 frames | 1.056 / 1.056 frames |
+| Período padrão / latência reportada | 100.000 / 0 × 100 ns | 100.000 / 0 × 100 ns |
+| Initialize e Start | Confirmados, Start S_OK | Confirmados, Start S_OK |
+| Packets adquiridos / liberados | 1 / 1 | 2 / 2 |
+| Frames adquiridos / liberados | 480 / 0 (packet rejeitado) | 1.536 / 1.536 |
+| Priming em frames | 0 | 1.056 antes do Start |
+| GetBuffer / ReleaseBuffer / Stop | S_OK / S_OK / S_OK | S_OK / S_OK / S_OK |
+| Flags, posição e QPC do pacote de captura | 0x1 DATA_DISCONTINUITY, 20.255.040, QPC 104.707.413.546 × 100 ns | Render submetido com SILENT |
+| Leituras de IAudioClock / avanços validados | Sem leitura registrada / 0 | Sem leitura registrada / 0 |
+| Release final / buffer em voo / erro de limpeza | Confirmado / não / nenhum | Confirmado / não / nenhum |
+
+A falha de estágio `Capture` foi registrada como `InvalidOperationException`, sem HRESULT de falha. O pacote sinalizado foi liberado com zero frames antes que o código lesse seu PCM. A origem da descontinuidade permanece indeterminada. A janela do ticket durou 110.401 × 100 ns (11,0401 ms), com `DurationReached=false`, `MovementProven=false` e `TransportObserved=false`. O QPC do pacote não constitui evidência de IAudioClock em movimento. O FIFO teve capacidade de 4.096 frames, 0 produzidos, 0 lidos, 0 descartados e 480 de underrun interno; esses números e a latência reportada não medem latência fim a fim ou glitches no headset. Nenhum recurso ficou retido.
+
+O relatório numérico ficou em `artifacts/wasapi-silent`, ignorado pelo Git, sem nomes/IDs de endpoints ou PCM. A tentativa terminou sem repetição, mudança de parâmetros ou alteração do código. A prova física requer revisão antes de nova autorização.
+
 ## F2-I6B1 — caminho nativo silencioso, 18/11/2026
 
 A ponte de preparação foi reutilizada com `WasapiResourceScope`. O modo compartilhado continua com flags 0, duração/período 0 e GUID de sessão próprio. Os dois clientes revalidam o endpoint explícito e o formato antes do Start, consultam capacidade e padding efetivos e usam polling limitado a 1–10 ms conforme o período. A prova tem dois owners MTA estáveis, cada qual com seu dispositivo, cliente, clock e serviço de packets. [IDL do Windows SDK](https://github.com/microsoft/win32metadata/blob/main/generation/WinSDK/RecompiledIdlHeaders/um/Audioclient.idl).

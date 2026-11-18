@@ -2,7 +2,14 @@
 
 Atualizado em 18/11/2026.
 
-## F2-I6B1-PROOF — verificações antes da execução
+## F2-I6B1-PROOF — tentativa física e parada antecipada
+
+- Sincronizado por fast-forward até `dd2e376`. A01, A02, A03, A05, A09, A11 e A12 aprovados por relato do proprietário após a formatação. O proprietário confirmou a autorização de cinco segundos, headset USB conectado, fechamento normal do Wave Studio e ausência de chamadas e testes em andamento. A checagem local confirmou ausência do app e de outro runner, e um endpoint ativo com o nome exato em cada direção.
+- Executado uma vez em Release, SDK 10.0.404, por filtro exato de `WasapiNativeSilentTests.AuthorizedHeadsetAndMicrophoneRunBoundedSilentTransport` e `--explicit only`. O processo de teste foi o único a receber as variáveis opt-in. O código e os binários conferidos correspondem à implementação `bed126c`. Nenhuma regressão ou teste manual foi repetido.
+- Resultado: **prova não aprovada**. Ambos os Start retornaram S_OK. O primeiro pacote de captura tinha 480 frames e flag 0x1 (DATA_DISCONTINUITY). O backend interrompeu a observação em 11,0401 ms, rejeitou o pacote antes de ler PCM e chamou ReleaseBuffer(0) com S_OK. A saída permaneceu SILENT, com 1.056 frames de priming e 1.536 frames liberados no total. Sem voz armazenada.
+- Stop retornou S_OK nos dois papéis, com liberação confirmada, nenhum buffer em voo e nenhum recurso retido. A janela de cinco segundos e o critério de movimento dos clocks ficaram sem confirmação. Exit code 2, um teste executado, uma falha. O [plano WASAPI](docs/WASAPI_BACKEND_PLAN.md) registra os dados técnicos. Uma avaliação da descontinuidade antecede nova execução. F2-I6B2 permanece pendente.
+
+## Histórico — preflight inicial da F2-I6B1-PROOF
 
 - Sincronização segura para `07b625d`. Esse commit alterou somente documentação em relação à implementação `bed126c`. Conferidos SDK 10.0.404, Desktop Runtime 10.0.15 e binário Release existente. A descoberta com filtro exato e `--explicit only` encontrou um teste. Nenhuma suíte foi repetida.
 - O proprietário autorizou especificamente a captura de cinco segundos com saída SILENT e sem armazenamento de voz. Nenhum processo Wave Studio apareceu na checagem. O Windows listou mais de uma entrada e saída. A confirmação de headset conectado, par exato de endpoints ativos, fechamento normal, ausência de chamadas/testes e resultados A01/A02/A03/A05/A09/A11/A12 no ambiente reinstalado ainda está pendente.

@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-18 — tentativa física F2-I6B1-PROOF
+
+- Executada uma tentativa autorizada com render exclusivamente SILENT. O primeiro pacote de captura veio com DATA_DISCONTINUITY e encerrou a observação em 11,0401 ms. Ambos os streams pararam e foram liberados. A janela de cinco segundos e o movimento dos clocks ficaram sem confirmação.
+- Registradas as evidências numéricas sem áudio armazenado. F2-I6B2 aguarda revisão da prova.
+
 ### 2026-11-18 — preparação de F2-I6B1-PROOF
 
 - Sincronizada a tarefa de prova nativa. O runner identificou o único teste explícito previsto. Execução física continua condicionada à confirmação do par de dispositivos e à validação física pertinente após a formatação.
