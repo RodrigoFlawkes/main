@@ -47,10 +47,10 @@ Também estão previstos integração com aplicativos externos, mix-minus e estu
 | --- | --- |
 | Testes automatizados | 737 em Debug e 737 em Release, conforme último relatório |
 | Aceitação manual | 7 casos aprovados; aceitação integral pendente |
-| WASAPI | Transporte silencioso implementado; prova física de 5 s ainda não aprovada |
-| Próxima etapa | Prova silenciosa instrumentada (F2-I6B1-PROOF-4), após autorização |
+| WASAPI | Prova física silenciosa 4 aprovada pelo teste com validação por janelas |
+| Próxima etapa | Revisão da prova silenciosa e checkpoint separado de comentários em pt-BR |
 
-A terceira prova física confirmou o transporte real de amostras e a liberação dos recursos, mas foi interrompida por divergência temporal do clock de captura. A validação temporal e a continuidade de pacotes foram exercitadas em replay e simulação. O monitoramento audível e a integração externa ainda dependem da prova física.
+A quarta prova física confirmou as janelas de clock, 499 pacotes contíguos e a liberação dos dois streams. O temporizador de 5 s concluiu, com 4,9997441 s medidos por QPC. O monitoramento audível e a integração externa seguem pendentes de revisão.
 
 [Status detalhado](PROJECT_STATUS.md) · [Próxima tarefa](NEXT_TASK.md) · [Evidências WASAPI](docs/WASAPI_BACKEND_PLAN.md)
 

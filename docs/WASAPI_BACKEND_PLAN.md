@@ -1,5 +1,43 @@
 # Backend WASAPI — preparação sem áudio e base isolada
 
+## F2-I6B1-PROOF-4 — resultado físico, 18/11/2026
+
+Única tentativa autorizada, Release x64 de `f72304e`, preflight em `d41a6f7`, SDK 10.0.404. O proprietário confirmou headset conectado, fechamento normal e ausência de chamadas e testes. Os endpoints foram verificados ativos e únicos por direção. O apphost executou somente `WaveStudio.Tests.WasapiNativeSilentTests.AuthorizedHeadsetAndMicrophoneRunBoundedSilentTransport`, com `--explicit only --filter-method` e opt-in restrito ao processo. A política Restricted foi preservada. Runner código 0, um teste aprovado, 5,595 s totais. `DurationReached=true` indica conclusão do temporizador configurado para 5 s. O QPC mediu 49.997.441 × 100 ns (4,9997441 s), 0,2559 ms abaixo de 5 s exatos.
+
+| Evidência | Captura | Render SILENT |
+| --- | --- | --- |
+| Mix exato | Float32 / 48 kHz / mono, máscara 4, 4 bytes/frame | Float32 / 48 kHz / LR, máscara 3, 8 bytes/frame |
+| Capacidade / padding final | 1.056 / 0 frames | 1.056 / 576 frames |
+| Período padrão / latência reportada | 100.000 / 0 × 100 ns | 100.000 / 0 × 100 ns |
+| Initialize / Start / último GetBuffer / último ReleaseBuffer / Stop | Confirmado / S_OK / S_OK / S_OK / S_OK | Confirmado / S_OK / S_OK / S_OK / S_OK |
+| Pacotes adquiridos / liberados | 500 / 500 | 502 / 502 |
+| Frames adquiridos / liberados | 240.000 / 240.000 | 241.536 / 241.536 |
+| Aceitos / descarte inicial | 499 pacotes, 239.520 frames / 1 pacote, 480 frames | Não se aplica |
+| Flags agregadas / descarte inicial | 0x1 / 0x1 DATA_DISCONTINUITY | Sempre SILENT |
+| Posição e QPC do descarte | 294.428.640 frames / 161.826.458.080 × 100 ns | Não se aplica |
+| Último pacote | 294.668.160 frames / 161.876.351.729 × 100 ns | Não se aplica |
+| Priming | 0 | 1.056 frames |
+| Histórico total / provisórias / sobrescritas | 49 / 6 / 0 | 49 / 0 / 0 |
+| Avanços válidos contabilizados | 42 | 48 |
+| Última posição / frequência de IAudioClock | 944.640 unidades / 192.000 unidades/s | 1.882.008 unidades / 384.000 unidades/s |
+| Último QPC de IAudioClock | 161.875.741.839 × 100 ns | 161.875.691.593 × 100 ns |
+| Liberação / buffer em voo / erro de limpeza | Confirmada / não / nenhum | Confirmada / não / nenhum |
+
+Os dois históricos têm sequência de 1 a 49, com HRESULTs S_OK e `Rejection=null`. Os deltas, restos, idades, erros e limites foram recalculados offline para ambos os clocks. A captura ficou provisória nos índices 14–19. O maior erro curto foi 480,792 frames na leitura 14, com limite nominal de 25,99604 e margem de 480 frames (período de 10 ms). Na leitura 19 o resíduo acumulado já era +0,7824 frame. O maior erro curto em leitura estrita da captura foi 0,7104 frame (limite 26,003552). No render, foi 1,7376 frame (limite 26,021312). A captura confirmou 29 janelas de clock e 298 de pacotes. O maior erro absoluto entre as janelas de clock foi 479,3088 frames, dentro do limite de 486,796544 nessa janela. O render manteve `CaptureTiming=null`.
+
+| Série | Âncora QPC (× 100 ns) | QPC final (× 100 ns) | Duração | Avanço em frames | Resíduo em frames | Limite nominal |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Clock, móvel | 161.854.741.894 | 161.875.741.839 | 2,0999945 s | 100.800 | +0,264 | 505,99868 |
+| Pacotes, móvel | 161.856.251.927 | 161.876.351.729 | 2,0099802 s | 96.480 | +0,9504 | 484,395248 |
+| Clock, acumulado | 161.827.542.151 | 161.875.741.839 | 4,8199688 s | 231.360 | +1,4976 | 1.158,792512 |
+| Pacotes, acumulado | 161.826.552.102 | 161.876.351.729 | 4,9799627 s | 239.040 | +1,7904 | 1.197,191048 |
+
+Os frames na âncora/fim da janela móvel foram 130.560/231.360 no clock e 294.571.680/294.668.160 nos pacotes. Nos acumulados foram 0/231.360 no clock e 294.429.120/294.668.160 nos pacotes. A sobreposição de 4,8199688 s deu `|231360 − 239040 × (48199688 / 49799627)| = 0,2352788707` frame, dentro de 1.158,792512. `Confirmed=true`. O relatório confirma 499 pacotes contíguos, igual aos 499 aceitos, com próxima posição esperada 294.668.640. O avanço entre os inícios dos pacotes, mais o último pacote de 480 frames, fecha em 239.520 frames. Somado o descarte de 480 frames, fecha com os 240.000 liberados.
+
+FIFO nominal de 4.096 frames, 239.520 produzidos, 239.040 lidos, zero drops e 960 frames de underrun interno. Após 1.056 frames de priming, o render liberou mais 240.480 frames SILENT. Esses contadores e a latência reportada pelo WASAPI não são medições de latência fim a fim. O resultado registrou `Completed`, `MovementProven` e `TransportObserved` verdadeiros e `ResourcesRetained=false`. Os dois streams confirmaram Stop e liberação.
+
+O JSON original fica local em `artifacts/wasapi-silent`, ignorado pelo Git, sem nomes, IDs ou PCM. Nenhuma voz foi armazenada. Código, parâmetros e proteções preservados, sem repetição da prova ou regressão completa. A tentativa verifica a política temporal no cenário testado e não estabelece causa para as rejeições anteriores, latência acústica ou controle de drift. F2-I6B2 e F3 aguardam revisão.
+
 ## F2-I6B1-CLOCK-WINDOW — validação temporal da captura silenciosa, 18/11/2026
 
 O replay offline usa as 11 leituras reais de cada papel. A fixture subtrai a mesma origem das marcas QPC e locais, retém posições, frequência e HRESULTs e não contém PCM ou IDs. O modo estrito reproduz a rejeição: 21.120 unidades a 192.000 unidades/s equivalem a 5.280 frames. Os 120,013 ms do QPC implicam 5.760,624 frames a 48 kHz. O resíduo assinado é −480,624 frames, com limite de 30,80312. Na captura, os nove intervalos anteriores avançaram exatamente 4.800 frames cada, com erro absoluto máximo de 0,5472 frame; o resíduo acumulado desde a primeira leitura foi +0,9648 antes da rejeição e −479,6592 na rejeição. No render, o resíduo terminal acumulado foi −0,5952 frame e o erro máximo por leitura foi 1,368. A idade QPC da captura caiu de 20,0004 a 0,3637 ms, com 100,3763 ms entre as leituras no QPC local e 110 ms de posição convertida. A variação é compatível com uma mudança de fase de aproximadamente um período de 10 ms, sem identificar sua origem ou provar drift sustentado. O histórico físico termina em ~1,11 s e não contém a série de pacotes para confirmar continuidade. Não é possível determinar o ramo da prova 2 com esses dados.

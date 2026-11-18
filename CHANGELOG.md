@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-18 — F2-I6B1-PROOF-4
+
+- Prova física silenciosa aprovada pelo teste, com temporizador de 5 s concluído e 4,9997441 s medidos por QPC. Confirmadas janelas de clock, continuidade de 499 pacotes e corroboração terminal.
+- Os dois streams confirmaram Stop e liberação. Nenhuma voz foi armazenada. Código preservado e F2-I6B2 pendente.
+
 ### 2026-11-18 — F2-I6B1-CLOCK-WINDOW
 
 - Captura da prova silenciosa com orçamento provisório ligado ao período consultado, âncora fixa, janelas móveis de taxa e confirmação por continuidade dos pacotes.

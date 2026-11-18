@@ -2,7 +2,15 @@
 
 Atualizado em 18/11/2026.
 
-## Estado atual — F2-I6B1-CLOCK-WINDOW
+## Estado atual — F2-I6B1-PROOF-4 aprovada pelo teste
+
+- Fast-forward para `d41a6f7`. Release x64 existente da implementação `f72304e`, SDK 10.0.404 e filtro de um único teste conferidos. Autorização específica e confirmação de headset conectado, Wave Studio fechado normalmente e ausência de chamadas/testes. Verificados endpoints exatos, ativos e únicos por direção e ausência de outros runners. Os sete manuais pós-formatação permanecem aprovados por relato.
+- A tentativa única SILENT passou com `TransportObserved=true`, `DurationReached=true` e `CaptureTiming.Confirmed=true`. O temporizador configurado para 5 s concluiu. O QPC registrou 4,9997441 s, 0,2559 ms abaixo do nominal. Runner com código 0, um teste aprovado.
+- A captura aceitou 499 pacotes contíguos (239.520 frames) e descartou o primeiro pacote descontínuo (480 frames). Houve 29 janelas de clock, 298 de pacotes e erro terminal de corroboração de 0,235279 frame, com limite de 1.158,792512. O histórico registra seis leituras provisórias na captura, sem rejeição. O render permaneceu estrito.
+- Start/Stop retornaram S_OK em ambos os papéis. Streams liberados, sem recursos retidos ou buffers em voo. Saída SILENT e nenhuma voz armazenada. [Medições, históricos e contabilidade](docs/WASAPI_BACKEND_PLAN.md#f2-i6b1-proof-4--resultado-físico-18112026).
+- Código e critérios preservados. Sem repetição da prova, build ou regressão completa. Resultado sujeito a revisão, com F2-I6B2 e F3 pendentes. O resultado não determina a origem das falhas anteriores nem valida drift físico ou monitoramento audível.
+
+## Histórico — F2-I6B1-CLOCK-WINDOW
 
 - Sincronização inicial por fast-forward a `38d3e5d`. O replay dos 11 pontos por papel reproduziu os −480,624 frames do intervalo rejeitado e −479,6592 frames desde a primeira leitura da captura. O desvio é compatível com variação de aproximadamente um período, sem explicação física comprovada. O replay classifica a última leitura como provisória; os dados da prova 3 continuam insuficientes para aprovação.
 - Implementação restrita à captura SILENT. Margem de até um período consultado no curto prazo e desde âncora fixa, com validação nominal em janelas móveis de 2–2,5 s e corroboração pelos deltas dos pacotes contíguos já liberados. A política estrita continua no render, na simulação e no estimador. [Análise, fórmula e limites](docs/WASAPI_BACKEND_PLAN.md).

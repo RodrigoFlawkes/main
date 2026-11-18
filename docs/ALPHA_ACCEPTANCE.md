@@ -210,3 +210,7 @@ O resultado dos sete casos manuais pós-formatação permanece aprovado por rela
 ## Terceira tentativa física F2-I6B1-PROOF-3 — 18/11/2026
 
 Os sete casos manuais pós-formatação permanecem aprovados por relato. A prova nativa separada descartou o primeiro pacote marcado e aceitou 111 pacotes seguintes. A captura encerrou a janela aos 1.110,3045 ms por `AdvanceOutsideTolerance` no clock. Os dois streams foram liberados, a saída permaneceu SILENT e nenhuma voz foi armazenada. A prova de cinco segundos permanece sem aprovação. [Histórico e cálculo](WASAPI_BACKEND_PLAN.md#f2-i6b1-proof-3--resultado-físico-18112026).
+
+## Quarta tentativa física F2-I6B1-PROOF-4 — 18/11/2026
+
+O teste explícito da prova silenciosa foi aprovado. O temporizador de 5 s concluiu e o QPC mediu 4,9997441 s. Clock e continuidade de pacotes foram confirmados. A saída permaneceu SILENT, os streams foram liberados e nenhuma voz foi armazenada. Os sete casos manuais permanecem aprovados por relato. A aceitação integral da Alpha e o monitoramento audível seguem pendentes. [Evidências técnicas](WASAPI_BACKEND_PLAN.md#f2-i6b1-proof-4--resultado-físico-18112026).
