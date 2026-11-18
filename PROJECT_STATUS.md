@@ -2,7 +2,14 @@
 
 Atualizado em 18/11/2026.
 
-## Estado atual — F2-I6B1-FIX
+## Estado atual — F2-I6B1-PROOF-2 não aprovada
+
+- Sincronização inicial por fast-forward para `212a60c`. Binários Release x64 existentes da correção `c7ff2c9`, SDK 10.0.404 e descoberta de um único teste com filtro exato conferidos. Autorização específica registrada. O proprietário confirmou headset conectado, Wave Studio fechado normalmente e ausência de chamadas ou testes. Verificados endpoints exatos, únicos e ativos por direção, além da ausência do app e de outros runners. A01/A02/A03/A05/A09/A11/A12 permanecem aprovados por relato.
+- Uma execução `Explicit`, com saída sempre SILENT. O primeiro pacote foi descartado integralmente (480 frames, DATA_DISCONTINUITY, 0x1). A captura aceitou 41 pacotes seguintes, com 19.680 frames produzidos e 18.720 lidos na FIFO. O descarte inicial funcionou nesta tentativa.
+- A observação parou em **412,5004 ms** após `InvalidPosition` no clock da captura, apesar de o último GetPosition ter retornado S_OK. Houve dois avanços válidos na captura e três no render antes da rejeição. O snapshot não identifica a condição exata que disparou `InvalidPosition`. `DurationReached=false`, `MovementProven=false` e `TransportObserved=false`. Runner: um teste, uma falha, código 2.
+- Ambos Start e Stop retornaram S_OK. O encerramento liberou os dois streams, sem buffers em voo ou recursos retidos e sem armazenamento de voz. Evidências numéricas no [plano WASAPI](docs/WASAPI_BACKEND_PLAN.md). Não houve repetição, mudança de código ou regressão completa. A prova requer revisão, e F2-I6B2 e F3 permanecem pendentes.
+
+## Histórico — F2-I6B1-FIX
 
 - Sincronização inicial por fast-forward até `ea1d499`. O transporte agora descarta apenas o primeiro pacote não vazio com DATA_DISCONTINUITY, isolada ou combinada com SILENT, se chegar dentro de 500 ms a partir da chamada a Start e passar as validações existentes. O pacote é consumido por inteiro e descartado antes do FIR/FIFO. A exceção não se aplica a perdas posteriores.
 - Contabilidade de captura distingue adquirido, liberado, aceito e descartado no startup. A aprovação exige produção e leitura efetivas da FIFO, clocks válidos dos dois streams, janela completa e encerramento confirmado. Detalhes e contratos em [WASAPI_BACKEND_PLAN](docs/WASAPI_BACKEND_PLAN.md).

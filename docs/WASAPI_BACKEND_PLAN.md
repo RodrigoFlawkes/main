@@ -1,5 +1,33 @@
 # Backend WASAPI — preparação sem áudio e base isolada
 
+## F2-I6B1-PROOF-2 — resultado físico, 18/11/2026
+
+Única tentativa física autorizada com Release x64 da correção `c7ff2c9`, SDK 10.0.404 e preflight em `212a60c`. A seleção exata foi confirmada ativa e única por direção. O proprietário confirmou headset conectado, Wave Studio fechado normalmente e ausência de chamadas e testes. A descoberta encontrou apenas `WaveStudio.Tests.WasapiNativeSilentTests.AuthorizedHeadsetAndMicrophoneRunBoundedSilentTransport`. Execução com `--explicit only --filter-method` e esse nome completo, variáveis opt-in somente no processo de teste. Runner retornou código 2, uma falha em 941 ms totais.
+
+| Evidência | Captura | Render SILENT |
+| --- | --- | --- |
+| Mix exato | Float32 / 48 kHz / mono, máscara 4, 4 bytes/frame | Float32 / 48 kHz / LR, máscara 3, 8 bytes/frame |
+| Capacidade / padding no snapshot | 1.056 / 480 frames | 1.056 / 576 frames |
+| Período padrão / latência reportada | 100.000 / 0 × 100 ns | 100.000 / 0 × 100 ns |
+| Initialize / Start | Confirmado / S_OK | Confirmado / S_OK |
+| Pacotes adquiridos / liberados | 42 / 42 | 43 / 43 |
+| Frames adquiridos / liberados | 20.160 / 20.160 | 21.216 / 21.216 |
+| Captura aceita / descarte inicial | 41 pacotes, 19.680 frames / 1 pacote, 480 frames | Não se aplica |
+| Flags agregadas / descarte inicial | 0x1 / 0x1 DATA_DISCONTINUITY, posição 103.502.400, QPC 122.050.472.784 × 100 ns | Saída sempre SILENT |
+| Último pacote de captura | Posição 103.522.080, QPC 122.054.572.600 × 100 ns | Não se aplica |
+| Priming | 0 | 1.056 frames antes do Start |
+| Último GetBuffer / ReleaseBuffer / Stop | S_OK / S_OK / S_OK | S_OK / S_OK / S_OK |
+| Último GetFrequency | S_OK, 192.000 unidades/s | S_OK, 384.000 unidades/s |
+| Último GetPosition | S_OK, 80.640 unidades, QPC 122.054.762.600 × 100 ns | S_OK, 151.240 unidades, QPC 122.054.640.215 × 100 ns |
+| Avanços válidos antes da parada / estado final do clock | 2 / InvalidPosition (6) | 3 / Valid (0) |
+| Liberação final / buffer em voo / erro de limpeza | Confirmada / não / nenhum | Confirmada / não / nenhum |
+
+O descarte inicial foi contabilizado integralmente. A soma de 19.680 frames aceitos e 480 descartados corresponde aos 20.160 frames liberados no endpoint, em 42 pacotes. A FIFO nominal de 4.096 frames registrou 19.680 produzidos, 18.720 lidos, 0 drops e 960 frames de underrun. A diferença de 960 frames entre produção e leitura é uma contagem distinta do underrun. Esses números e a latência reportada pelo WASAPI não medem latência fim a fim.
+
+O estágio `Capture` registrou `InvalidOperationException` sem HRESULT de falha. O HRESULT S_OK indica sucesso da chamada nativa, enquanto `InvalidPosition` registra a rejeição pelo validador. O relatório conserva a última leitura, sem os deltas anteriores necessários para identificar qual regra causou a rejeição. A observação terminou em 4.125.004 × 100 ns (412,5004 ms), com `DurationReached=false`, `MovementProven=false` e `TransportObserved=false`. A prova de cinco segundos segue sem aprovação. O snapshot registra `Completed=true` e `ResourcesRetained=false`.
+
+O JSON numérico permanece em `artifacts/wasapi-silent`, ignorado pelo Git, sem nomes/IDs de endpoints ou PCM. A tentativa não foi repetida e os critérios de clock e proteção permanecem os mesmos. A evidência sustenta o descarte inicial nessa execução, sem demonstrar drift controlado ou habilitar F2-I6B2.
+
 ## F2-I6B1-FIX — descarte na inicialização, 18/11/2026
 
 O WASAPI pode sinalizar DATA_DISCONTINUITY em uma transição de estado ou em uma falha de temporização. A origem da flag registrada na primeira prova permanece indeterminada. O backend pode consumir e descartar somente o primeiro pacote não vazio da sessão se as flags forem DATA_DISCONTINUITY ou DATA_DISCONTINUITY | SILENT. O limite de 500 ms começa imediatamente antes da chamada de Start da captura, inclui o tempo da chamada nativa e usa o mesmo teto da validação de frescor. É uma política desta prova. BUFFER_EMPTY não ocupa essa oportunidade, e um primeiro pacote limpo segue o fluxo normal. [Flags do WASAPI](https://learn.microsoft.com/en-us/windows/win32/api/audioclient/ne-audioclient-_audclnt_bufferflags).

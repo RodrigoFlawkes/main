@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-18 — segunda prova física F2-I6B1-PROOF-2
+
+- O primeiro pacote descontínuo foi descartado por inteiro. O transporte aceitou 41 pacotes seguintes e produziu e leu frames na FIFO com saída SILENT.
+- A prova parou com `InvalidPosition` no clock da captura após 412,5004 ms e ficou sem aprovação. Ambos os streams confirmaram Stop e liberação. Nenhuma voz foi armazenada.
+
 ### 2026-11-18 — F2-I6B1-FIX, primeira descontinuidade WASAPI
 
 - Descarte de um único pacote inicial descontínuo válido dentro de 500 ms, com liberação integral no owner e contagem separada. Pacotes descontínuos posteriores ou inválidos continuam encerrando a operação.
