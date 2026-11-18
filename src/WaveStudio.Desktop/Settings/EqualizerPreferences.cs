@@ -83,7 +83,7 @@ internal sealed class EqualizerPreferences
     public EqualizerPreferences DeleteSelected()
     {
         var selected = Find(SelectedProfileId);
-        // Deleting a name does not change the currently heard parameters or start playback.
+        // Excluir um nome não altera os parâmetros que estão sendo ouvidos nem inicia reprodução.
         return new(Current, Profiles.Where(p => p.Id != selected.Id).ToArray(), null);
     }
     private EqualizerProfile Find(string? id) => Profiles.SingleOrDefault(p => p.Id == id)

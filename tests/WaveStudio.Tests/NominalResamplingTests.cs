@@ -134,7 +134,7 @@ public sealed class NominalResamplingTests
         Assert.Equal(frames, resampler.InputFrames);
         Assert.Equal(result.LongLength, resampler.OutputFrames);
         Assert.All(result, value => Assert.Equal(0, value));
-        // Verify long-duration accounting without allocating or filtering a full day of audio.
+        // Verifica a contagem de longa duração sem alocar ou filtrar um dia inteiro de áudio.
         long dayFrames = (long)inputRate * 86400 + 17;
         Assert.Equal(((dayFrames + 160) * outputRate + inputRate - 1) / inputRate,
             resampler.ExpectedOutputFrames(dayFrames));
@@ -158,7 +158,7 @@ public sealed class NominalResamplingTests
         Assert.Equal(new float[] { 1, -1 }, destination);
         var extreme = Convert(new(44100, 48000, 1), Enumerable.Repeat(float.MaxValue, 2000).ToArray(), 1);
         Assert.All(extreme, value => Assert.True(float.IsFinite(value)));
-        // Raw FIR output is deliberately not normalized/clipped to the final playback range.
+        // A saída bruta do FIR intencionalmente não recebe normalização ou clipping na faixa final de reprodução.
         Assert.Contains(extreme, value => value > 1);
         NeutralProcessor.Process(extreme);
         Assert.All(extreme, value => Assert.InRange(value, -1, 1));

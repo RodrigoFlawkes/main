@@ -4,7 +4,7 @@ using WaveStudio.Audio.Dsp;
 
 namespace WaveStudio.Audio;
 
-// A single short diagnostic clip. No file, settings or network access.
+// Um único clipe curto de diagnóstico. Sem acesso a arquivos, configurações ou rede.
 internal sealed class BoundedTestAudio : IDisposable
 {
     internal const int MaximumSeconds = 10;
@@ -116,7 +116,7 @@ internal sealed class BoundedTestAudio : IDisposable
                 }
             }
             position += size;
-            // Invalidation during a read also suppresses the packet already copied.
+            // A invalidação durante uma leitura também suprime o pacote já copiado.
             if (!isCurrent()) { destination.Clear(); return 0; }
             return size;
         }

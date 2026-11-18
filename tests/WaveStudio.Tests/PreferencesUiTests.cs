@@ -51,8 +51,8 @@ public sealed class PreferencesUiTests(ITestOutputHelper output)
         }) { IsBackground = true };
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
-        // A real message loop and asynchronous polling avoid reentrant DoEvents.
-        // The deadline remains outside the STA; the process watchdog is the last resort.
+        // Um laço real de mensagens e consultas assíncronas evitam a reentrância de DoEvents.
+        // O prazo é controlado fora da STA. O watchdog do processo é o último recurso.
         await completion.Task.WaitAsync(TimeSpan.FromSeconds(20), TestContext.Current.CancellationToken);
         Assert.True(thread.Join(TimeSpan.FromSeconds(2)), "A thread STA não terminou após o teste.");
     }
@@ -285,7 +285,7 @@ public sealed class PreferencesUiTests(ITestOutputHelper output)
             await PumpUntilAsync(() => Descendants(form).OfType<CheckBox>().All(check => check.Enabled)
                 && Descendants(form).OfType<DevicePanel>().All(panel => panel.Enabled));
             Assert.All(Descendants(form).OfType<DevicePanel>(), panel => Assert.True(panel.Enabled));
-            Assert.Equal(FormWindowState.Normal, form.WindowState); // No maximization using fictitious area.
+            Assert.Equal(FormWindowState.Normal, form.WindowState); // Sem maximizar com uma área fictícia.
             if (scenario is 0 or 1 or 5)
                 Assert.Contains(Descendants(form).OfType<Label>(), label => label.Text.Contains("Área útil da tela indisponível"));
             else

@@ -2,7 +2,7 @@ using NAudio.CoreAudioApi;
 
 namespace WaveStudio.Audio;
 
-/// <summary>Created, read and disposed only on its owning MTA worker.</summary>
+/// <summary>A criação, a leitura e o descarte ocorrem somente no worker MTA proprietário.</summary>
 public sealed class CoreAudioWatchBackend : IAudioWatchBackend
 {
     private readonly MMDeviceEnumerator enumerator = new();

@@ -35,7 +35,7 @@ public sealed record SetEndpointVolume(double Percent) : EndpointCommand;
 public sealed record SetEndpointMute(bool Muted) : EndpointCommand;
 public sealed record SetEndpointBalance(double Position) : EndpointCommand;
 
-/// <summary>All access must occur on the worker that opened the endpoint.</summary>
+/// <summary>Todo acesso deve ocorrer no worker que abriu o endpoint.</summary>
 public interface IEndpointVolumeAccess : IDisposable
 {
     double VolumeScalar { get; set; }

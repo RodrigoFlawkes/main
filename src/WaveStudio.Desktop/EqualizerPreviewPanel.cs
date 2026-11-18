@@ -25,7 +25,7 @@ internal sealed class EqualizerPreviewPanel : UserControl
     public EqualizerPreferences? CapturePreferences()
     {
         if (!loaded) return null;
-        // Value validates any pending numeric edit before the closing flush takes its snapshot.
+        // Value valida qualquer edição numérica pendente antes que a gravação de encerramento capture o estado.
         _ = Preamp.Value;
         return preferences;
     }

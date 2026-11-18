@@ -1,6 +1,6 @@
 namespace WaveStudio.Audio.Engine;
 
-// Reuses the sample-domain FIR and existing SPSC. There is deliberately no native output encoder.
+// Reutiliza o FIR no domínio das amostras e a SPSC existente. Intencionalmente não há codificador para a saída nativa.
 internal sealed class WasapiSilentPath : IDisposable
 {
     private readonly AdaptiveResampler resampler;
@@ -38,7 +38,7 @@ internal sealed class WasapiSilentPath : IDisposable
         input = new float[4096 * capture.Channels]; converted = new float[8192 * playback.Channels]; render = new float[4096 * playback.Channels];
         pipeGeneration = pipe.Start();
     }
-    // Capture owner only. Borrowed bytes are never stored or transferred to the consumer.
+    // Somente o proprietário da captura acessa os bytes emprestados, que não são retidos nem transferidos ao consumidor.
     public void CopyCapture(ReadOnlySpan<byte> bytes, int frames, bool silent)
     {
         var floats = input.AsSpan(0, checked(frames * capture.Channels));
@@ -66,7 +66,7 @@ internal sealed class WasapiSilentPath : IDisposable
             Produced += accepted; Dropped += count - accepted; offset += count;
         }
     }
-    // Render owner only. Data is consumed/protected in private scratch, never copied into a WASAPI buffer.
+    // Somente o proprietário do render. Os dados são consumidos e protegidos em memória de trabalho privada, sem cópia para o buffer WASAPI.
     public void Consume(int frames, DeliveryTicket ticket)
     {
         if (!ticket.IsValid) return;
@@ -76,7 +76,7 @@ internal sealed class WasapiSilentPath : IDisposable
     }
     public void Dispose()
     {
-        // Called only after both owners have exited and no participant can touch the arrays.
+        // Chamado somente após a saída dos dois proprietários, quando nenhum participante pode acessar os arrays.
         pipe.Stop(); pipe.Dispose(); resampler.Reset(generation + 1); resampler.Stop(generation + 1);
         Array.Clear(input); Array.Clear(converted); Array.Clear(render);
     }

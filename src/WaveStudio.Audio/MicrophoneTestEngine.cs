@@ -4,7 +4,7 @@ using WaveStudio.Audio.Engine;
 
 namespace WaveStudio.Audio;
 
-// Owner-thread state machine; callbacks can only append to their bounded, generation-gated clip.
+// Máquina de estados da thread proprietária. Os callbacks só podem acrescentar dados ao clipe limitado e protegido pela geração.
 internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<long, bool> isCurrent, TransportActivityGuard? activityGuard = null)
 {
     private readonly TransportActivityGuard activities = activityGuard ?? new();
@@ -62,7 +62,7 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
             startedAt = now;
             elapsed = TimeSpan.Zero;
             discard = false;
-            captureStarted = true; // A failing Start may already have created a callback thread.
+            captureStarted = true; // Uma falha em Start pode ocorrer depois da criação da thread de callback.
             capture.Start(data => { if (Current()) recording.Append(data); });
             State = MicrophoneTestState.Recording;
             message = "GRAVANDO — fale por até 10 segundos. Clique em Parar quando terminar.";
@@ -129,8 +129,8 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
             (elapsed >= TimeSpan.FromSeconds(BoundedTestAudio.MaximumSeconds) || clip?.Full == true)) Stop();
         if (State == MicrophoneTestState.Playing && elapsed >= TimeSpan.FromSeconds(BoundedTestAudio.MaximumSeconds + 2)) Stop();
         if (stopRequested) RequestStop();
-        // Never short-circuit cleanup because the stream already has an error.
-        // Each resource is released only once and only after completion (or before Start).
+        // Um erro no stream não interrompe a limpeza dos recursos.
+        // Cada recurso é liberado uma única vez, somente após a conclusão ou antes de Start.
         if (capture is not null && (!captureStarted || capture.Completed))
         {
             try { if (capture.Error is { } error) { primaryError ??= error; discard = true; } }
@@ -150,7 +150,7 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
     private void Finish()
     {
         if (Busy) throw new InvalidOperationException("Término exige quiescência do diagnóstico.");
-        // Completion establishes callback quiescence. A failed Dispose leaves native ownership uncertain.
+        // A conclusão confirma que os callbacks estão inativos. Uma falha em Dispose deixa incerta a propriedade do recurso nativo.
         if (cleanupError is null)
         {
             activity?.Dispose();

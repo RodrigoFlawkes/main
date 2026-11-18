@@ -52,6 +52,6 @@ public sealed class CoreAudioVolumeAccess : IEndpointVolumeAccess
 
     public void SetChannelLevel(int channel, double level) => volume.Channels[channel].VolumeLevelScalar = (float)level;
 
-    // MMDevice owns AudioEndpointVolume. Its Dispose unregisters the native callback as well.
+    // MMDevice é responsável por AudioEndpointVolume. Seu Dispose também cancela o registro do callback nativo.
     public void Dispose() => device.Dispose();
 }

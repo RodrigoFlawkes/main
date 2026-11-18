@@ -140,7 +140,7 @@ public sealed class AudioWatchWorker : IAsyncDisposable
             if (!stopping) { stopping = true; wake.Set(); }
         }
         await completion.Task.ConfigureAwait(false);
-        // WaitHandle is kept until all concurrent disposers have stopped signaling it.
+        // O WaitHandle permanece disponível até que todas as rotinas de descarte concorrentes parem de sinalizá-lo.
         lock (sync) wake.Dispose();
     }
 }

@@ -26,7 +26,7 @@ public sealed class CoreAudioSessionEndpoint : IApplicationSessionEndpoint
 
     public int Count => sessions.Count;
     public IApplicationSessionAccess Open(int index) => new NativeSession(endpointId, sessions[index]);
-    // The device owns the manager, which owns the collection and its internal notification registration.
+    // O dispositivo é responsável pelo gerenciador, que é responsável pela coleção e pelo registro interno de notificações.
     public void Dispose() => device.Dispose();
 
     private sealed class NativeSession(string endpointId, AudioSessionControl control) : IApplicationSessionAccess

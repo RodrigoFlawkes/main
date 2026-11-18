@@ -2,7 +2,7 @@ using System.Buffers.Binary;
 
 namespace WaveStudio.Audio.Engine;
 
-// Internal foundation: deliberately not connected to the desktop or a WASAPI backend.
+// Base interna, intencionalmente sem conexão com a interface desktop ou com um backend WASAPI.
 internal sealed record PcmFloatFormat
 {
     public int SampleRate { get; }

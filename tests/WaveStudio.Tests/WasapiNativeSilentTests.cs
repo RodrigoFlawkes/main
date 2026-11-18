@@ -40,7 +40,7 @@ public sealed class WasapiNativeSilentTests(ITestOutputHelper output)
         await using var session = new WasapiSilentSession(new TransportRoute(capture, playback));
         var result = await session.RunAsync(TimeSpan.FromSeconds(5), token);
 
-        // This snapshot contains numeric evidence and fixed stage names, without endpoint IDs or PCM.
+        // O snapshot contém evidências numéricas e nomes fixos de etapas, sem IDs de endpoints ou PCM.
         var report = JsonSerializer.Serialize(new { CaptureFormat = capture.Mix, PlaybackFormat = playback.Mix, Result = result },
             new JsonSerializerOptions { WriteIndented = true });
         output.WriteLine(report);

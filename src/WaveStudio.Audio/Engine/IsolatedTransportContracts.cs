@@ -4,7 +4,7 @@ internal enum TransportState { Closed, Preparing, Priming, Running, Stopping, Fa
 internal enum TransportFault { None, Canceled, Backend, Clock, Discontinuity, Protocol, Boundary, QuiescenceTimeout, SnapshotUnavailable }
 internal enum AudioActivity { ShortDiagnostic = 1, IsolatedTransport = 2, NativePreparation = 3 }
 
-// Physical diagnostic and preparation use this process-wide arbiter. Other processes need separate isolation.
+// O diagnóstico físico e a preparação compartilham este controle de exclusão no processo. Outros processos exigem isolamento próprio.
 internal sealed class TransportActivityGuard
 {
     public static TransportActivityGuard Shared { get; } = new();
@@ -21,7 +21,7 @@ internal sealed class TransportActivityGuard
     }
 }
 
-// Invalidated before Stop waits for the worker/callbacks. Submit must check this at its delivery boundary.
+// O ticket é invalidado antes de Stop aguardar o worker e os callbacks. Submit deve conferi-lo no ponto de entrega.
 internal sealed class DeliveryTicket(TransportRoute route)
 {
     private int valid;
@@ -35,9 +35,9 @@ internal sealed class DeliveryTicket(TransportRoute route)
 internal delegate void CapturePacket(ReadOnlySpan<byte> bytes, int frames, NativeClockSample clock, long arrival100ns);
 internal delegate void RenderPacket(Span<byte> bytes, int frames, NativeClockSample clock, long arrival100ns);
 
-// Intentionally simulation-only. The native silent proof owns its own packet lifecycle.
-// Control methods belong to one MTA worker. Each callback has one separate, stable owner thread.
-// Borrowed spans expire on return. Submit is bounded, nonblocking and must revalidate ticket.
+// Exclusivo da simulação. A prova nativa silenciosa gerencia seu próprio ciclo de vida de pacotes.
+// Os métodos de controle pertencem a um worker MTA. Cada callback tem uma thread proprietária distinta e estável.
+// Os spans emprestados expiram no retorno. Submit é limitado, não bloqueia e deve revalidar o ticket.
 internal interface ISimulatedAudioTransport : IDisposable
 {
     void PrepareCapture(TransportRoute route, CapturePacket capture);
@@ -46,7 +46,7 @@ internal interface ISimulatedAudioTransport : IDisposable
     void StartCapture();
     void RequestStop();
     bool Submit(DeliveryTicket ticket, ReadOnlySpan<byte> bytes);
-    // No callback with arrival <= this watermark remains in flight or may arrive later.
+    // Nenhum callback com chegada anterior ou igual a este marco temporal permanece em andamento ou pode chegar depois.
     long ClosedThrough100ns { get; }
 }
 
@@ -56,7 +56,7 @@ internal sealed record TransportSnapshot(TransportState State, long Generation, 
     double TargetPpm, double AppliedPpm, DriftControlState ControlState, int OwnerThreadId, bool ResourcesRetained,
     bool BufferSnapshotAvailable = true);
 
-// One writer per ledger, bounded seqlock reads on the control worker. Only closed intervals are integrated.
+// Um escritor por registro, com leituras seqlock limitadas no worker de controle. Integra somente intervalos fechados.
 internal sealed class TransportLedger
 {
     private int sequence;

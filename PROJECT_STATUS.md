@@ -2,7 +2,35 @@
 
 Atualizado em 18/11/2026.
 
-## Estado atual — F2-I6B1-PROOF-4 aprovada pelo teste
+## Estado atual — COMENTARIOS-PTBR, 18/11/2026
+
+A main foi sincronizada por fast-forward a `80a0f59` e, durante a validação, ao commit documental `79a6867`. Foram examinados 125 arquivos versionados de código, testes, scripts e configuração. Cada comentário alterado foi contado como uma unidade sintática, incluindo blocos e documentação XML.
+
+| Escopo | Arquivos examinados | Arquivos traduzidos | Comentários traduzidos |
+| --- | ---: | ---: | ---: |
+| C# em src e tests | 112 | 72 | 203 |
+| Scripts PowerShell | 3 | 1 | 5 |
+| Projetos, props e solução XML | 5 | 1 | 1 |
+| Configuração e locks JSON | 4 | 0 | 0 |
+| .gitignore | 1 | 0 | 0 |
+| Total | 125 | 74 | 209 |
+
+Em C#, 126 comentários de 39 arquivos de áudio, 23 de 12 arquivos da interface e 54 de 21 arquivos de teste foram traduzidos. O total inclui 193 comentários de linha, 5 blocos e 5 comentários de documentação XML. Foram preservados os dois comentários literais `INPROC_SERVER` e `+0.25 PCM16`, o texto do modelo de terceiros em `.gitignore`, a string funcional que gera o probe do watchdog e seu marcador `WaveStudio-WatchdogProbe-v1`. Os textos de licença, arquivos gerados, assets e backups ficaram fora da tradução.
+
+A equivalência dos 112 arquivos C# foi verificada com Roslyn do SDK instalado, comparando árvore sintática, tipos e textos de tokens, valores de strings, diagnósticos de parse e texto fora dos comentários. As cinco documentações XML foram comparadas por estrutura, incluindo tags e atributos. O parser do PowerShell comparou os três scripts, preservando tokens executáveis, diretivas e strings. Os cinco arquivos XML de configuração foram comparados por estrutura e texto fora de comentários. Os quatro JSON e o `.gitignore` permaneceram textualmente iguais ao baseline. As edições conservaram as quebras de linha e a codificação originais. `git diff --check` passou. Inventário, patch e verificações locais em `artifacts/comment-audit`.
+
+O restore passou com `dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1900`. Os builds `dotnet build WaveStudio.slnx -c Debug --no-restore --no-incremental` e equivalente em Release x64 terminaram com zero erros ou avisos. As regressões do runner .NET direto usaram `dotnet test --solution WaveStudio.slnx -c <configuração> --no-build -- --explicit off --seed <seed> --timeout 165s --long-running 10 --diagnostic --diagnostic-output-directory <pasta>`. Política Restricted preservada, seeds 20261114/20261113 e logs em `artifacts/comment-audit/Debug` e `artifacts/comment-audit/Release`.
+
+| Configuração x64 | Aprovados | Falhas | Explicit excluídos | Duração da regressão |
+| --- | ---: | ---: | ---: | ---: |
+| Debug | 737 | 0 | 2 | 72,995 s |
+| Release | 737 | 0 | 2 | 42,257 s |
+
+As duas suítes passaram na primeira execução deste checkpoint, sem repetir as falhas intermitentes de alocação já registradas no histórico.
+
+Os sete casos manuais aprovados por relato e as evidências da prova silenciosa 4 foram preservados. Nenhuma prova física foi executada. A etapa está pronta para revisão. F2-I6B2, F3 e internacionalização seguem pendentes.
+
+## Histórico — F2-I6B1-PROOF-4 aprovada pelo teste
 
 - Fast-forward para `d41a6f7`. Release x64 existente da implementação `f72304e`, SDK 10.0.404 e filtro de um único teste conferidos. Autorização específica e confirmação de headset conectado, Wave Studio fechado normalmente e ausência de chamadas/testes. Verificados endpoints exatos, ativos e únicos por direção e ausência de outros runners. Os sete manuais pós-formatação permanecem aprovados por relato.
 - A tentativa única SILENT passou com `TransportObserved=true`, `DurationReached=true` e `CaptureTiming.Confirmed=true`. O temporizador configurado para 5 s concluiu. O QPC registrou 4,9997441 s, 0,2559 ms abaixo do nominal. Runner com código 0, um teste aprovado.

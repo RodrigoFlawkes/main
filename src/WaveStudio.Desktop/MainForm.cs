@@ -173,7 +173,7 @@ internal sealed partial class MainForm : Form
                     peakTimer.Stop();
                     watch.CatalogChanged -= OnCatalogChanged;
                     SystemEvents.PowerModeChanged -= OnPowerModeChanged;
-                    // Keep the caption/X available for retry, while preventing conflicting commands.
+                    // Mantém a barra de título e o botão X disponíveis para nova tentativa, impedindo comandos conflitantes.
                     foreach (Control child in Controls) child.Enabled = false;
                     lifetime.Cancel();
                 }
@@ -206,7 +206,7 @@ internal sealed partial class MainForm : Form
             if (IsHandleCreated && !IsDisposed)
                 BeginInvoke(new Action(() => RequestRefresh(resetControls)));
         }
-        catch (InvalidOperationException) { /* Closing may destroy the handle before dispatch. */ }
+        catch (InvalidOperationException) { /* O fechamento pode destruir o handle antes do despacho. */ }
     }
 
     private void SelectExplicit(DeviceSnapshot device)
@@ -299,7 +299,7 @@ internal sealed partial class MainForm : Form
             var catalog = await audio.QueryAsync(lifetime.Token);
             if (IsDisposed || lifetime.IsCancellationRequested)
                 return;
-            // Resolve both preferences before binding triggers selection events.
+            // Resolve as duas preferências antes que a vinculação dispare eventos de seleção.
             var selectedPlayback = selection.Resolve(catalog, EndpointDirection.Playback);
             var selectedCapture = selection.Resolve(catalog, EndpointDirection.Capture);
             bool playbackChanged = currentPlayback?.Id != selectedPlayback?.Id || currentPlayback?.State != selectedPlayback?.State;

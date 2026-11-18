@@ -15,7 +15,7 @@ public sealed class NominalPartialConsumptionTests(ITestOutputHelper output)
     [Fact]
     public void SmallOutputPreservesSamplesButRepeatsChannelMappingWork()
     {
-        Measure(512); Measure(1); // warmup outside reported intervals
+        Measure(512); Measure(1); // aquecimento fora dos intervalos relatados
         var regular = Measure(512);
         var tiny = Measure(1);
         Assert.Equal(regular.Hash, tiny.Hash);

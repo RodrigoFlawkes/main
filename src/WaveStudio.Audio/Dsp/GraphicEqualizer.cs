@@ -2,7 +2,7 @@ using NAudio.Dsp;
 
 namespace WaveStudio.Audio.Dsp;
 
-// Immutable, copied at command submission. No persistence or device settings.
+// Dados imutáveis, copiados no envio do comando. Sem persistência ou alteração das configurações do dispositivo.
 public sealed class GraphicEqualizerSettings
 {
     public static IReadOnlyList<int> Frequencies { get; } = Array.AsReadOnly(new[] { 31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 });
@@ -25,8 +25,8 @@ public sealed class GraphicEqualizerSettings
     }
 }
 
-// Serial per playback. Public NAudio peaking biquads, one independent cascade per channel.
-// Preamp/headroom precedes the cascade; final digital level/representation protection belongs to the provider.
+// Processamento serial por reprodução. Biquads paramétricos públicos da NAudio, em cascatas independentes por canal.
+// Pré-amplificação e margem dinâmica precedem a cascata. O provedor aplica o nível digital final e protege a representação.
 internal sealed class GraphicEqualizer
 {
     private readonly BiQuadFilter?[] filters;
@@ -52,7 +52,7 @@ internal sealed class GraphicEqualizer
     public float Process(float sample, int channel)
     {
         if ((uint)channel >= channels) throw new ArgumentOutOfRangeException(nameof(channel));
-        // Reject representation outliers as corrupt input, without hard clipping normal audio before the filters.
+        // Rejeita valores fora da faixa de representação como entrada corrompida, sem clipping rígido do áudio normal antes dos filtros.
         if (!float.IsFinite(sample) || Math.Abs(sample) > 1e12f) { Interlocked.Increment(ref sanitized); sample = 0; }
         sample *= preamp;
         for (int band = 0; band < 10; band++)

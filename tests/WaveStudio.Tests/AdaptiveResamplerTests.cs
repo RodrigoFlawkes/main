@@ -139,7 +139,7 @@ public sealed class AdaptiveResamplerTests
         UInt128 total = (UInt128)fraction + (UInt128)step * 1000000;
         Assert.Equal(start + (long)(total >> SampleCursor.Bits), cursor.Index);
         Assert.Equal((ulong)(total & SampleCursor.Mask), cursor.Fraction);
-        // Half a Q48 unit per output step gives this worst-case quantization budget in one day.
+        // Meia unidade Q48 por passo de saída determina este limite de pior caso para o erro de quantização em um dia.
         Assert.InRange(48000d * 86400 / (2 * SampleCursor.Scale), 0, .00001);
         var extreme = new SampleCursor(long.MaxValue, SampleCursor.Mask);
         Assert.Throws<OverflowException>(() => extreme.Advance(step));

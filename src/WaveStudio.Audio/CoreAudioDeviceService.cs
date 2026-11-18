@@ -11,7 +11,7 @@ public sealed class CoreAudioDeviceService
         await queryGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            // Thread-pool workers use MTA. All COM wrappers are scoped to this query.
+            // As threads do pool usam MTA. Todos os wrappers COM ficam restritos a esta consulta.
             return await Task.Run(() => Query(cancellationToken), cancellationToken).ConfigureAwait(false);
         }
         finally

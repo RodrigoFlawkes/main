@@ -47,7 +47,7 @@ public sealed class MicrophoneTestSession : IAsyncDisposable
         lock (sync)
         {
             if (stopping) return Task.CompletedTask;
-            long next = Interlocked.Increment(ref revision); // Immediately suppress old packets/providers.
+            long next = Interlocked.Increment(ref revision); // Suprime imediatamente pacotes e provedores antigos.
             return Enqueue(next, target => target.Select(captureId, playbackId, next));
         }
     }

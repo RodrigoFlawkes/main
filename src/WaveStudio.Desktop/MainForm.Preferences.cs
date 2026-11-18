@@ -97,8 +97,8 @@ internal sealed partial class MainForm
 
     private bool ApplyWindowPlacement()
     {
-        // Display/remote-session transitions may expose zero-sized working areas.
-        // Ignore invalid monitors; if none are usable, preserve bounds and saved placement.
+        // Transições de tela ou sessão remota podem expor áreas de trabalho com dimensão zero.
+        // Ignora monitores inválidos. Se nenhum puder ser usado, preserva os limites e o posicionamento salvo.
         var areas = readWorkAreas().Where(area => area.Width > 0 && area.Height > 0).ToArray();
         if (areas.Length == 0) return false;
         var initial = settings.Window ?? new WindowPlacement(Left, Top, Width, Height);

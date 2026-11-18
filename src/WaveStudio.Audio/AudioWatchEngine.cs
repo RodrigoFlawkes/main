@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace WaveStudio.Audio;
 
-/// <summary>Single-owner engine. Native callbacks only set an atomic signal.</summary>
+/// <summary>Motor com um único proprietário. Os callbacks nativos apenas acionam um sinal atômico.</summary>
 public sealed class AudioWatchEngine : IDisposable
 {
     private sealed class MeterSlot

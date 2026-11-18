@@ -54,7 +54,7 @@ public sealed class EnginePerformanceTests(ITestOutputHelper output)
         };
         string json = JsonSerializer.Serialize(metrics, new JsonSerializerOptions { WriteIndented = true });
         output.WriteLine(json);
-        // Report only AFTER the measured region; no signal/audio is written.
+        // Gera o relatório somente depois do trecho medido. Nenhum sinal ou áudio é gravado.
         var root = new DirectoryInfo(AppContext.BaseDirectory);
         while (root is not null && !File.Exists(Path.Combine(root.FullName, "WaveStudio.slnx"))) root = root.Parent;
         Assert.NotNull(root);

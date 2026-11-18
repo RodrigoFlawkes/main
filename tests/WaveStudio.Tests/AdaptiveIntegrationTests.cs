@@ -46,7 +46,7 @@ public sealed class AdaptiveIntegrationTests
         controller.Update(100000, 1024, new(1, 100000));
         var failed = controller.Update(4200000, 1024, new(1, 100000));
         Assert.Equal(DriftControlState.ReprimeRequired, failed.State);
-        // Owner interlock is explicit: no continued delivery using the last bounded ratio.
+        // A proteção entre proprietários é explícita. A entrega não continua usando a última razão limitada.
         stage.Stop(generation); pipe.Stop();
         Assert.Equal(0, stage.Process(generation, source, destination).ConsumedFrames);
         Assert.Equal(0, pipe.Render(generation, destination));
@@ -168,7 +168,7 @@ public sealed class AdaptiveIntegrationTests
             int read = pipe.Render(generation, rendered.AsSpan(0, frames * outputChannels));
             Hash(ref readHash, rendered.AsSpan(0, read * outputChannels)); queued -= read; drained += read;
         }
-        Assert.Equal(writtenHash, readHash); // Actual finite samples, FIFO through wrap/drop/underrun.
+        Assert.Equal(writtenHash, readHash); // Amostras finitas reais e uma FIFO sujeita a retorno circular, descarte e underrun.
         Assert.Equal(0, stage.Protection.InputNonFinite + stage.Protection.OutputNonFinite + stage.Protection.OutputClipped);
         return new(inputRate, outputRate, driftPpm, seconds, controlled, stage.InputFrames, stage.MappedFrames, stage.OutputFrames,
             1024, buffer.ReadFrames, drained, buffer.OverrunFrames, buffer.UnderrunFrames, buffer.QueuedFrames, minimum, maximum,

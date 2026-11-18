@@ -150,7 +150,7 @@ public sealed class AdaptiveResamplingQualityTests
     private static Cost Measure(int capacity)
     {
         var stage = new AdaptiveResampler(new(44100, 1), new(48000, 2), ChannelPolicy.DuplicateMono);
-        stage.SetTargetPpm(1, 500); // Active slew in measured path, not only a cached static step.
+        stage.SetTargetPpm(1, 500); // A medição inclui a variação gradual ativa do passo.
         var source = Enumerable.Range(0, 8192).Select(index => .25f * (float)Math.Sin(index * .1)).ToArray();
         var destination = new float[capacity * 2];
         int offset = 0; ulong hash = 14695981039346656037;

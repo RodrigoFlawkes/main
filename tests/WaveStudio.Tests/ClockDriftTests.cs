@@ -12,17 +12,17 @@ public sealed class ClockDriftTests(ITestOutputHelper output)
     private static AudioClock Clock(string id, int rate = 48000, long generation = 1) => new(id, generation, rate, "simulation-us", Frequency);
 
     [Theory]
-    [InlineData(0, 2)] // identity
-    [InlineData(1, 2)] // generation
-    [InlineData(2, 3)] // repeated timestamp
-    [InlineData(3, 3)] // reversed timestamp
-    [InlineData(4, 4)] // reversed position
-    [InlineData(5, 5)] // stale
-    [InlineData(6, 7)] // position jump, including extreme long
-    [InlineData(7, 4)] // negative position
-    [InlineData(8, 3)] // clock quality
-    [InlineData(9, 3)] // future timestamp
-    [InlineData(10, 6)] // discontinuity
+    [InlineData(0, 2)] // identidade
+    [InlineData(1, 2)] // geração
+    [InlineData(2, 3)] // marca de tempo repetida
+    [InlineData(3, 3)] // marca de tempo regressiva
+    [InlineData(4, 4)] // posição regressiva
+    [InlineData(5, 5)] // leitura obsoleta
+    [InlineData(6, 7)] // salto de posição, inclusive no extremo de long
+    [InlineData(7, 4)] // posição negativa
+    [InlineData(8, 3)] // qualidade do clock
+    [InlineData(9, 3)] // marca de tempo futura
+    [InlineData(10, 6)] // descontinuidade
     public void InvalidObservationsCannotCreateAnEstimate(int scenario, int expected)
     {
         var input = Clock("input"); var render = Clock("output");
@@ -239,7 +239,7 @@ public sealed class ClockDriftTests(ITestOutputHelper output)
     }
 }
 
-// Event-driven integer frame accounting, deliberately no PCM buffers/resampling.
+// Contagem inteira de frames orientada a eventos, intencionalmente sem buffers PCM ou resampling.
 internal static class DriftSimulation
 {
     internal readonly record struct Result(long Produced, long Consumed, long Dropped, long Underrun, int FinalOccupancy,
@@ -274,8 +274,8 @@ internal static class DriftSimulation
             double nowSeconds = tick / 10d;
             if (restartAt > 0 && resets == 0 && nowSeconds > restartAt)
             {
-                // Explicit pause: stop both callbacks, invalidate old generation, discard queue,
-                // pause 300 ms, then re-prime. Paused frames are not fabricated as captured audio.
+                // Pausa explícita: interrompe os dois callbacks, invalida a geração anterior, descarta a fila,
+                // aguarda 300 ms e faz novo priming. Os frames da pausa não são simulados como áudio capturado.
                 discarded += occupancy; occupancy = target; primed += target; resets++;
                 droppedAtReset = dropped; underrunAtReset = underrun; converged = -1; stableFor = 0;
                 fractional = 0; timeOrigin = restartAt + .3;
@@ -320,7 +320,7 @@ internal static class DriftSimulation
             occupancyArea += (nowSeconds - lastEvent) * occupancy;
             double meanOccupancy = occupancyArea / (nowSeconds - intervalStart);
             long now = (long)Math.Round(nowSeconds * frequency);
-            // Independently delayed observations of hardware position in the same monotonic domain.
+            // Observações da posição do hardware com atrasos independentes no mesmo domínio monotônico.
             long inputTime = now - (long)(Jitter() * frequency), outputTime = now - (long)(Jitter() * frequency);
             long inputPosition = 123456789 + (long)Math.Floor((inputTime / (double)frequency - timeOrigin) * actualInput);
             long outputPosition = 987654321 + (long)Math.Floor((outputTime / (double)frequency - timeOrigin) * actualOutput);
@@ -329,8 +329,8 @@ internal static class DriftSimulation
             if (observed is not (ClockObservationResult.Waiting or ClockObservationResult.Updated)) rejected++;
             if (controlled)
             {
-                // Time-weighted mean avoids aliasing a 5 ms callback sawtooth at 100 ms.
-                // Boundary failures still report the actual boundary, never an averaged success.
+                // A média ponderada pelo tempo evita o aliasing de um padrão dente de serra de 5 ms quando observado a cada 100 ms.
+                // Falhas nos limites ainda informam o limite efetivo, sem mascará-lo com uma média de sucesso.
                 int controlOccupancy = hitOverflow ? capacity : hitUnderrun ? 0 : (int)Math.Round(meanOccupancy);
                 state = controller.Update(now, controlOccupancy, estimator.Latest);
                 ratio = state.OutputPerInput;
@@ -344,7 +344,7 @@ internal static class DriftSimulation
             }
             if (nowSeconds > duration - 60) { lastSum += meanOccupancy; lastCount++; }
         }
-        // Every produced/primed frame has exactly one destination, including reset discards.
+        // Cada frame produzido ou usado no priming tem um único destino, inclusive os descartados na reinicialização.
         Assert.Equal(produced + primed, consumed + dropped + discarded + occupancy);
         return new(produced, consumed, dropped, underrun, occupancy, minimum, maximum, lastSum / lastCount,
             (ratio / (actualOutput / actualInput) - 1) * 1e6, converged, saturated, resets, discarded, primed, rejected, reprime,

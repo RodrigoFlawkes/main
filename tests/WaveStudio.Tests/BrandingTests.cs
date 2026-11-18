@@ -33,8 +33,8 @@ public sealed class BrandingTests
             stream.Position = position;
             using var iconStream = typeof(StudioBrand).Assembly.GetManifestResourceStream("WaveStudio.Brand.Icon")!;
             using var icon = new Icon(iconStream, size, size);
-            // GDI's Icon constructor may choose 128 for a 256 request; the PNG frame
-            // above verifies the full-resolution shell image independently.
+            // O construtor de Icon do GDI pode escolher 128 quando se pede 256. O frame PNG
+            // acima verifica de forma independente a imagem em resolução completa usada pelo shell.
             if (size <= 128) Assert.Equal(new Size(size, size), icon.Size);
         }
     }

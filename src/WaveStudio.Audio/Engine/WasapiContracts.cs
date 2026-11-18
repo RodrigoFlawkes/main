@@ -66,7 +66,7 @@ internal sealed record TransportRoute(WasapiEndpointInfo Capture, WasapiEndpoint
         if (Capture.DefaultPeriod100ns is null or <= 0 || Playback.DefaultPeriod100ns is null or <= 0)
             throw new NotSupportedException("Períodos consultados/simulados explícitos são obrigatórios.");
     }
-    // FIFO units are always output frames, including the capture period after nominal conversion.
+    // A unidade da FIFO é sempre frames de saída, inclusive para o período de captura após a conversão nominal.
     public int PeriodFrames => Math.Max(ToFrames(Capture, Playback.Mix!.SampleRate), ToFrames(Playback, Playback.Mix.SampleRate));
     public int CapacityFrames
     {

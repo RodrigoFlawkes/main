@@ -6,7 +6,7 @@ using Xunit;
 
 namespace WaveStudio.Tests;
 
-// Explicit is intentional: ordinary regression cannot authorize Initialize on hardware.
+// O teste é Explicit de propósito. A regressão comum não autoriza Initialize no hardware.
 public sealed class WasapiNativePreparationTests(ITestOutputHelper output)
 {
     [Fact(Explicit = true)]
@@ -23,7 +23,7 @@ public sealed class WasapiNativePreparationTests(ITestOutputHelper output)
             string? name = Environment.GetEnvironmentVariable(direction == EndpointDirection.Capture
                 ? "WAVESTUDIO_PREPARE_CAPTURE_NAME" : "WAVESTUDIO_PREPARE_PLAYBACK_NAME");
             Assert.False(string.IsNullOrWhiteSpace(name));
-            // Resolve an explicit unique name once to a full ID; no defaults or nearest-device fallback.
+            // Resolve uma única vez um nome explícito e único para o ID completo, sem recorrer ao padrão ou a outro dispositivo.
             var device = Assert.Single(catalog.Devices, d => d.Direction == direction && d.State == EndpointState.Active
                 && d.Name.Contains(name!, StringComparison.OrdinalIgnoreCase));
             var endpoint = new TransportEndpoint(device.Id, direction, 61);
@@ -43,7 +43,7 @@ public sealed class WasapiNativePreparationTests(ITestOutputHelper output)
                 Assert.NotNull(result.Clock); Assert.Equal(0, result.Clock.Value.FrequencyHResult); Assert.True(result.Clock.Value.Frequency > 0);
                 Assert.Contains(result.Clock.Value.PositionHResult, new[] { 0, 1 });
             }
-            else Assert.NotNull(result.FailedStage); // Failure is evidence, never a reason to Start or select another device.
+            else Assert.NotNull(result.FailedStage); // A falha é uma evidência e não autoriza Start nem a seleção de outro dispositivo.
         }
         string directory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../artifacts/wasapi-preparation"));
         Directory.CreateDirectory(directory);

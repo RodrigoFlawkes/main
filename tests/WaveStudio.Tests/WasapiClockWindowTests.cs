@@ -5,8 +5,8 @@ namespace WaveStudio.Tests;
 
 public sealed class WasapiClockWindowTests
 {
-    // PROOF-3: all 11 reads per role. QPC and local time share a subtracted origin.
-    // Frequencies, raw positions and HRESULTs are unchanged. No packet sequence was recorded.
+    // PROOF-3: as 11 leituras de cada papel. QPC e tempo local têm a mesma origem subtraída.
+    // Frequências, posições brutas e HRESULTs foram preservados. A sequência de pacotes não foi registrada.
     private static readonly (ulong Position, ulong Qpc, long Now)[] Capture =
     [
         (21120, 1118258, 1263674),
@@ -109,7 +109,7 @@ public sealed class WasapiClockWindowTests
         var timing = new WasapiCaptureTiming(rate, period, 1056);
         var adapter = new WasapiClockAdapter(WasapiContractTests.Route().Capture.Endpoint, rate, timing);
         var first = InitialClock(rate);
-        ulong packetOrigin = 50_000_000; // Deliberately unrelated to the clock's absolute position.
+        ulong packetOrigin = 50_000_000; // Intencionalmente sem relação com a posição absoluta do clock.
         uint packetFrames = (uint)rate / 100;
         for (int tick = 0; tick <= 500; tick++)
         {
@@ -247,14 +247,14 @@ public sealed class WasapiClockWindowTests
         var first = InitialClock(48000);
         for (uint tick = 0; tick <= 250; tick++)
         {
-            ulong packetQpc = first.Qpc100ns + tick * 100400UL; // Approximately -3984 ppm.
+            ulong packetQpc = first.Qpc100ns + tick * 100400UL; // Aproximadamente -3984 ppm.
             timing.ValidatePacket(tick * 480UL, 480, packetQpc);
             timing.AcceptReleasedPacket(tick * 480UL, 480, packetQpc);
             if (tick % 10 != 0) continue;
             ulong clockQpc = first.Qpc100ns + tick * 100000UL;
             Assert.Equal(NativeClockResult.Valid, adapter.Convert(first with
             {
-                Position = first.Position + tick * 482UL, // Approximately +4167 ppm.
+                Position = first.Position + tick * 482UL, // Aproximadamente +4167 ppm.
                 Qpc100ns = clockQpc
             }, (long)clockQpc, out _));
         }

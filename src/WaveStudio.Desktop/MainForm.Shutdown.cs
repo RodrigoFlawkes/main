@@ -15,7 +15,7 @@ internal sealed partial class MainForm
     {
         try
         {
-            // Start every independent cleanup even when a previous factory throws synchronously.
+            // Inicia cada limpeza independente, mesmo quando uma criação anterior lança uma exceção síncrona.
             foreach (var step in closeSteps) step.BeginOrRetry();
             await Task.WhenAll(closeSteps.Select(step => step.Task!)).WaitAsync(closeTimeout);
             closing = true;
@@ -40,7 +40,7 @@ internal sealed partial class MainForm
         public Task? Task { get; private set; }
         public void BeginOrRetry()
         {
-            // Pending/successful operations are retained; never start a second disposer in flight.
+            // Mantém operações pendentes ou concluídas com sucesso. Nunca inicia um segundo descarte enquanto outro está em andamento.
             if (Task is null || Task.IsFaulted || Task.IsCanceled) Task = InvokeAsync();
         }
         private async Task InvokeAsync() => await run();

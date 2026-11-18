@@ -94,7 +94,7 @@ internal sealed class MicrophoneTestPanel : UserControl
         _ = RunAsync(() => session.SelectAsync(inputId, outputId));
     }
 
-    // May be invoked directly by the notification/power callback. No WinForms access here.
+    // Pode ser chamado diretamente pelo callback de notificação ou energia. Não acessa WinForms aqui.
     public Task InvalidateAsync()
     {
         inputMeter.InvalidateSelection();

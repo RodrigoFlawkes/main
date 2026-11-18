@@ -8,7 +8,7 @@ internal readonly record struct NativeClockSample(TransportEndpoint Endpoint, ul
     ulong Qpc100ns, NativePositionUnit Unit, NativeClockQuality Quality, TransportPacketFlags Flags = TransportPacketFlags.None);
 internal enum NativeClockResult { Valid, InvalidIdentity, Unavailable, TimestampError, Discontinuity, InvalidTime, InvalidPosition, Stalled, Overflow, RequiresReset, Provisional }
 
-// No native clock call is made here. Caller must supply audited accuracy/unit evidence.
+// Não faz chamadas nativas de clock. O chamador deve fornecer evidências verificadas de precisão e unidade.
 internal sealed class WasapiClockAdapter
 {
     private readonly TransportEndpoint endpoint;
@@ -28,7 +28,7 @@ internal sealed class WasapiClockAdapter
         if (captureTiming is not null && endpoint.Direction != EndpointDirection.Capture)
             throw new ArgumentException("A política temporal é exclusiva da captura.", nameof(captureTiming));
         this.endpoint = endpoint; this.rate = rate; this.captureTiming = captureTiming;
-        // Bounded identity for the estimator; native identity is checked in full above conversion.
+        // Identidade de tamanho limitado para o estimador. A identidade nativa é verificada por inteiro antes da conversão.
         string identity = ConvertIdentity(endpoint);
         clock = new(identity, endpoint.Generation, rate, "WASAPI-QPC-100ns", 10000000);
     }

@@ -3,9 +3,9 @@ using System.Runtime.InteropServices.Marshalling;
 
 namespace WaveStudio.Audio.Engine;
 
-// Windows SDK mmdeviceapi.idl / Audioclient.idl; full inherited IUnknown method order.
-// Signatures only, no third-party implementation. See docs/WASAPI_BACKEND_PLAN.md.
-// ComObjectWrapper generates calls to native COM only, not a callable audio server.
+// mmdeviceapi.idl / Audioclient.idl do SDK do Windows. Ordem completa dos métodos após os herdados de IUnknown.
+// Somente assinaturas, sem implementação de terceiros. Consulte docs/WASAPI_BACKEND_PLAN.md.
+// ComObjectWrapper gera apenas chamadas ao COM nativo, sem expor um servidor de áudio invocável.
 [GeneratedComInterface(Options = ComInterfaceOptions.ComObjectWrapper)]
 [Guid("A95664D2-9614-4F35-A746-DE8DB63617E6")]
 internal partial interface IPreparationEnumerator
@@ -45,7 +45,7 @@ internal partial interface IPreparationAudioClient
     [PreserveSig] int IsFormatSupported(int shareMode, nint format, out nint closest);
     [PreserveSig] int GetMixFormat(out nint format);
     [PreserveSig] int GetDevicePeriod(out long default100ns, out long minimum100ns);
-    [PreserveSig] int Start(); // Preparation never calls this; active transport requires separate opt-in.
+    [PreserveSig] int Start(); // A preparação nunca chama este método. O transporte ativo exige autorização separada.
     [PreserveSig] int Stop();
     [PreserveSig] int Reset();
     [PreserveSig] int SetEventHandle(nint handle);

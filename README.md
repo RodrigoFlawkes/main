@@ -51,7 +51,7 @@ Também estão previstos integração com aplicativos externos, mix-minus e estu
 | Testes automatizados | 737 em Debug e 737 em Release, conforme último relatório |
 | Aceitação manual | 7 casos aprovados; aceitação integral pendente |
 | WASAPI | Prova física silenciosa 4 aprovada pelo teste com validação por janelas |
-| Próxima etapa | Revisão da prova silenciosa e checkpoint separado de comentários em pt-BR |
+| Próxima etapa | Revisão do checkpoint de comentários em pt-BR |
 
 A quarta prova física confirmou as janelas de clock, 499 pacotes contíguos e a liberação dos dois streams. O temporizador de 5 s concluiu, com 4,9997441 s medidos por QPC. O monitoramento audível e a integração externa seguem pendentes de revisão.
 

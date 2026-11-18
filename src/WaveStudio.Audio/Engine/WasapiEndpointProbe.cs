@@ -2,7 +2,7 @@ using NAudio.CoreAudioApi;
 
 namespace WaveStudio.Audio.Engine;
 
-// Query-only adapter: no Initialize, Start, GetService(clock/buffer), volume setters or defaults.
+// Adaptador somente para consultas, sem Initialize, Start, GetService(clock/buffer), alteração de volume ou seleção padrão.
 internal static class WasapiEndpointProbe
 {
     public static Task<WasapiEndpointInfo> QueryAsync(TransportEndpoint endpoint, CancellationToken token = default)

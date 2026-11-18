@@ -9,7 +9,7 @@ namespace WaveStudio.Tests;
 [Collection("Synthetic engine measurement")]
 public sealed class ResamplingQualityTests(ITestOutputHelper output)
 {
-    // Fixed before evaluating the filter; see docs/RESAMPLING_QUALITY.md.
+    // Definido antes da avaliação do filtro. Consulte docs/RESAMPLING_QUALITY.md.
     private const double MaximumPassbandErrorDb = .1;
     private const double MinimumStopbandRejectionDb = 60;
     private const double MaximumPassbandRippleDb = 2 * MaximumPassbandErrorDb;

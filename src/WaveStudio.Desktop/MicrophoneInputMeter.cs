@@ -2,7 +2,7 @@ using WaveStudio.Audio;
 
 namespace WaveStudio.Desktop;
 
-// Presentation only: receives the existing endpoint worker's snapshots, never a capture stream.
+// Apenas apresentação. Recebe os estados do worker de endpoints existente, sem acessar o stream de captura.
 internal sealed class MicrophoneInputMeter : GroupBox
 {
     private readonly ProgressBar bar = new() { Minimum = 0, Maximum = 100, Height = 24, Dock = DockStyle.Fill,
@@ -43,7 +43,7 @@ internal sealed class MicrophoneInputMeter : GroupBox
         ShowSnapshot(null, 0);
     }
 
-    // Notification/power callbacks may invalidate without touching WinForms.
+    // Callbacks de notificação ou de energia podem invalidar o estado sem acessar WinForms.
     public void InvalidateSelection() => Volatile.Write(ref invalidated, 1);
     public void RefreshInvalidation() { if (Volatile.Read(ref invalidated) != 0) ShowSnapshot(null, 0); }
 

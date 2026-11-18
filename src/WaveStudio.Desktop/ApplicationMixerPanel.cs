@@ -99,7 +99,7 @@ internal sealed class ApplicationMixerPanel : UserControl
     public void SelectDevice(DeviceSnapshot? device)
     {
         if (stopped) return;
-        // Cancel edits before changing the selection, so CellEndEdit cannot target the next endpoint.
+        // Cancela as edições antes de mudar a seleção para que CellEndEdit não atue no próximo endpoint.
         binding = true;
         try
         {
@@ -252,7 +252,7 @@ internal sealed class ApplicationMixerPanel : UserControl
             writing = false;
             if (!stopped) grid.Enabled = true;
         }
-        // Preserve command errors across polling until another explicit action.
+        // Mantém erros de comando durante as consultas periódicas até outra ação explícita.
         if (!stopped) PendingRead = ReadAsync();
     }
 

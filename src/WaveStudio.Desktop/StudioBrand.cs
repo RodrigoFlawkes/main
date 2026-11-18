@@ -4,7 +4,7 @@ internal static class StudioBrand
 {
     public const string ProductName = "Wave Studio";
 
-    // Each caller owns its clone; resource streams are closed immediately.
+    // Cada chamador é responsável por seu clone. Os streams de recursos são fechados imediatamente.
     public static Icon CreateIcon()
     {
         using var stream = typeof(StudioBrand).Assembly.GetManifestResourceStream("WaveStudio.Brand.Icon")

@@ -229,7 +229,7 @@ public sealed class EngineFoundationTests
                     for (int channel = 0; channel < channels; channel++) block[frame * channels + channel] = channel == 0 ? next + frame : -(next + frame);
                 int accepted = ring.Write(block.AsSpan(0, count * channels));
                 next += accepted;
-                if (accepted == 0) Thread.Yield(); // Test driver only; ring never waits/retries.
+                if (accepted == 0) Thread.Yield(); // Apenas o driver de teste. O buffer circular nunca espera nem tenta novamente.
             }
         }, token);
         var consumer = Task.Run(() =>

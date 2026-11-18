@@ -4,7 +4,7 @@ internal enum DriftControlState { Waiting, Tracking, Saturated, ReprimeRequired 
 internal readonly record struct DriftControl(double OutputPerInput, double CorrectionPpm, double FilteredOccupancy,
     double IntegralPpm, DriftControlState State);
 
-// Count-domain experiment. Does not vary a sample resampler or interact with endpoints.
+// Experimento no domínio das contagens. Não varia a taxa de um resampler de amostras nem interage com endpoints.
 internal sealed class ClockRatioController
 {
     private readonly double nominal, limit, slew;
@@ -29,8 +29,8 @@ internal sealed class ClockRatioController
         if (now < 0) throw new ArgumentOutOfRangeException(nameof(now));
         previous = now; correction = integral = 0; occupancy = target; tracking = failed = false;
     }
-    // bufferedFrames is a time-weighted mean over the control interval. Actual
-    // queue-boundary failures must be reported as 0/capacity, or reset by owner.
+    // bufferedFrames é a média ponderada pelo tempo no intervalo de controle. Falhas reais
+    // nos limites da fila devem ser reportadas como 0/capacidade ou tratadas com reinicialização pelo proprietário.
     public DriftControl Update(long now, int bufferedFrames, ClockEstimate? estimate)
     {
         if (bufferedFrames < 0 || bufferedFrames > capacity) throw new ArgumentOutOfRangeException(nameof(bufferedFrames));
@@ -48,7 +48,7 @@ internal sealed class ClockRatioController
         double feedForward = (estimate!.Value.OutputPerInput / nominal - 1) * 1e6;
         double candidateIntegral = Math.Clamp(integral - .02 * error * dt, -limit, limit);
         double requested = feedForward - .8 * error + candidateIntegral;
-        // Conditional integration: allow only unsaturated or unwinding updates.
+        // Integração condicional: permite somente atualizações sem saturação ou que reduzam a saturação.
         if (Math.Abs(requested) <= limit || (requested > limit && error > 0) || (requested < -limit && error < 0))
             integral = candidateIntegral;
         requested = feedForward - .8 * error + integral;

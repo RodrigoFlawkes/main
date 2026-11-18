@@ -6,7 +6,7 @@ using Xunit;
 
 namespace WaveStudio.Tests;
 
-// All capture/playback objects below are fakes. These tests never open the real microphone.
+// Todos os objetos de captura e reprodução abaixo são simulados. Estes testes nunca abrem o microfone real.
 public sealed class MicrophoneTestTests
 {
     internal sealed class FakeCapture : ITestCapture

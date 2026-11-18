@@ -34,7 +34,7 @@ internal static class EndpointPreferenceRestore
         try
         {
             StereoLevels? expectedStereo = null;
-            // Mute requested on is applied first, and unmute last. Each command confirms its result.
+            // Ativa o mute primeiro e o desativa por último, conforme solicitado. Cada comando confirma seu resultado.
             if (plan.Values.Muted == true) EndpointVolumeOperations.Apply(endpoint, new SetEndpointMute(true), token);
             if (plan.Values.VolumePercent is double volume) EndpointVolumeOperations.Apply(endpoint, new SetEndpointVolume(volume), token);
             if (plan.Values.Balance is double balance)
@@ -62,7 +62,7 @@ internal static class EndpointPreferenceRestore
     {
         if (expected.BaseLevel == 0 || actual.BaseLevel == 0)
             throw new InvalidOperationException("O balanço final não é observável com os canais em zero. Os níveis atuais foram consultados.");
-        // Compare channels relative to the base, so a low level cannot conceal an inverted balance.
+        // Compara os canais em relação ao nível base para que um nível baixo não oculte um balanço invertido.
         double tolerance = expected.BaseLevel * 0.02;
         if (Math.Abs(actual.Left - expected.Left) > tolerance || Math.Abs(actual.Right - expected.Right) > tolerance)
             throw new NotSupportedException("O Windows alterou os canais após aplicar a preferência. O balanço final não foi confirmado.");

@@ -28,7 +28,7 @@ public sealed class EqualizerProfileUiTests
         eq.ProfileName.Text = "Voz natural"; eq.RenameProfile.PerformClick(); Assert.Equal("Voz natural", eq.Preferences.Profiles.Single().Name);
         eq.DeleteProfile.PerformClick(); Assert.Single(eq.Preferences.Profiles);
         approve = true; eq.DeleteProfile.PerformClick(); Assert.Empty(eq.Preferences.Profiles); Assert.Equal(-3, eq.Bands[5].Value);
-        eq.ProfileList.SelectedIndex = 0; // Already Padrão after delete, so select another profile first.
+        eq.ProfileList.SelectedIndex = 0; // O perfil já é Padrão após a exclusão. Selecione outro perfil primeiro.
         eq.ProfileName.Text = "Teste"; eq.CreateProfile.PerformClick(); eq.Bands[0].Value = 2; eq.ProfileList.SelectedIndex = 0;
         Assert.False(eq.Activate.Checked); Assert.All(eq.Bands, band => Assert.Equal(0, band.Value));
         Assert.True(confirmations >= 4); await Task.CompletedTask;
@@ -71,7 +71,7 @@ public sealed class EqualizerProfileUiTests
                     Assert.False(eq.Activate.Checked); Assert.All(eq.Bands, band => Assert.Equal(0, band.Value));
                     eq.SetAvailability(true, false); eq.Activate.Checked = true; eq.Bands[5].Value = -9; eq.Preamp.Value = -2.5m;
                     eq.ProfileName.Text = "Voz"; eq.CreateProfile.PerformClick(); id = eq.Preferences.SelectedProfileId;
-                    eq.Bands[5].Value = -6; // Draft must survive closing, without replacing the -9 dB named profile.
+                    eq.Bands[5].Value = -6; // O rascunho deve sobreviver ao fechamento sem substituir o perfil nomeado de -9 dB.
                 }
                 else
                 {

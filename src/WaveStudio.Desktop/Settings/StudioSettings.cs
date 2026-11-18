@@ -72,7 +72,7 @@ internal static class SettingsJson
         if (number == 1)
         {
             if (root.TryGetProperty("equalizer", out _)) throw new InvalidDataException("Campos de EQ exigem a versão 2.");
-            // Explicit in-memory v1 -> v2 migration. Original bytes/baseline remain owned by SettingsStore.
+            // Migração explícita v1 -> v2 em memória. SettingsStore permanece responsável pelos bytes originais e pela referência inicial.
             using var migrated = new MemoryStream();
             using (var writer = new Utf8JsonWriter(migrated))
             {
@@ -82,7 +82,7 @@ internal static class SettingsJson
                     if (property.Name == "schemaVersion") writer.WriteNumber("schemaVersion", 2);
                     else if (property.Name == "window" && property.Value.ValueKind == JsonValueKind.Object)
                     {
-                        // v1 allowed omitted X/Y to mean zero; materialize those legacy defaults explicitly.
+                        // Na v1, a omissão de X/Y significava zero. Preenche explicitamente esses valores padrão do formato anterior.
                         writer.WritePropertyName("window");
                         JsonSerializer.Serialize(writer, property.Value.Deserialize<WindowPlacement>(LegacyWindowOptions), Options);
                     }

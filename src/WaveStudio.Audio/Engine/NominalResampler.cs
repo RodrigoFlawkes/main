@@ -2,7 +2,7 @@ namespace WaveStudio.Audio.Engine;
 
 internal readonly record struct ResamplingResult(int ConsumedFrames, int ProducedFrames, bool Completed);
 
-// Single-owner, fixed rational rate, causal FIR. No scheduling, drift correction or native audio.
+// FIR causal com um único proprietário e razão racional fixa. Sem agendamento, correção de drift ou áudio nativo.
 internal sealed class NominalResampler
 {
     public const int Radius = 80;
@@ -77,7 +77,7 @@ internal sealed class NominalResampler
         return new(consumed, produced, false);
     }
 
-    // Caller declares EOF only after every real frame has been consumed.
+    // O chamador só declara EOF após consumir todos os frames reais.
     public void BeginFlush()
     {
         if (ending) return;
@@ -95,7 +95,7 @@ internal sealed class NominalResampler
         {
             if (availableFrames <= nextInputIndex)
             {
-                // Padding is not real input and is not counted as consumed frames.
+                // O preenchimento não é entrada real e não conta como frames consumidos.
                 history.AsSpan((int)(availableFrames & (HistoryFrames - 1)) * channels, channels).Clear();
                 availableFrames++;
                 continue;

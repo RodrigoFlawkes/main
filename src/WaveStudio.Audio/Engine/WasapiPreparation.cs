@@ -1,6 +1,6 @@
 namespace WaveStudio.Audio.Engine;
 
-// HRESULT and UINT64 outputs are retained verbatim. Success/accuracy is not movement.
+// Preserva HRESULT e os valores UINT64 exatamente como retornados. Sucesso e precisão da leitura não comprovam movimento.
 internal readonly record struct WasapiClockReading(int FrequencyHResult, ulong Frequency,
     int PositionHResult, ulong Position, ulong Qpc100ns)
 {
@@ -21,7 +21,7 @@ internal sealed class WasapiCallException(string stage, int result) : Exception(
     }
 }
 
-// Narrow preparation-only seam: deliberately has no Start, Stop or audio buffer methods.
+// Interface restrita à preparação, sem métodos Start, Stop ou acesso a buffers de áudio.
 internal interface IWasapiPreparationDevice : IDisposable
 {
     void ValidateIdentity(TransportEndpoint endpoint);
@@ -44,7 +44,7 @@ internal sealed record WasapiPreparationResult(TransportEndpoint Endpoint, Wasap
     string? CleanupError, bool ResourcesReleased, int OwnerThreadId)
 {
     public bool Succeeded => FailedStage is null && ResourcesReleased;
-    public bool AudioStarted => false; // This operation has no audio-start capability.
+    public bool AudioStarted => false; // Esta operação não inicia áudio.
 }
 
 internal static class WasapiPreparation

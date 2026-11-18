@@ -44,7 +44,7 @@ public sealed class CoreAudioIntegrationTests(ITestOutputHelper output)
             }
         }
         Assert.Equal(catalog.Devices.Count, catalog.Devices.Select(device => device.Id).Distinct().Count());
-        // An empty hardware inventory is valid. API failures are reported as warnings.
+        // Um inventário de hardware vazio é válido. Falhas da API são relatadas como avisos.
         Assert.Empty(catalog.Warnings);
     }
 

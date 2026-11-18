@@ -3,9 +3,9 @@ namespace WaveStudio.Audio.Engine;
 internal readonly record struct FrameBufferSnapshot(int QueuedFrames, long WrittenFrames, long ReadFrames,
     long OverrunFrames, long UnderrunFrames);
 
-// Exactly one producer and one consumer. Reset requires BOTH to be quiescent.
-// Producer publishes payload with release(write); consumer acquires(write) before reading.
-// Consumer release(read) publishes completed copies; producer acquires(read) before reuse.
+// Exatamente um produtor e um consumidor. A reinicialização exige que ambos estejam inativos.
+// O produtor publica o conteúdo com release(write). O consumidor executa acquire(write) antes da leitura.
+// O release(read) do consumidor publica as cópias concluídas. O produtor executa acquire(read) antes de reutilizar o espaço.
 internal sealed class SpscFrameBuffer
 {
     public const int MaximumCapacityFrames = 65536;
@@ -65,8 +65,8 @@ internal sealed class SpscFrameBuffer
         return count;
     }
 
-    // Bounded diagnostic sampling, never spin until success. Totals are individually
-    // atomic, not a transaction. Full conservation is checked once quiescent.
+    // Amostragem de diagnóstico limitada, sem girar em espera até obter sucesso. Os totais são atômicos
+    // individualmente, sem transação conjunta. A conservação completa é verificada após a quiescência.
     public bool TryGetSnapshot(out FrameBufferSnapshot snapshot)
     {
         for (int attempt = 0; attempt < 3; attempt++)

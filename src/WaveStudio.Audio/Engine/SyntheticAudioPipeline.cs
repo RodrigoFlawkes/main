@@ -5,8 +5,8 @@ internal readonly record struct SyntheticPipelineSnapshot(SyntheticPipelineState
     FrameBufferSnapshot? Buffer, long NonFiniteSamples, long ClippedSamples, double? BufferedMilliseconds,
     double CapacityMilliseconds, int StorageBytes);
 
-// No threads, devices, scheduling, file/network I/O or automatic start.
-// Control methods use a lock; producer/consumer never acquire that lock or wait.
+// Sem threads, dispositivos, agendamento, I/O de arquivos ou rede, ou início automático.
+// Os métodos de controle usam um lock. O produtor e o consumidor não o adquirem nem esperam por ele.
 internal sealed class SyntheticAudioPipeline : IDisposable
 {
     public const int MaximumBlockFrames = 4096;
@@ -70,8 +70,8 @@ internal sealed class SyntheticAudioPipeline : IDisposable
         {
             ObjectDisposedException.ThrowIf(State == SyntheticPipelineState.Disposed, this);
             if (State == SyntheticPipelineState.Running) return false;
-            // Full fence pairs with participant CAS: an entering callback must see
-            // Stopped, or its busy flag must be visible before memory is cleared.
+            // A barreira completa de memória atua em conjunto com o CAS do participante. Um callback ao entrar deve observar
+            // Stopped ou deixar seu sinal de ocupação visível antes de a memória ser limpa.
             Interlocked.Exchange(ref state, (int)SyntheticPipelineState.Stopped);
             if (Volatile.Read(ref producerBusy) != 0 || Volatile.Read(ref consumerBusy) != 0) return false;
             buffer.ResetQuiescent();

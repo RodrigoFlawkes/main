@@ -1,7 +1,7 @@
 namespace WaveStudio.Audio.Engine;
 
-// One serial producer owns adaptation, phase, EOF and reset. A separate SPSC stage
-// can receive only the ProducedFrames prefix; no concurrent lifecycle calls here.
+// Um único produtor serial é responsável pela adaptação, fase, EOF e reinicialização. Uma etapa SPSC separada
+// só pode receber o prefixo ProducedFrames. Não há chamadas concorrentes de ciclo de vida aqui.
 internal sealed class NominalConversionStage
 {
     private readonly ChannelAdapter adapter;

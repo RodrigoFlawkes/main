@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace WaveStudio.Audio.Engine;
 
-// Fakeable native-call seam; each object is acquired, used and released by one stable MTA owner.
+// Interface de chamadas nativas que admite um substituto de teste. Cada objeto é adquirido, usado e liberado por uma thread MTA proprietária e estável.
 internal interface IWasapiStreamClient : IWasapiPreparationClient
 {
     int Start();
@@ -26,7 +26,7 @@ internal interface IWasapiRenderPackets : IDisposable
 }
 internal static class WasapiTime
 {
-    // Windows QPC converted to 100ns for age/control only; never an audio position substitute.
+    // O QPC do Windows é convertido para unidades de 100 ns e usado apenas para idade e controle. Não substitui a posição do áudio.
     public static long Now100ns() => checked((long)((UInt128)(ulong)Stopwatch.GetTimestamp() * 10000000 / (ulong)Stopwatch.Frequency));
 }
 
@@ -75,7 +75,7 @@ internal sealed class WasapiRunningClock(TransportEndpoint endpoint, int rate, l
         return result;
     }
 
-    // Called by the coordinator after the owner has joined.
+    // O coordenador chama este método após o término da thread proprietária.
     public NativeClockHistory Snapshot()
     {
         int length = (int)Math.Min(readingCount, HistoryCapacity);

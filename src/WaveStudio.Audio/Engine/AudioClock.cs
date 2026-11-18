@@ -19,13 +19,13 @@ internal sealed record AudioClock
     }
 }
 
-// Position is already converted to frames, timestamp to the declared common domain.
+// A posição já está em frames e a marca de tempo está no domínio comum declarado.
 internal readonly record struct ClockObservation(AudioClock Clock, long FramePosition, long Timestamp,
     ClockQuality Quality = ClockQuality.Monotonic, bool Discontinuity = false);
 internal readonly record struct ClockEstimate(double OutputPerInput, long Timestamp);
 internal enum ClockObservationResult { Waiting, Updated, InvalidIdentity, InvalidTime, InvalidPosition, Stale, Discontinuity, Implausible }
 
-// Single owner; no backend/API claim. Invalid observations do not advance the baseline.
+// Único proprietário, sem pressupor backend ou API. Observações inválidas não avançam a referência.
 internal sealed class ClockRatioEstimator
 {
     private readonly AudioClock input, output;
@@ -63,7 +63,7 @@ internal sealed class ClockRatioEstimator
         double inputDt = (capture.Timestamp - lastInput.Timestamp) / (double)input.TimestampFrequency;
         double outputDt = (render.Timestamp - lastOutput.Timestamp) / (double)output.TimestampFrequency;
         if (inputDt > 2 || outputDt > 2) { Reset(); return ClockObservationResult.Discontinuity; }
-        // Allow two frames of quantization per short observation; also validate the long window below.
+        // Tolera dois frames de quantização por observação curta e também valida a janela longa abaixo.
         if (!Plausible(capture.FramePosition - lastInput.FramePosition, inputDt, input.NominalRate, 2) ||
             !Plausible(render.FramePosition - lastOutput.FramePosition, outputDt, output.NominalRate, 2))
             return ClockObservationResult.Implausible;
@@ -78,8 +78,8 @@ internal sealed class ClockRatioEstimator
         if (inputFrames <= 0 || outputFrames <= 0 || !Plausible(inputFrames, inputDt, input.NominalRate, 2) ||
             !Plausible(outputFrames, outputDt, output.NominalRate, 2))
         {
-            // Neither baseline accepts this sample. A cumulative failure invalidates
-            // the previous estimate and requires an explicit owner reset/reprime.
+            // Nenhuma das referências aceita esta amostra. Uma falha acumulada invalida
+            // a estimativa anterior e exige reinicialização e novo priming explícitos pelo proprietário.
             RequiresReset = true; Latest = null; estimated = false;
             return ClockObservationResult.Implausible;
         }

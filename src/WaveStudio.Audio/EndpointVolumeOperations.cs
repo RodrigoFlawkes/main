@@ -76,7 +76,7 @@ public static class EndpointVolumeOperations
         }
         catch (Exception error) when (writeStarted)
         {
-            // A two-channel update has two native calls. Restore a partial update on failure.
+            // Atualizar dois canais exige duas chamadas nativas. Em caso de falha, desfaz a atualização parcial.
             try
             {
                 var current = endpoint.ReadStereo();
@@ -100,7 +100,7 @@ public static class EndpointVolumeOperations
     private static void WriteChannels(IEndpointVolumeAccess endpoint, StereoLevels current, StereoLevels target,
         CancellationToken cancellationToken, Action? startingWrite = null, Action<int, double>? writingChannel = null)
     {
-        // Attenuate first when moving across the center, avoiding a temporary increase of both sides.
+        // Atenua primeiro ao cruzar o centro para evitar um aumento temporário dos dois lados.
         int first = target.Left < current.Left ? 0 : 1;
         cancellationToken.ThrowIfCancellationRequested();
         startingWrite?.Invoke();

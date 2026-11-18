@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-18 — COMENTARIOS-PTBR
+
+- Traduzidos 209 comentários próprios em 74 arquivos C#, PowerShell e XML. A verificação por parser preservou tokens, sintaxe, strings e diretivas.
+- Preservadas a aceitação manual registrada e a prova silenciosa 4. Checkpoint textual para revisão antes de F2-I6B2.
+
 ### 2026-11-18 — F2-I6B1-PROOF-4
 
 - Prova física silenciosa aprovada pelo teste, com temporizador de 5 s concluído e 4,9997441 s medidos por QPC. Confirmadas janelas de clock, continuidade de 499 pacotes e corroboração terminal.

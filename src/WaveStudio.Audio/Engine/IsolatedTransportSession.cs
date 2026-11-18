@@ -3,12 +3,12 @@ using System.Collections.Concurrent;
 
 namespace WaveStudio.Audio.Engine;
 
-// Internal contract proof: only ISimulatedAudioTransport is accepted, never a native stream.
+// Prova interna do contrato: aceita apenas ISimulatedAudioTransport, sem stream nativo.
 internal sealed class IsolatedTransportSession : IAsyncDisposable
 {
     private const long Frequency = 10000000;
     private readonly BlockingCollection<Action> commands = new(8);
-    private readonly object posting = new(); // Control plane only; callbacks never take this lock.
+    private readonly object posting = new(); // Apenas no plano de controle. Os callbacks nunca adquirem este lock.
     private readonly TransportActivityGuard guard;
     private readonly Func<SyntheticAudioPipeline, FrameBufferSnapshot?> readBuffer;
     private readonly Thread worker;
@@ -45,7 +45,7 @@ internal sealed class IsolatedTransportSession : IAsyncDisposable
     }
     public Task<TransportSnapshot> StopAsync()
     {
-        Freeze(); // Even if the worker is still preparing or a callback is in flight.
+        Freeze(); // Mesmo se o worker ainda estiver em preparação ou houver um callback em andamento.
         return Post(() => StopCore(false));
     }
     public Task<TransportSnapshot> TickAsync(long closedThrough100ns) => Post(() => Tick(closedThrough100ns));
@@ -130,7 +130,7 @@ internal sealed class IsolatedTransportSession : IAsyncDisposable
             backend.StartPlayback(); CheckStart(e, token);
             backend.StartCapture(); CheckStart(e, token);
             e.Ticket.Enable();
-            // Stop may have raced Enable; observe its monotonic watermark again.
+            // Stop pode ter ocorrido em paralelo com Enable. Consulte novamente seu marco monotônico.
             CheckStart(e, token);
             return Publish(e, TransportState.Running);
         }
@@ -174,12 +174,12 @@ internal sealed class IsolatedTransportSession : IAsyncDisposable
             var input = e.Input.AsSpan(0, frames * e.InputChannels);
             if (silent) input.Clear();
             else PcmFloatConverter.Decode(bytes, input, e.InputFormat, e.InputEncoding);
-            // AdaptiveResampler is serial: only this producer applies commands and processes samples.
+            // AdaptiveResampler é serial: somente este produtor aplica comandos e processa amostras.
             e.Adaptive.SetTargetPpm(e.Generation, Volatile.Read(ref e.Ratio).Ppm);
             var converted = e.Adaptive.Process(e.Generation, input, e.Output);
             Volatile.Write(ref e.AppliedPpm, e.Adaptive.CurrentPpm);
             if (converted.ConsumedFrames != frames) { Fail(e, TransportFault.Protocol); return; }
-            // Pipeline accepts at most 4096 frames per call, split larger upsample output explicitly.
+            // O pipeline aceita até 4096 frames por chamada. Divida explicitamente saídas maiores do aumento de taxa.
             int accepted = 0;
             for (int offset = 0; offset < converted.ProducedFrames;)
             {
@@ -230,7 +230,7 @@ internal sealed class IsolatedTransportSession : IAsyncDisposable
         var e = active;
         if (e is null || !e.Ticket.IsValid) return Snapshot;
         if (now <= e.ControlTime || now > e.Backend.ClosedThrough100ns) throw new ArgumentException("Intervalo ainda aberto ou tempo inválido; não existe média exata disponível.");
-        // The fake watermark closes both roles. A later packet at/before this instant is a protocol fault.
+        // O marco simulado fecha os dois papéis. Receber depois um pacote com marca de tempo anterior ou igual a esse instante viola o protocolo.
         Volatile.Write(ref e.Cutoff, now);
         if (!e.ProducerLedger.Read(now, out var p) || !e.ConsumerLedger.Read(now, out var c))
         { Fail(e, TransportFault.Protocol); return StopCore(true); }
@@ -267,7 +267,7 @@ internal sealed class IsolatedTransportSession : IAsyncDisposable
         if (e is null) return Snapshot;
         e.Ticket.Invalidate(); Publish(e, TransportState.Stopping);
         try { e.Backend.RequestStop(); } catch { Fail(e, TransportFault.Backend); faulted = true; }
-        // Control plane only; no blocking wait or destruction is performed by a callback.
+        // Apenas no plano de controle. O callback não realiza espera bloqueante nem destrói recursos.
         var timeout = System.Diagnostics.Stopwatch.StartNew();
         while (Volatile.Read(ref e.ProducerBusy) != 0 || Volatile.Read(ref e.ConsumerBusy) != 0)
         {
@@ -304,7 +304,7 @@ internal sealed class IsolatedTransportSession : IAsyncDisposable
     private FrameBufferSnapshot? ReadBuffer(Epoch e)
     {
         try { return readBuffer(e.Pipe); }
-        catch { return null; } // Diagnostic failure is unavailability, never an invented queue value.
+        catch { return null; } // Falha de diagnóstico indica indisponibilidade. Não se atribui um valor fictício à fila.
     }
     public async ValueTask DisposeAsync()
     {

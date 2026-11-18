@@ -4,8 +4,8 @@ using NAudio.Wave;
 
 namespace WaveStudio.Audio.Engine;
 
-// Isolated native ownership. All acquisitions, queries and releases stay on this MTA owner.
-// No NAudio private interface/RCW is borrowed; NAudio is reused only for detached format decoding.
+// Propriedade isolada dos recursos nativos. Aquisição, consulta e liberação ocorrem nesta thread MTA proprietária.
+// Não usa interfaces privadas ou RCWs da NAudio. Reutiliza a biblioteca apenas para decodificar o formato de forma independente.
 internal sealed class NativeWasapiPreparationDevice(TransportEndpoint requested) : IWasapiPreparationDevice
 {
     private NativeReference<IPreparationEnumerator>? enumerator;
@@ -20,7 +20,7 @@ internal sealed class NativeWasapiPreparationDevice(TransportEndpoint requested)
         if (endpoint != requested) throw new InvalidOperationException("Identidade/geração divergente.");
         if (enumerator is null)
         {
-            int hr = CoInitializeEx(0, 0); // COINIT_MULTITHREADED; balance S_OK and S_FALSE alike.
+            int hr = CoInitializeEx(0, 0); // COINIT_MULTITHREADED. Balanceia S_OK e S_FALSE da mesma forma.
             if (hr is not (0 or 1)) throw new WasapiCallException("CoInitializeEx", hr);
             apartmentInitialized = true;
             var clsid = new Guid("BCDE0395-E52F-467C-8E3D-C4579291692E");
@@ -73,7 +73,7 @@ internal sealed class NativeWasapiPreparationDevice(TransportEndpoint requested)
         private bool initialized;
         public WasapiPcm ReadMixFormat()
         {
-            _ = client.Value; // Owner/disposal check before touching memory.
+            _ = client.Value; // Verifica a propriedade e o descarte antes de acessar a memória.
             if (format != 0) throw new InvalidOperationException("Formato já consultado.");
             WasapiCallException.RequireSuccess(client.Value.GetMixFormat(out format), "IAudioClient.GetMixFormat");
             if (format == 0) throw new InvalidOperationException("Formato nativo ausente.");
@@ -98,7 +98,7 @@ internal sealed class NativeWasapiPreparationDevice(TransportEndpoint requested)
         public void Initialize()
         {
             if (format == 0 || initialized) throw new InvalidOperationException("Preparação fora de sequência.");
-            var session = Guid.NewGuid(); // Isolated session; never attaches to the diagnostic/session-volume controls.
+            var session = Guid.NewGuid(); // Sessão isolada, sem vínculo com os controles de diagnóstico ou de volume das sessões.
             WasapiCallException.RequireSuccess(client.Value.Initialize(0, 0, 0, 0, format, in session), "IAudioClient.Initialize");
             initialized = true;
         }
@@ -189,7 +189,7 @@ internal sealed class NativeWasapiPreparationDevice(TransportEndpoint requested)
         public void Dispose() => packets.Dispose();
     }
 
-    // Unique generated RCW + counted raw reference. Unlike classic RCW caching, each owner is independent.
+    // RCW gerado único e referência bruta contada. Cada proprietário é independente do cache clássico de RCWs.
     private sealed class NativeReference<T>(T value) : IDisposable where T : class
     {
         private T? current = value;

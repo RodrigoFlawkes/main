@@ -32,7 +32,7 @@ internal sealed class SettingsWriter : ISettingsWriter
     }
 }
 
-/// <summary>Serializes I/O off the UI thread. A lease and content hash protect cooperating instances.</summary>
+/// <summary>Serializa as operações de I/O fora da thread da interface. Um lease e o hash do conteúdo protegem as instâncias cooperantes.</summary>
 internal sealed class SettingsStore
 {
     private readonly SemaphoreSlim gate = new(1, 1);
@@ -122,7 +122,7 @@ internal sealed class SettingsStore
 
     private async Task<SettingsSaveResult> WriteAsync(StudioSettings settings, bool recovery, bool useBackup, CancellationToken token)
     {
-        // Copy and validate before awaiting so callers cannot change an array in an enqueued save.
+        // Copia e valida antes de aguardar, para que o chamador não altere um array em uma gravação enfileirada.
         byte[] encoded;
         try { encoded = SettingsJson.Encode(settings); }
         catch (Exception error) when (SettingsJson.IsValidationError(error))
@@ -173,7 +173,7 @@ internal sealed class SettingsStore
                 State = SettingsFileState.Conflict;
                 return new(false, "O arquivo mudou durante a gravação. Conteúdo atual preservado. Reabra o aplicativo para carregar a alteração.");
             }
-            // Only a known-valid primary becomes the next backup. Recovery keeps the good backup.
+            // Somente um arquivo principal reconhecidamente válido vira o próximo backup. A recuperação mantém o backup válido.
             string? backupPath = State == SettingsFileState.Ready ? BackupPath : null;
             writer.Commit(temporary, FilePath, current is not null, backupPath);
             baseline = encoded;
@@ -192,9 +192,9 @@ internal sealed class SettingsStore
         }
         finally
         {
-            // This exact, unique temporary belongs to this operation in the settings directory.
+            // Este arquivo temporário exclusivo pertence a esta operação no diretório de configurações.
             try { File.Delete(temporary); }
-            catch (Exception error) when (IsStorageError(error)) { /* A later explicit inspection can remove the orphan. */ }
+            catch (Exception error) when (IsStorageError(error)) { /* Uma inspeção explícita posterior pode remover o arquivo órfão. */ }
         }
     }
 

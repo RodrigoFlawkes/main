@@ -14,7 +14,7 @@ public sealed class PipelineLifecycleConcurrencyTests
     public void ParticipantsRaceStopCancelResetOrDisposeWithBoundedLifetime(int action)
     {
         var token = TestContext.Current.CancellationToken;
-        // Dedicated test threads avoid making active loops depend on thread-pool growth.
+        // Threads dedicadas ao teste evitam que os laços ativos dependam do crescimento do pool de threads.
         for (int iteration = 0; iteration < 32; iteration++)
         {
             token.ThrowIfCancellationRequested();
@@ -62,9 +62,9 @@ public sealed class PipelineLifecycleConcurrencyTests
                 if (action == 2)
                 {
                     try { pipeline.Dispose(); }
-                    catch (InvalidOperationException) { /* Active participant: retry only after join. */ }
+                    catch (InvalidOperationException) { /* Participante ativo: tente novamente somente após o término da thread. */ }
                 }
-                else pipeline.TryReset(); // False while busy is an explicit, valid result.
+                else pipeline.TryReset(); // False enquanto ocupado é um resultado explícito e válido.
             }
             finally
             {

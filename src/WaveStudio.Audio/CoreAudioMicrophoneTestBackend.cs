@@ -3,14 +3,14 @@ using NAudio.Wave;
 
 namespace WaveStudio.Audio;
 
-// All construction, commands and disposal run on the diagnostic worker's MTA thread.
-// NAudio owns its stream clients/threads; these wrappers own the explicitly selected MMDevice.
+// A criação, os comandos e o descarte ocorrem na thread MTA do worker de diagnóstico.
+// A NAudio gerencia os clientes e threads do stream. Estes wrappers são responsáveis pelo MMDevice selecionado explicitamente.
 internal sealed class CoreAudioMicrophoneTestBackend : IMicrophoneTestBackend
 {
     private static MMDevice Open(string id, DataFlow direction)
     {
         using var enumerator = new MMDeviceEnumerator();
-        var device = enumerator.GetDevice(id); // Never resolve a default or fall back.
+        var device = enumerator.GetDevice(id); // Não selecionar o dispositivo padrão nem recorrer a um substituto.
         try
         {
             if (device.State != DeviceState.Active || device.DataFlow != direction)
@@ -46,10 +46,10 @@ internal sealed class CoreAudioMicrophoneTestBackend : IMicrophoneTestBackend
         try
         {
             using var client = device.CreateAudioClient();
-            // Avoid ambiguous multi-channel mapping in this diagnostic preview.
+            // Evita mapeamento ambíguo de canais na prévia de diagnóstico.
             BoundedTestAudio.ValidateFormat(client.MixFormat);
             player = new WasapiPlayerBuilder().WithDevice(device).WithSharedMode().WithLatency(200).Build();
-            player.Init(source); // Public shared-mode AutoConvertPcm/SrcDefaultQuality path in NAudio 3.1.0.
+            player.Init(source); // Caminho público AutoConvertPcm/SrcDefaultQuality no modo compartilhado da NAudio 3.1.0.
             return new Playback(device, player);
         }
         catch { try { player?.Dispose(); } finally { device.Dispose(); } throw; }
@@ -87,22 +87,22 @@ internal sealed class CoreAudioMicrophoneTestBackend : IMicrophoneTestBackend
             try { recorder.StartRecording(); }
             catch
             {
-                // Audited 3.1.0: a fresh StartRecording initializes synchronously,
-                // then launches its thread as its final action. Caller-side failure
-                // has no running capture callback; asynchronous failure uses RecordingStopped.
+                // Auditoria da versão 3.1.0: a primeira chamada a StartRecording inicializa de forma síncrona
+                // e inicia sua thread como última ação. Uma falha no chamador
+                // não deixa callback de captura ativo. Falhas assíncronas são comunicadas por RecordingStopped.
                 Volatile.Write(ref completed, 1);
                 throw;
             }
         }
         public void RequestStop()
         {
-            // 3.1.0 sets Capturing on its capture thread. Do not race that assignment
-            // with StopRecording while Starting. The worker retries on its next tick.
+            // A versão 3.1.0 define Capturing na thread de captura. Evite disputar essa atribuição
+            // com StopRecording durante Starting. O worker tenta novamente no próximo ciclo.
             if (recorder.CaptureState != CaptureState.Starting) recorder.StopRecording();
         }
         public void Dispose()
         {
-            // Only after RecordingStopped (or failure before Start created a thread).
+            // Somente após RecordingStopped ou falha anterior à criação da thread por Start.
             try { recorder.Dispose(); }
             finally
             {
@@ -140,8 +140,8 @@ internal sealed class CoreAudioMicrophoneTestBackend : IMicrophoneTestBackend
             try { player.Play(); }
             catch
             {
-                // Fresh one-shot Play ends in Thread.Start in the pinned source;
-                // callback failures are reported separately through PlaybackStopped.
+                // Na versão inspecionada, a chamada única a Play termina em Thread.Start.
+                // Falhas nos callbacks são comunicadas separadamente por PlaybackStopped.
                 Volatile.Write(ref completed, 1);
                 throw;
             }

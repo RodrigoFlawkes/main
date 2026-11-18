@@ -13,7 +13,7 @@ internal sealed record WasapiCaptureTimingSnapshot(int PhaseBudgetFrames, long P
     WasapiRateMeasurement? PacketAccumulated, WasapiRateMeasurement? PacketRolling,
     double? CorroborationErrorFrames, double? CorroborationLimitFrames, string? Failure, bool Confirmed);
 
-// Single capture owner. Packet and clock rates are independent observations in the same QPC time domain.
+// Um único proprietário da captura. As taxas dos pacotes e do relógio são observações independentes no mesmo domínio QPC.
 internal sealed class WasapiCaptureTiming
 {
     private const ulong Window = 20_000_000;
@@ -53,7 +53,7 @@ internal sealed class WasapiCaptureTiming
         return NativeClockReason.None;
     }
 
-    // Validate before touching PCM. The previous position is committed only after a full ReleaseBuffer.
+    // Valida antes de acessar PCM. A posição anterior só é confirmada após ReleaseBuffer integral.
     public void ValidatePacket(ulong position, uint frames, ulong qpc)
     {
         if (position > ulong.MaxValue - frames) Reject("PacketPositionOverflow");
@@ -114,8 +114,8 @@ internal sealed class WasapiCaptureTiming
 
     private sealed class RateWindow
     {
-        // Keep at most one anchor every 100 ms. Every observation still validates against the newest
-        // stored anchor at least 2 s old, and against the fixed origin, including the terminal sample.
+        // Armazena no máximo uma âncora a cada 100 ms. Cada observação é validada em relação à âncora armazenada
+        // mais recente com pelo menos 2 s de idade e à origem fixa, inclusive na última amostra.
         private const ulong AnchorSpacing = 1_000_000;
         private readonly WasapiRatePoint[] anchors = new WasapiRatePoint[32];
         private int head, count;

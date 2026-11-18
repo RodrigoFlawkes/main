@@ -141,7 +141,7 @@ public sealed class WasapiSilentTests
             {
                 role.Step("ReleaseRender"); Assert.True(role.BufferHeld); Assert.Equal(2u, flags);
                 Assert.InRange(framesWritten, 1u, role.Capacity);
-                Assert.All(role.Data, value => Assert.Equal(0x5a, value)); // Transport never writes samples to WASAPI output.
+                Assert.All(role.Data, value => Assert.Equal(0x5a, value)); // O transporte nunca grava amostras na saída WASAPI.
                 if (role.ReleaseResult == 0) role.BufferHeld = false; role.ReleasedFrames += framesWritten; return role.ReleaseResult;
             }
             public void Dispose() { role.Step("DisposeRender"); Assert.False(role.BufferHeld); }

@@ -7,7 +7,7 @@ param(
     [ValidateSet('None', 'Timeout', 'Pipe')][string]$Probe = 'None'
 )
 
-# Only this newly created dotnet process and its descendants can be terminated.
+# Somente o processo dotnet recém-criado e seus descendentes podem ser encerrados.
 $ErrorActionPreference = 'Stop'
 $repoRoot = if ($RepositoryRoot) { (Resolve-Path -LiteralPath $RepositoryRoot).Path }
     else { (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
@@ -33,8 +33,8 @@ if ($Probe -ne 'None') {
     if (-not (Test-Path -LiteralPath $processInfo.FileName)) { throw 'Compile primeiro o probe local revisado.' }
     $arguments = @($Probe, $prefix, $logDirectory)
 }
-# No shell interpretation. All arguments are quoted; none can contain quotes or
-# end with a backslash (which would escape the closing quote on Windows).
+# Sem interpretação pelo shell. Todos os argumentos são delimitados por aspas. Nenhum pode conter aspas ou
+# terminar com barra invertida, que escaparia a aspa de fechamento no Windows.
 foreach ($argument in $arguments) {
     if ($argument.Contains('"') -or $argument.EndsWith('\')) { throw 'Argumento não suportado pelo watchdog.' }
 }
@@ -53,7 +53,7 @@ function Stop-OwnedChildren([int]$parentId, [datetime]$parentCreated, [int]$dept
     catch { $watchdogState.OwnershipRefused = $true; $watchdogState.Refused.Add('CIM: ' + $_.Exception.GetType().Name); return }
     foreach ($child in $children) {
         if ($budget.Elapsed.TotalSeconds -gt ($TimeoutSeconds - 2)) { $watchdogState.OwnershipRefused = $true; break }
-        # PID ancestry alone is insufficient: MTP/probe must carry this unique invocation nonce.
+        # A relação entre PIDs não basta. O MTP e o probe precisam carregar o identificador único desta execução.
         if (-not $child.CommandLine -or -not $child.CommandLine.Contains($prefix) -or $child.CreationDate.ToUniversalTime() -lt $parentCreated) {
             $watchdogState.OwnershipRefused = $true; $watchdogState.Refused.Add('nonce/creation: ' + $child.Name); continue
         }
@@ -90,7 +90,7 @@ try {
         if (-not $runner.HasExited) { $runner.Kill() }
         $null = $runner.WaitForExit([int][Math]::Max(1, [Math]::Min(1000, ($TimeoutSeconds - $budget.Elapsed.TotalSeconds) * 1000)))
     }
-    # Bounded even when an unverified descendant holds a pipe open. Never GetResult on a pending task.
+    # A espera é limitada mesmo quando um descendente não verificado mantém um pipe aberto. Nunca chame GetResult em tarefa pendente.
     $collected = Wait-CapturedStreams ([int][Math]::Max(1, [Math]::Min(2000, ($TimeoutSeconds - $budget.Elapsed.TotalSeconds) * 1000)))
     $stdout = if ($stdoutTask.Status -eq [System.Threading.Tasks.TaskStatus]::RanToCompletion) { $stdoutTask.Result } else { '[stdout incompleto: pipe não encerrou no orçamento ou falhou]' }
     $stderr = if ($stderrTask.Status -eq [System.Threading.Tasks.TaskStatus]::RanToCompletion) { $stderrTask.Result } else { '[stderr incompleto: pipe não encerrou no orçamento ou falhou]' }

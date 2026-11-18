@@ -75,7 +75,7 @@ public sealed class EqualizerPreviewTests
         {
             var provider = clip.CreatePlayback(.2f, () => true, settings);
             var data = new byte[original.Length]; int at = 0;
-            // Irregular, frame-aligned blocks; EOF and undersized destination must not advance state.
+            // Blocos irregulares alinhados a frames. EOF e espaço insuficiente no destino não devem avançar o estado.
             Assert.Equal(0, provider.Read(data.AsSpan(0, format.BlockAlign - 1)));
             while (at < data.Length) { int count = Math.Min(data.Length - at, 37 * format.BlockAlign); at += provider.Read(data.AsSpan(at, count)); }
             Assert.Equal(0, provider.Read(data)); return data;

@@ -1,6 +1,6 @@
 namespace WaveStudio.Audio;
 
-/// <summary>Stores independent endpoint preferences without changing Windows settings.</summary>
+/// <summary>Armazena preferências independentes de endpoints sem alterar as configurações do Windows.</summary>
 public sealed class DeviceSelection
 {
     public string? PlaybackId { get; private set; }
@@ -38,7 +38,7 @@ public sealed class DeviceSelection
         string? id = direction == EndpointDirection.Playback ? PlaybackId : CaptureId;
         var candidates = catalog.Devices.Where(device => device.Direction == direction);
 
-        // An absent preference stays absent until the user chooses a replacement.
+        // Uma preferência ausente permanece ausente até o usuário escolher um substituto.
         if (id is not null)
             return candidates.FirstOrDefault(device => device.Id == id);
 

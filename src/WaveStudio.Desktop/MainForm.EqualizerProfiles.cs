@@ -57,7 +57,7 @@ internal sealed partial class MainForm
     }
     private void ShowEqualizerSaveResult(bool success, string message)
     {
-        if (!success) equalizerSavePending = true; // Keep the latest in-memory snapshot eligible for explicit retry/closing flush.
+        if (!success) equalizerSavePending = true; // Mantém o estado mais recente em memória disponível para nova tentativa explícita ou gravação no encerramento.
         microphoneTest.Equalizer.SetWritable(store.CanSave && !recoveringPreferences);
         microphoneTest.Equalizer.SetSaveStatus(success
             ? equalizerSavePending || settingsSaveRequested ? "Alterações aguardando salvamento…" : "Ajustes salvos neste computador. Perfis só mudam ao salvar alterações."

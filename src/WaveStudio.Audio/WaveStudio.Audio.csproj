@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!-- Required only by the SDK's audited COM source generator. -->
+    <!-- Necessário apenas para o gerador de código-fonte COM do SDK, já auditado. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>

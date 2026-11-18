@@ -1,6 +1,6 @@
 namespace WaveStudio.Audio.Engine;
 
-// One-shot, always-SILENT proof. No UI, unmute, recovery, monitor level or simulated transport interface.
+// Prova de execução única e saída sempre SILENT. Sem UI, reativação de áudio, recuperação, nível de monitoramento ou interface de transporte simulado.
 internal sealed class WasapiSilentSession : IAsyncDisposable
 {
     private static readonly HashSet<WasapiSilentSession> live = [];
@@ -9,7 +9,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
     private readonly TransportActivityGuard guard;
     private readonly TimeSpan timeout;
     private readonly bool verifyCaptureTiming;
-    private readonly object control = new(); // Never acquired by sample processing.
+    private readonly object control = new(); // O processamento de amostras nunca adquire este lock.
     private readonly SemaphoreSlim finalizing = new(1);
     private readonly ManualResetEventSlim stop = new();
     private readonly TaskCompletionSource stopped = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -49,7 +49,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             if (run is not null || stop.IsSet) throw new InvalidOperationException("Sessão de prova é de uso único.");
             token.ThrowIfCancellationRequested();
             lease = guard.TryAcquire(AudioActivity.IsolatedTransport) ?? throw new InvalidOperationException("Outra operação de áudio está ativa.");
-            lock (live) live.Add(this); // Root COM owners/lease even if a caller abandons a timed-out operation.
+            lock (live) live.Add(this); // Mantém os proprietários COM e o lease referenciados mesmo se o chamador abandonar uma operação que excedeu o prazo.
             cancellation = token.Register(RequestStop);
             try { capture.Launch(); playback.Launch(); }
             catch (Exception error) { Fail("OwnerLaunch", error); capture.NotLaunched(); playback.NotLaunched(); }
@@ -58,7 +58,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
     }
     public void RequestStop()
     {
-        ticket.Invalidate(); // Irreversible before any wait or native stop.
+        ticket.Invalidate(); // Invalidação irreversível antes de qualquer espera ou parada nativa.
         stop.Set(); stopped.TrySetResult();
     }
     public void Invalidate(long generation)
@@ -108,7 +108,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
         if (completed) return Snapshot();
         if (retryStop) { capture.Retry.Set(); playback.Retry.Set(); }
         try { await Task.WhenAll(capture.Done.Task, playback.Done.Task).WaitAsync(timeout); }
-        catch (TimeoutException) { return Snapshot(); } // Keep owners/COM/scratch/lease; never abort a native call.
+        catch (TimeoutException) { return Snapshot(); } // Preserva proprietários, COM, memória de trabalho e lease. Nunca interrompe uma chamada nativa.
         if (!capture.Join() || !playback.Join()) return Snapshot();
             path?.Dispose();
             cancellation.Dispose();
@@ -160,7 +160,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
         private int? startResult, stopResult, acquireResult, releaseResult;
         private long nextClock, startTime, startRequested100ns;
         private NativeClockResult? clockStatus;
-        private const long StartupDiscardWindow100ns = 5_000_000; // Bound by the existing packet freshness budget.
+        private const long StartupDiscardWindow100ns = 5_000_000; // Limitado pelo prazo de frescor já aplicado aos pacotes.
         private const uint Discontinuity = (uint)TransportPacketFlags.Discontinuity;
         private const uint Silent = (uint)TransportPacketFlags.Silent;
         private const int BufferEmpty = 0x08890001;
@@ -231,7 +231,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             finally
             {
                 Ready.TrySetResult(); Started.TrySetResult(); session.RequestStop();
-                // Retry Stop only on an explicit disposal attempt. A failed Release is never blindly repeated.
+                // Só repete Stop em uma tentativa explícita de descarte. Não repete uma liberação malsucedida sem confirmação.
                 while (true)
                 {
                     if (TryCleanup()) { Done.TrySetResult(); break; }
@@ -258,7 +258,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                 Check();
                 var buffer = packets.GetBuffer();
                 acquireResult = buffer.HResult;
-                if (buffer.HResult == BufferEmpty) return; // AUDCLNT_S_BUFFER_EMPTY: no packet acquired, no Release.
+                if (buffer.HResult == BufferEmpty) return; // AUDCLNT_S_BUFFER_EMPTY: nenhum pacote adquirido, nenhuma liberação.
                 WasapiCallException.RequireSuccess(buffer.HResult, "IAudioCaptureClient.GetBuffer");
                 bufferInFlight = true; acquired++; acquiredFrames += buffer.Frames; uint consumed = 0;
                 bool discardStartup = (buffer.Flags & Discontinuity) != 0;
@@ -266,7 +266,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                 {
                     flags |= buffer.Flags; packetPosition = buffer.Position; packetQpc = buffer.Qpc100ns;
                     long now = WasapiTime.Now100ns();
-                    // BUFFER_EMPTY never reaches here. A valid first packet uses up the one-shot exception, too.
+                    // BUFFER_EMPTY não chega a este ponto. Um primeiro pacote válido também esgota a exceção de uso único.
                     if (buffer.Frames != nextFrames || buffer.Frames > Capacity ||
                         (buffer.Flags & ~(Silent | Discontinuity)) != 0 ||
                         (discardStartup && (acquired != 1 || now - startRequested100ns > StartupDiscardWindow100ns)))
@@ -280,8 +280,8 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                     var bytes = silent ? ReadOnlySpan<byte>.Empty : new ReadOnlySpan<byte>((void*)buffer.Data, checked((int)buffer.Frames * info.Mix!.BlockAlign));
                     if (discardStartup)
                     {
-                        // ReleaseBuffer(0) would return this same packet next time. Consume the whole packet
-                        // before advancing, with no sample read for SILENT and no input to the FIR for either case.
+                        // ReleaseBuffer(0) faria o mesmo pacote reaparecer. Consuma o pacote inteiro
+                        // antes de avançar, sem ler amostras quando SILENT e sem alimentar o FIR em nenhum dos casos.
                         if (!silent) session.path!.DiscardCapture(bytes, (int)buffer.Frames);
                     }
                     else session.path!.CopyCapture(bytes, (int)buffer.Frames, silent);
@@ -325,7 +325,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             }
             finally
             {
-                // SILENT is unconditional, even if cancellation/selection/failure occurs after GetBuffer.
+                // SILENT é incondicional, mesmo se houver cancelamento, mudança de seleção ou falha após GetBuffer.
                 int hr;
                 try { hr = render.ReleaseBuffer(frames, Silent); releaseResult = hr; }
                 catch { bufferUncertain = true; throw; }

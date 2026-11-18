@@ -72,7 +72,7 @@ internal sealed class EndpointOperationQueue : IAsyncDisposable
         try
         {
             try { await previous.ConfigureAwait(false); }
-            catch (Exception) { /* A prior failure must not poison later requests. */ }
+            catch (Exception) { /* Uma falha anterior não deve afetar solicitações posteriores. */ }
             previous = Task.CompletedTask;
             return await Task.Run(() =>
             {
@@ -108,6 +108,6 @@ internal sealed class EndpointOperationQueue : IAsyncDisposable
     private static async Task ObserveAsync(Task pending)
     {
         try { await pending.ConfigureAwait(false); }
-        catch (Exception) { /* Every generation releases itself after its last operation. */ }
+        catch (Exception) { /* Cada geração libera seus recursos após a última operação. */ }
     }
 }

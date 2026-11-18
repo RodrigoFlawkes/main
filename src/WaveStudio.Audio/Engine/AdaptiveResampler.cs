@@ -24,7 +24,7 @@ internal struct SampleCursor
 internal readonly record struct AdaptiveProtection(long InputNonFinite, long OutputNonFinite,
     long RepresentationSaturations, long OutputClipped);
 
-// Serial, sample-domain FIR. No backend, borrowed spans retained, or allocation in valid processing.
+// FIR serial no domínio das amostras. Sem backend, retenção de spans emprestados ou alocação no processamento válido.
 internal sealed class AdaptiveResampler
 {
     public const int Radius = 80, Taps = 161, Phases = 256;
@@ -151,7 +151,7 @@ internal sealed class AdaptiveResampler
         double blend = (scaled & SampleCursor.Mask) / (double)SampleCursor.Scale;
         double left = 0, right = 0;
         int validTaps = cursor.Index >= Taps - 1 ? Taps : (int)cursor.Index + 1;
-        // Coefficients and circular indices are shared by channels; histories remain independent.
+        // Os canais compartilham coeficientes e índices circulares, com históricos independentes.
         for (int tap = 0; tap < validTaps; tap++)
         {
             int slot = (int)((cursor.Index - tap) & (HistoryFrames - 1)) * outputChannels;

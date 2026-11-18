@@ -35,7 +35,7 @@ public sealed class IsolatedTransportTests
             fake.Capture(route, block, captureTime, .5f);
             fake.Render(route, (int)Math.Round(block * (double)outputRate / inputRate), renderTime);
         }
-        // A step has FIR ringing; verify settled gain separately from its bounded transient peak.
+        // Uma transição em degrau gera oscilações no FIR. Verifica o ganho estabilizado separadamente do pico transitório limitado.
         Assert.InRange(fake.LastValue, .099, .101); Assert.InRange(fake.Peak, .099, .12);
         Assert.True(fake.EqualChannels); Assert.True(fake.NonzeroSamples > 0);
         var stopped = await session.StopAsync();
@@ -67,7 +67,7 @@ public sealed class IsolatedTransportTests
         var route = Route(); using var fake = new FakeTransport(); await using var session = new IsolatedTransportSession(new());
         await session.StartAsync(route, fake, 0, cancellation: TestContext.Current.CancellationToken);
         await Assert.ThrowsAsync<ArgumentException>(() => session.TickAsync(100000));
-        // Queue 1024 until .01 s, 1504 until .02 s, then 1024: mean over .03 s = 1184.
+        // Fila com 1024 até .01 s, 1504 até .02 s e então 1024: média em .03 s = 1184.
         fake.Capture(route, 480, 100000, .2f); fake.Render(route, 480, 200000);
         var first = await session.TickAsync(fake.CloseThrough(300000));
         Assert.Equal(1184, first.MeanOccupancy); Assert.Equal(DriftControlState.Waiting, first.ControlState);
@@ -399,7 +399,7 @@ public sealed class IsolatedTransportTests
         {
             if (ThrowSubmit) throw new IOException("Submissão simulada falhou.");
             PendingTicket = ticket; SubmitEntered?.Set();
-            // Test-only barrier to exercise invalidation at the last delivery boundary; never in production callbacks.
+            // Barreira usada apenas no teste para exercitar a invalidação no último ponto de entrega, sem uso em callbacks de produção.
             if (SubmitRelease is not null && !SubmitRelease.Wait(TimeSpan.FromSeconds(4))) throw new TimeoutException();
             if (!ticket.IsValid) return false;
             bytes.CopyTo(Last); LastLength = bytes.Length; Submissions++;

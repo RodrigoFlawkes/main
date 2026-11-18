@@ -1,6 +1,6 @@
 namespace WaveStudio.Audio.Engine;
 
-// Control plane only. Unique COM children precede parents in inverse acquisition order.
+// Apenas no plano de controle. Objetos COM filhos únicos são liberados antes dos pais, na ordem inversa à aquisição.
 internal sealed class WasapiResourceScope(IDisposable? lease = null) : IDisposable
 {
     private static readonly List<object> retained = [];

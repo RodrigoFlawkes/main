@@ -17,7 +17,7 @@ internal enum NativeClockReason
 internal readonly record struct NativeClockAnchor(NativePositionUnit Unit, ulong Frequency, ulong Position,
     ulong Qpc100ns, ulong LastProgressQpc100ns, long FramePosition, ulong Remainder);
 
-// Values are populated at the point where validation uses them. Null marks a step the reading never reached.
+// Preenche os valores no ponto em que a validação os utiliza. Null indica uma etapa que a leitura não atingiu.
 internal record struct NativeClockValidation(NativePositionUnit Unit, NativeClockQuality Quality,
     TransportPacketFlags Flags, long Now100ns, long? Age100ns, NativeClockAnchor? Anchor)
 {
