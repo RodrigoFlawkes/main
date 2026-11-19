@@ -2,7 +2,19 @@
 
 Atualizado em 19/11/2026.
 
-## Estado atual — F3-I1-EXTERNAL-ROUTE, 19/11/2026
+## Estado atual — F3-I2-EXTERNAL-ACCEPTANCE, 19/11/2026
+
+**Preparação verificada. Aceitação física aguarda escolha de dependência.** A `main` foi sincronizada por fast-forward de `6c7a5d4` até `fdd2816`. A diferença é exclusivamente documental. A conectividade Git, o SDK 10.0.404, o Git 2.56.1 e a política Restricted foram conferidos.
+
+O inventário somente leitura encontrou seis endpoints PnP presentes com estado OK no Windows 10 Pro x64, build 19045. A busca não identificou VB-CABLE A+B ou VoiceMeeter entre endpoints e registros de drivers, nem pacote oficial A+B ou OBS nas pastas e registros consultados. Essa busca não exclui cópias portáteis em outros locais. O estado consultado indicou Secure Boot ativo e serviço de integridade de memória fora de execução. Nenhuma configuração foi modificada. Versão, assinatura e compatibilidade efetiva dos drivers permanecem sem verificação local até que haja pacote.
+
+O Release x64 foi reaproveitado. O metadado de versão referencia `31acd2f`, base de planejamento sobre a qual se compilou a implementação antes de publicá-la em `6c7a5d4`. Os três PDBs correspondem às respectivas DLLs e os checksums de 131 fontes C# coincidem com a árvore atual. O apphost e as DLLs são AMD64. Os oito documentos virtuais de fontes geradas sem arquivo local ficam fora da comparação de bytes. Os hashes dos binários e os detalhes estão no log ignorado `artifacts/f3-external-acceptance/provenance-final.log`. A evidência anterior de 819 casos por configuração e da descoberta do método único foi preservada, sem repetir build, restore, regressões ou descoberta do runner.
+
+A loja oficial exibe US$ 15 para A+B na contribuição padrão e libera o pacote após pagamento pelo proprietário. O candidato OBS é o ZIP x64 oficial 33.0.1 em modo portátil. A rota sem pagamento antecipado usa como ponto de partida o VB-CABLE simples, com adaptação separada e revisão antes de prova. A escolha fica com o proprietário. A autorização de instalação ou elevação exige o pacote concreto e sua assinatura verificada. A autorização de configuração temporária, captura e reprodução fica para o preflight da sessão agrupada. [Dependências, verificação e roteiro](docs/EXTERNAL_ROUTE_PROOF.md#f3-i2--preparação-da-aceitação-agrupada).
+
+Foi gerado localmente um estímulo WAV sintético, sem reprodução. As duas fases seguem planejadas para a mesma sessão autorizada, com snapshot privado independente do runner, reconfirmação de configuração antes de cada fluxo e restauração verificada depois da quiescência. As evidências físicas anteriores e as pendências de fechamento da Fase 2 foram preservadas.
+
+## Histórico — F3-I1-EXTERNAL-ROUTE, 19/11/2026
 
 O proprietário autorizou expressamente iniciar o desenvolvimento da Fase 3 e acompanhar as pendências F2 em validação integrada. A `main` foi sincronizada de `d743351` para `31acd2f` por fast-forward seguro, com base funcional inicial `0c1e54b`, Git 2.56.1, .NET SDK 10.0.404 e política Restricted. A prova 4, nominal SILENT aprovada, DIAG-PROOF reprovada, sete manuais e aprovação de escuta sem telemetria foram preservados.
 

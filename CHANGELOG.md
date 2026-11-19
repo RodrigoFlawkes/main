@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-19 — F3-I2-EXTERNAL-ACCEPTANCE
+
+- Conferidos o Release x64 existente e as dependências da prova externa. A disponibilidade do A+B e do OBS ainda precisa de confirmação.
+- Definidos os critérios de aceitação da sessão agrupada, o estímulo sintético local e a restauração independente do runner. A execução física aguarda a escolha de dependência e autorizações específicas.
+
 ### 2026-11-19 — F3-I1-EXTERNAL-ROUTE
 
 - Rota WASAPI opt-in e limitada em dois fluxos sequenciais, com processamento no motor existente, validação de identidade dos pares e parada cooperativa.
