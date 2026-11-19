@@ -20,31 +20,51 @@ internal sealed class WasapiCaptureTiming
     private const ulong Freshness = 5_000_000;
     private const ulong MaximumWindow = Window + Freshness;
     private readonly int rate;
+    private readonly bool limitedNominal;
+    private ulong? unavailableSince;
+    private ulong unavailableTime;
+    public long UnavailableReadings { get; private set; }
     private readonly RateWindow clock = new(), packets = new();
     private ulong nextPacketPosition, lastPacketPosition;
     private long continuousPackets, provisionalReadings;
     private string? failure;
 
-    public WasapiCaptureTiming(int rate, long period100ns, uint capacity)
+    public WasapiCaptureTiming(int rate, long period100ns, uint capacity, bool limitedNominal = false)
     {
         if (rate is not (44100 or 48000) || period100ns is <= 0 or > 1_000_000 || capacity is 0 or > 4096)
             throw new ArgumentOutOfRangeException(nameof(period100ns), "Formato, período ou capacidade fora do orçamento.");
         this.rate = rate;
+        this.limitedNominal = limitedNominal;
         PhaseBudgetFrames = (int)Math.Min(capacity, ((ulong)period100ns * (uint)rate + 9_999_999) / 10_000_000);
     }
 
     public int PhaseBudgetFrames { get; }
     public bool HasRateWindows => clock.Rolling is { WithinLimit: true } && packets.Rolling is { WithinLimit: true };
+    public bool HasNominalPackets(long now) => now >= 0 && packets.IsTerminallyValid((ulong)now);
 
     public NativeClockReason ObserveClock(ulong qpc, ulong frames, ref NativeClockValidation validation)
     {
         if (validation.AbsoluteErrorFrames is { } shortError &&
             shortError > validation.ErrorLimitFrames!.Value + PhaseBudgetFrames)
             return NativeClockReason.AdvanceOutsideTolerance;
-        var reason = clock.Observe(new(qpc, frames), rate, PhaseBudgetFrames);
+        var reason = clock.Observe(new(qpc, frames), rate, PhaseBudgetFrames, keepRejectedWindow: limitedNominal);
         validation.ClockAccumulated = clock.Accumulated;
         validation.ClockRolling = clock.Rolling;
+        if (reason == NativeClockReason.WindowRateOutsideTolerance && limitedNominal &&
+            clock.ConfirmedWindows > 0 && clock.Accumulated is { WithinLimit: true } && HasNominalPackets(validation.Now100ns))
+        {
+            unavailableSince ??= qpc;
+            if (qpc - unavailableSince.Value + unavailableTime >= Freshness) return reason;
+            validation.Reason = reason;
+            UnavailableReadings++;
+            return NativeClockReason.None;
+        }
         if (reason != NativeClockReason.None) return reason;
+        if (unavailableSince is { } since)
+        {
+            unavailableTime += qpc - since;
+            unavailableSince = null;
+        }
         if (validation.AbsoluteErrorFrames > validation.ErrorLimitFrames ||
             clock.Accumulated is { WithinLimit: false })
         {
@@ -76,6 +96,8 @@ internal sealed class WasapiCaptureTiming
     public void CheckProgress(long now, long start)
     {
         if (!packets.IsRecent((ulong)now, (ulong)start)) Reject("PacketProgressExpired");
+        if (unavailableSince is { } since && (!HasNominalPackets(now) || (ulong)now - since + unavailableTime >= Freshness))
+            Reject("NominalClockEvidenceExpired");
         if (!clock.IsRecent((ulong)now, (ulong)start)) Reject("ClockProgressExpired");
         if (packets.ConfirmationExpired((ulong)now)) Reject("PacketConfirmationExpired");
         if (clock.ConfirmationExpired((ulong)now)) Reject("ClockConfirmationExpired");
@@ -126,7 +148,7 @@ internal sealed class WasapiCaptureTiming
         public WasapiRateMeasurement? Rolling { get; private set; }
         public long ConfirmedWindows { get; private set; }
 
-        public NativeClockReason Observe(WasapiRatePoint point, int rate, int phaseBudget)
+        public NativeClockReason Observe(WasapiRatePoint point, int rate, int phaseBudget, bool keepRejectedWindow = false)
         {
             if (count == 0)
             {
@@ -144,14 +166,19 @@ internal sealed class WasapiCaptureTiming
                 head = (head + 1) % anchors.Length;
                 count--;
             }
+            var result = NativeClockReason.None;
             ulong age = point.Qpc100ns - anchors[head].Qpc100ns;
             if (age >= Window)
             {
                 var rolling = Measure(anchors[head], point, rate);
                 Rolling = rolling;
                 if (age > MaximumWindow) return NativeClockReason.WindowExpired;
-                if (!rolling.WithinLimit) return NativeClockReason.WindowRateOutsideTolerance;
-                ConfirmedWindows++;
+                if (!rolling.WithinLimit)
+                {
+                    result = NativeClockReason.WindowRateOutsideTolerance;
+                    if (!keepRejectedWindow) return result;
+                }
+                else ConfirmedWindows++;
             }
             if (point.Qpc100ns - lastStored.Qpc100ns >= AnchorSpacing)
             {
@@ -160,7 +187,7 @@ internal sealed class WasapiCaptureTiming
                 count++;
             }
             Last = point;
-            return NativeClockReason.None;
+            return result;
         }
 
         public bool IsRecent(ulong now, ulong start)

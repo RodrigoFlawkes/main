@@ -1,5 +1,11 @@
 # Plano de testes
 
+## F2-I6C-NOMINAL-MONITOR — replay e monitor simulado
+
+O replay usa a série real de 37 leituras de captura da prova diagnóstica. Os pacotes do caso positivo são sintéticos. São testados o motivo de rejeição anterior, a exceção nominal condicionada, o prazo de indisponibilidade, regressão, idade do pacote e HRESULT incerto. O caminho simulado exercita os owners MTA, formato Float32 ou PCM16, taxas de 44,1/48 kHz, drift simulado nos dois sentidos, nível, zero inicial, dropout evitado pelas bordas, cutoff por evidência, troca de seleção, falhas Get/Release/Stop e retenção do guard.
+
+Um impulso atravessa FIR e FIFO e aparece no terceiro bloco de 480 frames no gerador de tempo virtual, com a primeira amostra detectável dentro dos 160 primeiros frames desse bloco. O limite de 30–34 ms pertence à convenção de instantes da fixture, ao preenchimento e ao caminho algorítmico; a prova não mede latência de headset. O ensaio isolado do encoder verifica zero bytes recorrentes após aquecimento. Descoberta do teste `Explicit` dedicado é permitida; execução física exige nova autorização. [Resultados e logs](../PROJECT_STATUS.md).
+
 ## F2-I6B2B-DRIFT — integração automatizada e preparo físico
 
 A simulação usa dois owners MTA do `WasapiSilentSession`, o FIR/FIFO de `WasapiSilentPath`, clock virtual, cadência determinística e amostras PCM finitas. Cobre 44,1 ↔ 48 kHz e 48 ↔ 48 kHz, drift zero e nos dois sentidos, fase de ±1 período, granulação, jitter, latência até aplicar comandos, convergência, saturação e ausência de correção com incerteza insuficiente. O ensaio de 45 s virtuais compara razão nominal e adaptativa pela distância de ocupação ao alvo no trecho final.

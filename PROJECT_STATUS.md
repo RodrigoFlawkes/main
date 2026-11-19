@@ -2,7 +2,27 @@
 
 Atualizado em 18/11/2026.
 
-## Estado atual — F2-I6B2B-DIAG-PROOF, 18/11/2026
+## Estado atual — F2-I6C-NOMINAL-MONITOR, 18/11/2026
+
+A `main` avançou por fast-forward de `59cc56e` para `00fc42f`; a diferença desde a base funcional `558a431` era documental. Pasta oficial, referências local/remota, SDK .NET 10.0.404, Git 2.56.1 e conectividade de objetos verificados. O SHA-256 do JSON local coincide com o publicado. A prova 4 e a tentativa diagnóstica reprovada permanecem registradas.
+
+A rota nominal opt-in compartilha os owners MTA, o guard, FIR e FIFO WASAPI. A admissão de uma janela de captura rejeitada como evidência indisponível exige pacotes íntegros, contíguos e frescos e dura menos de 500 ms acumulados. O novo modo preserva o limite original e continua recusando falhas de integridade. A ocupação usa cortes coerentes, com parada por lacuna e margem de um bloco. Sessão de até cinco segundos, razão fixa e sem comandos de drift. O render Float32/PCM16 com rampa de ganho foi exercitado exclusivamente em fakes. O teste de impulso observou início do sinal no terceiro bloco no relógio virtual, dentro de 30–34 ms pela convenção da fixture. O ensaio de mil codificações após aquecimento registrou zero bytes recorrentes. Nenhum dado estabelece latência acústica ou precisão de drift. [Protocolo, orçamento e prova preparada](docs/WASAPI_BACKEND_PLAN.md#f2-i6c-nominal-monitor--transporte-limitado-em-razão-fixa).
+
+Restore aprovado com `dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1900`. Builds finais com `dotnet build WaveStudio.slnx -c <configuração> --no-restore --no-incremental`, zero erros ou avisos em Debug e Release x64. Os direcionados usaram `--explicit off --filter-class '*WasapiNominal*'`. Um direcionado intermediário teve 13 de 21 aprovações. A fixture deixou a asserção de sentinela B1 ativa em buffers do novo fake que já haviam sido zerados. A fixture nominal passou a verificar SILENT nesse caminho, e as asserções dos fakes B1/B2 foram preservadas.
+
+| Validação x64 | Aprovados | Falhas | Explicit excluídos | Duração |
+| --- | ---: | ---: | ---: | ---: |
+| Direcionado nominal Debug | 21 | 0 | 0 | 6,824 s |
+| Regressão Debug, seed 20261114 | 801 (780 + 21) | 0 | 4 | 81,220 s |
+| Regressão Release padrão, seed 20261113 | 800 | 1 | 4 | 48,797 s |
+| Regressão Release padrão, seed 20261114 | 800 | 1 | 4 | 45,620 s |
+| Regressão Release serial, seed 20261113 | 801 (780 + 21) | 0 | 4 | 89,190 s |
+
+A alocação histórica foi investigada nos casos do diário, EQ e resamplers nominal e adaptativo. Antes da mudança, os quatro passaram filtrados com seeds 20261113 e 20261114. Depois da mudança, passaram filtrados no Release com seed 20261113, tanto no padrão quanto no modo serial. As duas regressões Release padrão registraram 7.912 e 6.856 bytes, respectivamente, no teste do diário. A medição ocorre na thread do teste após aquecimento de 20 mil pares, com exigência de zero bytes nos 100 mil pares medidos. O loop, as asserções e a rotina de publicação testada foram preservados. A regressão Release completa serial passou com os mesmos binários e seed 20261113, preservando a asserção. O resultado diferencia os contextos do runner nesta amostra. Ele não identifica a causa da alocação, que permanece pendente. Atribuir esses bytes a JIT, infraestrutura de medição ou processamento exige diagnóstico adicional. Monitoramento físico audível e contínuo permanecem bloqueados por essa pendência.
+
+Regressões executadas com `dotnet test --solution WaveStudio.slnx -c <configuração> --no-build -- --explicit off --seed <seed> --timeout 165s --long-running 10 --diagnostic --diagnostic-output-directory <pasta>`, sob política Restricted, com `--parallel none` na execução diagnóstica serial. Logs separados em `artifacts/f2-i6c-nominal`. O teste `WaveStudio.Tests.WasapiNativeSilentTests.AuthorizedEndpointsRunBoundedSilentNominalTransport` foi descoberto pelo apphost Release como método único, sem executar Start. A prova SILENT nominal aguarda revisão e nova autorização. A Fase 2 permanece em desenvolvimento, sem início da F3.
+
+## Histórico — F2-I6B2B-DIAG-PROOF, 18/11/2026
 
 A única coleta física autorizada **não foi aprovada**. O runner Release x64 executou exclusivamente o teste dedicado, retornou código 2 e registrou uma falha em 5,060 s. A observação QPC encerrou em **3,7220736 s** dos 10 s configurados. O clock de captura rejeitou a leitura 37 por `WindowRateOutsideTolerance`. Em 2,0205647 s, avançou 96.480 frames para 96.987,1056 esperados. O resíduo de −507,1056 frames excedeu o limite de 486,935528. A janela móvel dos pacotes contíguos permaneceu dentro de seu limite. O padrão é compatível com uma diferença de fase próxima de um período, com causa física indeterminada.
 

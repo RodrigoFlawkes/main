@@ -1,15 +1,37 @@
 namespace WaveStudio.Audio.Engine;
 
-// Prova de execução única e saída sempre SILENT. Sem UI, reativação de áudio, recuperação, nível de monitoramento ou interface de transporte simulado.
+// Os pontos de entrada B1 e B2 sempre liberam o render com SILENT.
 internal sealed class WasapiSilentSession : IAsyncDisposable
 {
-    private static readonly HashSet<WasapiSilentSession> live = [];
+    private readonly WasapiSessionCore core;
+
+    public WasapiSilentSession(TransportRoute route, TransportActivityGuard? guard = null,
+        Func<TransportEndpoint, IWasapiPreparationDevice>? open = null, TimeSpan? timeout = null,
+        bool simulateCaptureTiming = false, bool observeCheckpoints = false,
+        WasapiDriftSimulation? simulation = null, bool nativeDriftDiagnostic = false) =>
+        core = new(route, guard, open, timeout, simulateCaptureTiming, observeCheckpoints, simulation, nativeDriftDiagnostic);
+
+    public Task<WasapiSilentSnapshot> RunAsync(TimeSpan duration, CancellationToken token = default) => core.RunAsync(duration, token);
+    internal WasapiCheckpointResult ReadCheckpoint(long generation, WasapiCheckpoint? baseline = null) => core.ReadCheckpoint(generation, baseline);
+    internal bool DriftRunning => core.DriftRunning;
+    internal WasapiDriftSample StepDrift() => core.StepDrift();
+    internal WasapiDriftReport? ReadDriftReport() => core.ReadDriftReport();
+    public void Invalidate(long generation) => core.Invalidate(generation);
+    public void RequestStop() => core.RequestStop();
+    public ValueTask DisposeAsync() => core.DisposeAsync();
+}
+
+// Núcleo de uso único e dois proprietários COM. As fachadas restringem os modos que cada chamador pode usar.
+internal sealed class WasapiSessionCore : IAsyncDisposable
+{
+    private static readonly HashSet<WasapiSessionCore> live = [];
     private readonly TransportRoute route;
     private readonly Func<TransportEndpoint, IWasapiPreparationDevice> open;
     private readonly TransportActivityGuard guard;
     private readonly TimeSpan timeout;
     private readonly bool verifyCaptureTiming, observeCheckpoints, nativeDriftDiagnostic;
     private readonly WasapiDriftSimulation? simulation;
+    private readonly WasapiNominalControl? nominal;
     private readonly object driftGate = new();
     private WasapiDriftControl? drift;
     private WasapiDriftCommand? command;
@@ -17,6 +39,8 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
     private readonly SemaphoreSlim finalizing = new(1);
     private readonly ManualResetEventSlim stop = new();
     private readonly TaskCompletionSource stopped = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource nominalFinished = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private long nominalDeadline;
     private readonly DeliveryTicket ticket;
     private readonly Owner capture, playback;
     private IDisposable? lease;
@@ -31,17 +55,21 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
     private long observation100ns, observationEnd100ns;
     private bool durationReached;
 
-    public WasapiSilentSession(TransportRoute route, TransportActivityGuard? guard = null,
+    public WasapiSessionCore(TransportRoute route, TransportActivityGuard? guard = null,
         Func<TransportEndpoint, IWasapiPreparationDevice>? open = null, TimeSpan? timeout = null,
         bool simulateCaptureTiming = false, bool observeCheckpoints = false,
-        WasapiDriftSimulation? simulation = null, bool nativeDriftDiagnostic = false)
+        WasapiDriftSimulation? simulation = null, bool nativeDriftDiagnostic = false, WasapiNominalControl? nominal = null)
     {
         route.Validate();
+        if (nominal?.FakeEncoder is not null && (open is null || simulation is null ||
+            route.Capture.Evidence != FormatEvidence.SimulatedExact || route.Playback.Evidence != FormatEvidence.SimulatedExact))
+            throw new ArgumentException("Render PCM restrito ao backend simulado.", nameof(open));
+        this.nominal = nominal;
         if ((observeCheckpoints || simulation is not null) && open is null)
             throw new ArgumentException("A instrumentação simulada exige backend injetado.", nameof(open));
         if (nativeDriftDiagnostic && open is not null)
             throw new ArgumentException("Use o modo de simulação com backend injetado.", nameof(open));
-        this.observeCheckpoints = observeCheckpoints || simulation is not null || nativeDriftDiagnostic;
+        this.observeCheckpoints = observeCheckpoints || simulation is not null || nativeDriftDiagnostic || nominal is not null;
         this.simulation = simulation;
         this.nativeDriftDiagnostic = nativeDriftDiagnostic;
         if (open is null && (route.Capture.Evidence != FormatEvidence.ExactCapability ||
@@ -49,14 +77,14 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             throw new ArgumentException("A prova nativa requer formatos consultados no Windows.", nameof(route));
         if (route.Capture.Endpoint.Generation == long.MaxValue) throw new ArgumentException("Geração sem espaço para limpeza.");
         this.route = route; this.guard = guard ?? TransportActivityGuard.Shared;
-        verifyCaptureTiming = open is null || simulateCaptureTiming || simulation is not null;
+        verifyCaptureTiming = open is null || simulateCaptureTiming || simulation is not null || nominal is not null;
         this.open = open ?? NativeWasapiPreparationDevice.Open; this.timeout = timeout ?? TimeSpan.FromSeconds(3);
         if (this.timeout <= TimeSpan.Zero || this.timeout > TimeSpan.FromSeconds(5)) throw new ArgumentOutOfRangeException(nameof(timeout));
         ticket = new(route); capture = new(this, route.Capture, true); playback = new(this, route.Playback, false);
     }
     public Task<WasapiSilentSnapshot> RunAsync(TimeSpan duration, CancellationToken token = default)
     {
-        if (duration < TimeSpan.FromMilliseconds(50) || duration > TimeSpan.FromSeconds(simulation is null ? 10 : 120)) throw new ArgumentOutOfRangeException(nameof(duration));
+        if (duration < TimeSpan.FromMilliseconds(50) || duration > (nominal is null ? TimeSpan.FromSeconds(simulation is null ? 10 : 120) : WasapiNominalSession.MaximumDuration)) throw new ArgumentOutOfRangeException(nameof(duration));
         lock (control)
         {
             if (run is not null || stop.IsSet) throw new InvalidOperationException("Sessão de prova é de uso único.");
@@ -81,6 +109,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
     }
     internal bool DriftRunning => ticket.IsValid && drift is not null;
     private long Now100ns() => simulation?.Now() ?? WasapiTime.Now100ns();
+    private bool NominalDeadlinePassed => nominal is not null && ticket.IsValid && Now100ns() > nominalDeadline;
 
     internal WasapiDriftSample StepDrift()
     {
@@ -103,6 +132,34 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
     internal WasapiDriftReport? ReadDriftReport()
     {
         lock (driftGate) return drift?.Snapshot();
+    }
+    internal bool NominalRunning => nominal is not null && ticket.IsValid;
+    internal void SetFakeGain(float gain)
+    {
+        var encoder = nominal?.FakeEncoder ?? throw new InvalidOperationException("Este modo renderiza somente SILENT.");
+        encoder.SetGain(gain);
+    }
+    internal void StepNominal()
+    {
+        lock (driftGate)
+        {
+            if (nominal is null || !ticket.IsValid || checkpoints is not { } ledger) return;
+            var cut = ReadCheckpoint(route.Capture.Endpoint.Generation, nominal.Baseline);
+            var reason = nominal.Observe(ledger, cut, Now100ns());
+            if (reason is not null) Fail(reason);
+            else if (simulation is not null && Now100ns() >= nominalDeadline && cut.Checkpoint is not null)
+                nominalFinished.TrySetResult();
+        }
+    }
+    internal WasapiNominalReport ReadNominalReport(WasapiSilentSnapshot result)
+    {
+        lock (driftGate)
+        {
+            var state = nominal ?? throw new InvalidOperationException("Sessão nominal ausente.");
+            return state.Report(result, result.Completed && capture.HasNominalPackets(observationEnd100ns),
+                result.Completed ? capture.ClockEvidenceUnavailable : 0, path?.FifoPrimingFrames ?? 0,
+                playback.PreTicketRender, playback.WarmupRender, observationEnd100ns);
+        }
     }
     public void RequestStop()
     {
@@ -131,6 +188,8 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             if (!stop.IsSet)
             {
                 path = new(route, capture.Capacity, playback.Capacity, capture.Period, playback.Period);
+                nominal?.Configure(path.CapacityFrames, route.Capture.Mix!.SampleRate, route.Playback.Mix!.SampleRate,
+                    capture.Capacity, playback.Capacity);
                 if (observeCheckpoints) Volatile.Write(ref checkpoints, new(ticket, path.CapacityFrames, Now100ns));
                 playback.Go.Set(); await playback.Started.Task.WaitAsync(timeout);
             }
@@ -138,7 +197,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             if (!stop.IsSet)
             {
                 long begin = Now100ns();
-                if (simulation is not null || nativeDriftDiagnostic)
+                if (nominal is null && (simulation is not null || nativeDriftDiagnostic))
                 {
                     int inputRate = route.Capture.Mix!.SampleRate, outputRate = route.Playback.Mix!.SampleRate;
                     var uncertainty = simulation?.Uncertainty ?? new WasapiTimingUncertainty(
@@ -148,6 +207,8 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                     lock (driftGate) drift = new(inputRate, outputRate, path!.CapacityFrames,
                         simulation?.ApplyCorrection == true, uncertainty, begin);
                 }
+                nominal?.Start(begin);
+                if (nominal is not null) nominalDeadline = checked(begin + duration.Ticks);
                 ticket.Enable();
                 using var delayCancellation = new CancellationTokenSource();
                 var limit = Task.Delay(duration, delayCancellation.Token);
@@ -157,7 +218,16 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                         StepDrift();
                         await Task.WhenAny(limit, stopped.Task, Task.Delay(55, delayCancellation.Token));
                     }
-                durationReached = await Task.WhenAny(limit, stopped.Task) == limit && !stop.IsSet;
+                if (nominal is not null && simulation is null)
+                    while (!limit.IsCompleted && !stop.IsSet)
+                    {
+                        StepNominal();
+                        await Task.WhenAny(limit, stopped.Task, Task.Delay(23, delayCancellation.Token));
+                    }
+                if (nominal is not null && simulation is not null)
+                    durationReached = await Task.WhenAny(limit, stopped.Task, nominalFinished.Task) == nominalFinished.Task && !stop.IsSet;
+                else
+                    durationReached = await Task.WhenAny(limit, stopped.Task) == limit && !stop.IsSet;
                 observationEnd100ns = Now100ns();
                 observation100ns = observationEnd100ns - begin;
                 delayCancellation.Cancel();
@@ -197,11 +267,11 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
     }
     private WasapiSilentSnapshot Snapshot() => new(capture.Snapshot(completed), playback.Snapshot(completed), completed, lease is not null,
         failure, hresult, path?.CapacityFrames ?? 0, path?.Produced ?? 0, path?.Read ?? 0, path?.Dropped ?? 0, path?.Underrun ?? 0,
-        observation100ns, durationReached);
+        observation100ns, durationReached) { NominalMode = nominal is not null, FakeRender = nominal?.FakeEncoder is not null };
 
     private sealed class Owner
     {
-        private readonly WasapiSilentSession session;
+        private readonly WasapiSessionCore session;
         private readonly WasapiEndpointInfo info;
         private readonly bool input;
         private readonly Thread thread;
@@ -216,6 +286,10 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
         public uint Capacity;
         public long Period;
         private long latency, acquired, released, acquiredFrames, releasedFrames, primed, preTicketRenderFrames, warmupRenderFrames;
+        public long PreTicketRender => Interlocked.Read(ref preTicketRenderFrames);
+        public long WarmupRender => Interlocked.Read(ref warmupRenderFrames);
+        public long ClockEvidenceUnavailable => captureTiming?.UnavailableReadings ?? 0;
+        public bool HasNominalPackets(long now) => captureTiming?.HasNominalPackets(now) == true;
         private long clockEpoch, appliedCommand100ns, appliedAt100ns;
         private long acceptedPackets, acceptedFrames, startupDiscardedPackets, startupDiscardedFrames;
         private uint padding, flags, startupDiscardFlags;
@@ -235,7 +309,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
         public readonly TaskCompletionSource Started = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public readonly TaskCompletionSource Done = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public readonly ManualResetEventSlim Go = new(), Retry = new();
-        public Owner(WasapiSilentSession session, WasapiEndpointInfo info, bool input)
+        public Owner(WasapiSessionCore session, WasapiEndpointInfo info, bool input)
         {
             this.session = session; this.info = info; this.input = input;
             thread = new Thread(Run) { IsBackground = true, Name = input ? "WaveStudio WASAPI capture owner" : "WaveStudio WASAPI silent render owner" };
@@ -256,7 +330,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             Check(); device.ValidateIdentity(info.Endpoint); Check(); client.Initialize(); initialized = true; Check();
             (Capacity, latency) = client.ReadBufferInfo();
             if (Capacity is 0 or > 4096 || latency < 0) throw new NotSupportedException("Capacidade/latência fora do orçamento.");
-            if (input && session.verifyCaptureTiming) captureTiming = new(mix.SampleRate, Period, Capacity);
+            if (input && session.verifyCaptureTiming) captureTiming = new(mix.SampleRate, Period, Capacity, limitedNominal: session.nominal is not null);
             padding = client.ReadPadding(); if (padding > Capacity) throw new InvalidOperationException("Padding inválido na preparação.");
             Check(); clock = resources.Add(client.OpenClock()); Check();
             if (input) packets = resources.Add(client.OpenCapture()); else render = resources.Add(client.OpenRender());
@@ -284,13 +358,19 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                         if (session.stop.IsSet) break;
                     }
                     ProcessBoundary(prime: false);
-                    if (session.drift is null) ObserveClockIfDue();
+                    if (session.drift is null && session.nominal is null) ObserveClockIfDue();
                     if (session.simulation is { } pacing) pacing.CycleCompleted(input);
                     else session.stop.Wait(pollMs);
                 }
             }
             catch (OperationCanceledException) { }
-            catch (Exception problem) { error = problem is WasapiCallException c ? c.Stage : problem.GetType().Name; session.Fail(input ? "Capture" : "Render", problem); }
+            catch (Exception problem)
+            {
+                error = problem is WasapiCallException c ? c.Stage : problem.GetType().Name;
+                string stage = session.nominal is not null && problem is InvalidOperationException &&
+                    problem.Message.StartsWith("Nominal/", StringComparison.Ordinal) ? problem.Message : input ? "Capture" : "Render";
+                session.Fail(stage, problem);
+            }
             finally
             {
                 Ready.TrySetResult(); Started.TrySetResult(); session.RequestStop();
@@ -308,14 +388,14 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             var journal = input ? ledger?.Capture : ledger?.Render;
             if (journal is null) { ProcessAudio(prime); return; }
 
-            if (!prime && !CheckCommandAge()) return;
+            if (!prime && (session.NominalDeadlinePassed || !CheckCommandAge())) return;
             var path = session.path!;
             long missingBefore = input ? path.Dropped : path.Underrun;
             journal.Begin();
             try
             {
                 ProcessAudio(prime);
-                if (!prime && session.drift is not null) ObserveClockIfDue();
+                if (!prime && (session.drift is not null || session.nominal is not null)) ObserveClockIfDue();
             }
             catch
             {
@@ -341,7 +421,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             var status = journal.Complete(new(acquired, released, acquiredFrames, releasedFrames,
                 acceptedPackets, acceptedFrames, startupDiscardedPackets, startupDiscardedFrames,
                 input ? path.Produced : path.Read, input ? path.Dropped : path.Underrun, primed, preTicketRenderFrames,
-                warmupRenderFrames), session.drift is null ? default : DriftEvidence(path));
+                warmupRenderFrames), session.drift is null && session.nominal is null ? default : DriftEvidence(path));
             if (status != WasapiCheckpointStatus.Available) session.Fail("Checkpoint/" + status);
         }
         private void ProcessAudio(bool prime)
@@ -373,6 +453,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             clockStatus = result;
             if (session.drift is not null && result == NativeClockResult.Provisional) clockEpoch++;
             if (result == NativeClockResult.Stalled && lastClock.Value.Position == 0 && now - startTime <= 5000000) return;
+            if (result == NativeClockResult.NominalEvidenceUnavailable && input && session.nominal is not null) return;
             if (result is not (NativeClockResult.Valid or NativeClockResult.Provisional))
                 throw new InvalidOperationException("Clock inválido: " + result);
         }
@@ -380,8 +461,11 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
         {
             for (int count = 0; count < 32 && !session.stop.IsSet && session.ticket.IsValid; count++)
             {
+                if (session.NominalDeadlinePassed) return;
                 uint nextFrames = packets!.NextPacketSize();
                 if (nextFrames == 0) return;
+                if (session.nominal is { } nominal && session.path!.ProducerQueued >= session.path.CapacityFrames - nominal.MarginFrames)
+                    throw new InvalidOperationException("Nominal/FifoHigh");
                 Check();
                 var buffer = packets.GetBuffer();
                 acquireResult = buffer.HResult;
@@ -435,7 +519,10 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
                 acceptedPackets++;
                 acceptedFrames += consumed;
                 if (session.drift is not null && !ApplyCommand()) return;
-                session.path!.Produce((int)consumed, session.ticket, prefill: session.drift is not null);
+                var path = session.path!;
+                long dropped = path.Dropped;
+                path.Produce((int)consumed, session.ticket, prefill: session.drift is not null || session.nominal is not null);
+                if (session.nominal is not null && path.Dropped != dropped) throw new InvalidOperationException("Nominal/Drop");
             }
         }
         private bool CheckCommandAge()
@@ -467,7 +554,7 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             appliedAt100ns = now;
             return true;
         }
-        private void FillRender(bool prime)
+        private unsafe void FillRender(bool prime)
         {
             if (session.stop.IsSet) return;
             padding = client!.ReadPadding();
@@ -476,20 +563,38 @@ internal sealed class WasapiSilentSession : IAsyncDisposable
             if (frames == 0 || session.stop.IsSet) return;
             nint data = render!.GetBuffer(frames); bufferInFlight = true; acquired++; acquiredFrames += frames;
             acquireResult = 0;
+            uint releaseFlags = Silent;
+            Span<byte> fakeBytes = default;
             try
             {
                 if (data == 0) throw new InvalidOperationException("Buffer de render inválido.");
+                if (!prime && session.nominal is { } nominal)
+                {
+                    var path = session.path!;
+                    if (nominal.FakeEncoder is not null)
+                        fakeBytes = new Span<byte>((void*)data, checked((int)frames * info.Mix!.BlockAlign));
+                    if (!session.ticket.IsValid) preTicketRenderFrames += frames;
+                    else if (path.FifoPrimingFrames == 0) warmupRenderFrames += frames;
+                    else
+                    {
+                        if (path.ConsumerQueued <= nominal.MarginFrames) throw new InvalidOperationException("Nominal/FifoLow");
+                        if (path.ConsumeNominal((int)frames, session.ticket, nominal.FakeEncoder, fakeBytes))
+                            releaseFlags = 0;
+                    }
+                }
             }
             finally
             {
-                // SILENT é incondicional, mesmo se houver cancelamento, mudança de seleção ou falha após GetBuffer.
+                // O único ramo que permite PCM usa um buffer emprestado do backend de teste.
+                if (releaseFlags == 0 && (!session.ticket.IsValid || session.NominalDeadlinePassed)) releaseFlags = Silent;
+                if (releaseFlags == Silent) fakeBytes.Clear();
                 int hr;
-                try { hr = render.ReleaseBuffer(frames, Silent); releaseResult = hr; }
+                try { hr = render.ReleaseBuffer(frames, releaseFlags); releaseResult = hr; }
                 catch { bufferUncertain = true; throw; }
                 if (hr != 0) { bufferUncertain = true; throw new WasapiCallException("IAudioRenderClient.ReleaseBuffer", hr); }
                 bufferInFlight = false; released++; releasedFrames += frames; if (prime) primed += frames;
             }
-            if (!prime)
+            if (!prime && session.nominal is null)
             {
                 if (session.ticket.IsValid)
                 {

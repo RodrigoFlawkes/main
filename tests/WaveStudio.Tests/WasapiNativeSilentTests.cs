@@ -57,6 +57,25 @@ public sealed class WasapiNativeSilentTests(ITestOutputHelper output)
         });
     }
 
+
+    [Fact(Explicit = true)]
+    [Trait("Category", "NativeSilentBoundedNominal")]
+    public async Task AuthorizedEndpointsRunBoundedSilentNominalTransport()
+    {
+        Assert.Equal("1", Environment.GetEnvironmentVariable("WAVESTUDIO_NOMINAL_SILENT_START_AUTHORIZED"));
+        Assert.Equal("1", Environment.GetEnvironmentVariable("WAVESTUDIO_NOMINAL_SILENT_PREFLIGHT_CONFIRMED"));
+        var token = TestContext.Current.CancellationToken;
+        var route = await Preflight("WAVESTUDIO_NOMINAL_SILENT_CAPTURE_NAME", "WAVESTUDIO_NOMINAL_SILENT_HEADSET_NAME", token);
+        await using var session = WasapiNominalSession.CreateSilentProof(route);
+        var result = await session.RunAsync(WasapiNominalSession.MaximumDuration, token);
+        Save("wasapi-nominal-silent", "native-nominal", new { CaptureFormat = route.Capture.Mix, PlaybackFormat = route.Playback.Mix, Result = result });
+        Assert.True(result.NominalObserved && result.RenderSilent && result.PacketRateConfirmed,
+            "A prova nominal exige integridade de transporte, cortes frescos, saída SILENT e cleanup confirmado.");
+        Assert.False(result.DriftPrecisionAvailable);
+        Assert.False(result.Cleanup.TransportObserved);
+        Assert.False(result.Cleanup.DriftControlEnabled);
+    }
+
     private static async Task<TransportRoute> Preflight(string captureName, string playbackName, CancellationToken token)
     {
         AssertNoPreviewProcess();

@@ -14,6 +14,9 @@ internal sealed class WasapiSilentPath : IDisposable
     public long Produced, Read, Dropped, Underrun;
     private long fifoPrimingFrames;
     public long FifoPrimingFrames => Volatile.Read(ref fifoPrimingFrames);
+    // Leituras conservadoras por papel, usadas só para impedir operações junto às bordas.
+    public long ProducerQueued => Produced - Volatile.Read(ref Read);
+    public long ConsumerQueued => Volatile.Read(ref Produced) - Read;
     public double AppliedPpm => resampler.CurrentPpm;
     public bool SetTargetPpm(long generation, double ppm) => resampler.SetTargetPpm(generation, ppm);
 
@@ -67,7 +70,7 @@ internal sealed class WasapiSilentPath : IDisposable
         {
             int count = Math.Min(4096, result.ProducedFrames - offset);
             int accepted = pipe.Produce(pipeGeneration, converted.AsSpan(offset * playback.Channels, count * playback.Channels));
-            Produced += accepted; Dropped += count - accepted; offset += count;
+            Volatile.Write(ref Produced, Produced + accepted); Dropped += count - accepted; offset += count;
         }
         // Antes da primeira leitura, os frames escritos são exatamente o preenchimento da FIFO.
         if (prefill && fifoPrimingFrames == 0 && Produced >= CapacityFrames / 2)
@@ -78,8 +81,31 @@ internal sealed class WasapiSilentPath : IDisposable
     {
         if (!ticket.IsValid) return;
         var floats = render.AsSpan(0, checked(frames * playback.Channels));
-        int read = pipe.Render(pipeGeneration, floats); Read += read; Underrun += frames - read;
+        int read = pipe.Render(pipeGeneration, floats); Volatile.Write(ref Read, Read + read); Underrun += frames - read;
         floats.Clear();
+    }
+    public bool ConsumeNominal(int frames, DeliveryTicket ticket, WasapiMonitorEncoder? encoder, Span<byte> destination)
+    {
+        if (!ticket.IsValid) return false;
+        var floats = render.AsSpan(0, checked(frames * playback.Channels));
+        try
+        {
+            int read = pipe.Render(pipeGeneration, floats);
+            Volatile.Write(ref Read, Read + read);
+            if (read != frames)
+            {
+                Underrun += frames - read;
+                if (ticket.IsValid) throw new InvalidOperationException("Nominal/Underrun");
+                return false;
+            }
+            return encoder is not null && ticket.IsValid && encoder.Encode(floats, destination);
+        }
+        catch
+        {
+            destination.Clear();
+            throw;
+        }
+        finally { floats.Clear(); }
     }
     public void Dispose()
     {

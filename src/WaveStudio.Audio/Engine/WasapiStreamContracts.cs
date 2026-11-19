@@ -71,6 +71,11 @@ internal sealed class WasapiRunningClock(TransportEndpoint endpoint, int rate, l
             lastAccepted = entry;
         }
         else if (result == NativeClockResult.Provisional) position = reading.Position;
+        else if (result == NativeClockResult.NominalEvidenceUnavailable)
+        {
+            position = reading.Position;
+            rejection ??= entry;
+        }
         else if (validation.Reason != NativeClockReason.StartupWaiting) rejection ??= entry;
         return result;
     }
@@ -101,10 +106,12 @@ internal sealed record WasapiSilentSnapshot(WasapiRoleSnapshot Capture, WasapiRo
     bool Completed, bool ResourcesRetained, string? Failure, int? HResult,
     int FifoCapacityFrames, long ProducedFrames, long ReadFrames, long DroppedFrames, long UnderrunFrames, long Observation100ns, bool DurationReached)
 {
-    public bool AlwaysSilent => true;
+    [System.Text.Json.Serialization.JsonIgnore] public bool NominalMode { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore] public bool FakeRender { get; init; }
+    public bool AlwaysSilent => !FakeRender;
     public bool DriftControlEnabled => false;
     public bool MovementProven => Completed && Failure is null && Capture.MovementSamples >= 2 && Playback.MovementSamples >= 2;
-    public bool TransportObserved => DurationReached && MovementProven && (Capture.CaptureTiming is null or { Confirmed: true } &&
+    public bool TransportObserved => !NominalMode && DurationReached && MovementProven && (Capture.CaptureTiming is null or { Confirmed: true } &&
         (Capture.CaptureTiming is null || Capture.CaptureTiming.ContinuousPackets == Capture.PacketsAccepted)) &&
         Capture.Started && Playback.Started &&
         Capture.StopConfirmed && Playback.StopConfirmed && Capture.Released && Playback.Released &&

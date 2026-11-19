@@ -21,6 +21,7 @@ public sealed class WasapiSilentTests
     {
         public string? FailStep;
         public Action<string>? OnStep;
+        public Action<uint, uint>? OnRenderSubmitted;
         public Func<int, WasapiClockReading>? ReadClockOverride;
         public Func<uint>? PacketSizeOverride, RenderPaddingOverride;
         public Func<WasapiCaptureBuffer>? CaptureBufferOverride;
@@ -157,9 +158,14 @@ public sealed class WasapiSilentTests
             }
             public int ReleaseBuffer(uint framesWritten, uint flags)
             {
-                role.Step("ReleaseRender"); Assert.True(role.BufferHeld); Assert.Equal(2u, flags);
+                role.Step("ReleaseRender"); Assert.True(role.BufferHeld);
                 Assert.InRange(framesWritten, 1u, role.Capacity);
-                Assert.Equal(-1, role.Data.AsSpan().IndexOfAnyExcept((byte)0x5a)); // O transporte nunca grava amostras na saída WASAPI.
+                if (role.OnRenderSubmitted is { } submitted) submitted(framesWritten, flags);
+                else
+                {
+                    Assert.Equal(2u, flags);
+                    Assert.Equal(-1, role.Data.AsSpan().IndexOfAnyExcept((byte)0x5a)); // As provas existentes não gravam amostras na saída WASAPI.
+                }
                 if (role.ReleaseResult == 0) role.BufferHeld = false; role.ReleasedFrames += framesWritten; return role.ReleaseResult;
             }
             public void Dispose() { role.Step("DisposeRender"); Assert.False(role.BufferHeld); }

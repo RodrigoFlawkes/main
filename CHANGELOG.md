@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-18 — F2-I6C-NOMINAL-MONITOR
+
+- Transporte nominal opt-in de até cinco segundos, com verificação independente de pacotes, margem de FIFO e relatório separado de drift.
+- Render Float32/PCM16 com ganho digital nos fakes. Preparada prova nominal nativa SILENT, sem execução física.
+
 ### 2026-11-18 — F2-I6B2B-DIAG-PROOF
 
 - A tentativa diagnóstica nominal SILENT encerrou em 3,7220736 s por rejeição da janela móvel do clock de captura. Os dois streams confirmaram Stop e liberação.

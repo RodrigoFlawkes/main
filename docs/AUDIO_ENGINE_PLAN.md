@@ -1,5 +1,9 @@
 # Motor de áudio — fundação, conversão e relógios
 
+## F2-I6C-NOMINAL-MONITOR — amostras em razão fixa
+
+A rota nominal limitada reutiliza FIR, SPSC e dois owners WASAPI. O controle observa evidência de pacotes e clock por owner, e usa cortes coerentes para ocupação. A sessão para antes das bordas com margem de um bloco e não emite comandos ppm. A codificação Float32/PCM16 e o ganho digital suave foram exercitados nos buffers do backend simulado. A fachada de prova física permanece SILENT. [Contrato, limites e roteiro](WASAPI_BACKEND_PLAN.md#f2-i6c-nominal-monitor--transporte-limitado-em-razão-fixa).
+
 ## F2-I6B2B-DRIFT — controle com limites de observação
 
 O preenchimento da FIFO precede o consumo adaptativo e fica separado do priming nativo. O coordenador usa duas extremidades da ocupação média e da razão estimada. O erro cuja faixa contém zero não impõe uma direção. Somente o produtor aplica o comando de ±500 ppm, com slew de 25 ppm/s e prazo de 500 ms. Faixas imprecisas adiam Tracking durante o aquecimento nominal. Fronteiras reais ou evidência insuficiente após ativação interrompem a entrega. [Modelo de incerteza e prova diagnóstica](WASAPI_BACKEND_PLAN.md#f2-i6b2b-drift--controle-com-evidência-intervalar-e-diagnóstico-silent).

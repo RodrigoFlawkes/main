@@ -129,6 +129,15 @@ internal sealed class WasapiCheckpointLedger
         public WasapiCheckpointOwner State { get; private set; }
         public WasapiCheckpointStatus Fault { get; private set; } = WasapiCheckpointStatus.Available;
 
+        public bool TryRead(out WasapiCheckpointOwner snapshot)
+        {
+            long before = Version;
+            snapshot = State;
+            bool valid = Fault == WasapiCheckpointStatus.Available;
+            Thread.MemoryBarrier();
+            return (before & 1) == 0 && before == Version && valid;
+        }
+
         // A versão ímpar cobre toda a operação, inclusive GetBuffer, ReleaseBuffer e as mutações da FIFO.
         public void Begin()
         {

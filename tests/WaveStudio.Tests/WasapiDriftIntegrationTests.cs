@@ -332,7 +332,7 @@ public sealed partial class WasapiDriftTests
         }
     }
 
-    private sealed class VirtualRig : IDisposable
+    internal sealed class VirtualRig : IDisposable
     {
         public const long Origin = 10_000_000_000;
         public const int Block100ns = 100_000;
@@ -341,6 +341,7 @@ public sealed partial class WasapiDriftTests
         private readonly WaitHandle[][] waits = [new WaitHandle[2], new WaitHandle[2]];
         private readonly double inputActual, outputActual;
         private readonly TransportRoute route;
+        internal TransportRoute Route => route;
         public WasapiSilentTests.Calls Calls { get; }
         public long Generation => route.Capture.Endpoint.Generation;
         private long now = Origin;
@@ -348,10 +349,10 @@ public sealed partial class WasapiDriftTests
         private long desiredCapture, desiredRender;
         public int ExtraRenderCycles, ExtraRenderFrames = 1;
 
-        public VirtualRig(int input, int output, int drift, int phase)
+        public VirtualRig(int input, int output, int drift, int phase, bool outputFloat = true)
         {
             route = WasapiContractTests.Route(inputRate: input, outputRate: output, inputChannels: input == 44100 ? 1 : 2,
-                outputChannels: output == 44100 ? 2 : 1);
+                outputChannels: output == 44100 ? 2 : 1, outputFloat: outputFloat);
             inputActual = input * (1 + drift * 1e-6);
             outputActual = output;
             Calls = new(route);
@@ -378,6 +379,13 @@ public sealed partial class WasapiDriftTests
 
         public WasapiSilentSession Create(TransportActivityGuard guard, bool apply, WasapiTimingUncertainty uncertainty, TimeSpan? timeout = null) =>
             new(route, guard, Calls.Open, timeout, simulation: new(() => Volatile.Read(ref now), Wait, input => finished[input ? 0 : 1].Set(), uncertainty, apply));
+
+        internal WasapiNominalSession CreateNominal(TransportActivityGuard guard, TimeSpan? timeout = null)
+        {
+            Calls.Output.OnRenderSubmitted ??= (_, flags) => Assert.Equal(2u, flags);
+            return WasapiNominalSession.CreateFake(route, guard, Calls.Open,
+                new(() => Volatile.Read(ref now), Wait, input => finished[input ? 0 : 1].Set(), default, false), timeout);
+        }
 
         private WasapiClockReading Clock(int index, double actualRate, int frequency, int phaseFrames, ulong offset)
         {

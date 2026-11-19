@@ -6,7 +6,7 @@ internal enum NativeClockQuality { Unavailable, Accurate, Uncertain }
 internal enum NativePositionUnit { Frames, DeviceUnits }
 internal readonly record struct NativeClockSample(TransportEndpoint Endpoint, ulong Position, ulong Frequency,
     ulong Qpc100ns, NativePositionUnit Unit, NativeClockQuality Quality, TransportPacketFlags Flags = TransportPacketFlags.None);
-internal enum NativeClockResult { Valid, InvalidIdentity, Unavailable, TimestampError, Discontinuity, InvalidTime, InvalidPosition, Stalled, Overflow, RequiresReset, Provisional }
+internal enum NativeClockResult { Valid, InvalidIdentity, Unavailable, TimestampError, Discontinuity, InvalidTime, InvalidPosition, Stalled, Overflow, RequiresReset, Provisional, NominalEvidenceUnavailable }
 
 // Não faz chamadas nativas de clock. O chamador deve fornecer evidências verificadas de precisão e unidade.
 internal sealed class WasapiClockAdapter
@@ -132,6 +132,8 @@ internal sealed class WasapiClockAdapter
             lastProgressQpc = sample.Qpc100ns;
         }
         nativePosition = sample.Position; nativeFrequency = frequency; qpc = sample.Qpc100ns; unit = sample.Unit;
+        // A evidência de taxa segue rejeitada. A observação bruta só passou pelas regras do modo nominal.
+        if (validation.Reason == NativeClockReason.WindowRateOutsideTolerance) return NativeClockResult.NominalEvidenceUnavailable;
         if (validation.TemporalProvisional) return NativeClockResult.Provisional;
         if (captureTiming is null) observation = new(clock, frames, (long)qpc, ClockQuality.Monotonic);
         return NativeClockResult.Valid;
