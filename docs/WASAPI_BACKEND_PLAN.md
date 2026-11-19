@@ -1,5 +1,65 @@
 # Backend WASAPI — preparação sem áudio e base isolada
 
+## F2-I6B2B-DIAG-PROOF — resultado físico, 18/11/2026
+
+A tentativa física única foi executada sob autorização expressa e confirmação imediata do proprietário, com os sete casos manuais ainda aplicáveis, dispositivo USB de saída e dispositivo de captura corretos conectados, Wave Studio fechado e ausência de chamadas, gravações, testes e outros runners. A consulta Windows confirmou um único endpoint ativo por direção, e o runner confirmou capacidade exata e o mix antes de Start, sem fallback. O Release x64 foi recompilado de `bcafcda`, com código funcional idêntico a `558a43165f391fdd66153d36304206b568a21479`. O build terminou com zero avisos e erros e o apphost e as DLLs de áudio e testes identificavam a revisão `bcafcda`.
+
+Restore com `dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1900`. Build com `dotnet build WaveStudio.slnx -c Release --no-restore --no-incremental`. Descoberta pelo apphost com `--list-tests text --filter-method` e o nome qualificado `WaveStudio.Tests.WasapiNativeSilentTests.AuthorizedEndpointsCollectSilentDriftEvidenceAtNominalRatio`. A tentativa usou o mesmo filtro com `--explicit only --timeout 30s --diagnostic --diagnostic-output-directory`. Os quatro opt-ins foram definidos apenas no processo de execução; a política Restricted foi preservada. A primeira verificação automatizada do rótulo de arquitetura precisou considerar o formato `net10.0|x64` antes do Start. Isso afetou apenas a descoberta; houve uma execução de teste físico.
+
+### Resultado e encerramento
+
+| Critério | Evidência da tentativa |
+| --- | --- |
+| Runner | 1 teste executado, 1 falha, código 2. Duração de 5,060 s no runner e 5,349 s no processo observado. |
+| Observação | 37.220.736 × 100 ns, ou 3,7220736 s. Temporizador de 10 s interrompido por rejeição na captura. |
+| Aceitação | `DurationReached=false`, `TransportObserved=false`, `CaptureTiming.Confirmed=false`. Coleta não aprovada. |
+| Cortes e janelas | 34 consultas, 20 cortes coerentes de 60 exigidos, zero janelas estimáveis de 10 exigidas. O requisito de pelo menos 4 s entre janelas não pôde ser atendido. |
+| Razão nominal | `CorrectionEnabled=false`, `DriftControlEnabled=false`, `TrackingUpdates=0`. `RequestedPpm=null` e `AppliedPpm=0` nas 34 amostras. |
+| Segurança e limpeza | Render sempre SILENT, sem PCM persistido. Start, último Get/ReleaseBuffer e Stop com S_OK em ambos os papéis. `Completed=true` indica encerramento confirmado. Ambos liberados, sem buffers em voo, erros de limpeza ou recursos retidos. |
+
+| Contabilidade | Captura | Render SILENT |
+| --- | --- | --- |
+| Mix exato | Float32, 48 kHz, mono, 4 bytes/frame | Float32, 48 kHz, LR, 8 bytes/frame |
+| Capacidade, período e latência informada | 1.056 frames, 10 ms, 0 reportado | 1.056 frames, 10 ms, 0 reportado |
+| Aquisições / liberações | 372 / 372 | 374 / 374 |
+| Frames adquiridos / liberados | 178.560 / 178.560 | 180.096 / 180.096 |
+| Captura aceita / descarte inicial | 371 pacotes contíguos, 178.080 frames / 1 pacote, 480 frames com DATA_DISCONTINUITY | — |
+| FIFO terminal | 178.080 frames escritos, zero drops | 176.160 frames lidos, zero underruns internos |
+
+### Rejeição temporal
+
+O histórico registrou 37 leituras por papel sem sobrescrita, 37 válidas no render e 15 válidas, 21 provisórias e uma rejeitada na captura. Frequências constantes de 192.000 unidades/s na captura e 384.000 no render, com HRESULTs S_OK nas leituras. As provisórias ocorreram nos índices 5–20, 24–25, 29 e 31–32. A idade do QPC lido na captura variou de 0,2423 a 19,9809 ms, mediana 17,2441 ms. No render, de 0,0003 a 0,0859 ms, mediana 0,0006 ms. O maior desvio curto no render foi 1,5936 frame. Na captura, o maior desvio curto foi 480,4896 frames.
+
+A leitura de captura 37 retornou `InvalidPosition` com motivo `WindowRateOutsideTolerance`. A posição bruta foi 714.240 unidades e o QPC 236.026.844.357 × 100 ns. Entre as leituras 36 e 37, o QPC avançou 100,5913 ms e a posição aumentou 19.200 unidades, equivalentes a 4.800 frames. O esperado era 4.828,3824 frames. O erro curto de 28,3824 excedeu o limite nominal de 26,141912, mas ainda cabia na margem de fase do curto prazo. A decisão de parada veio da janela móvel, que usa o limite nominal sem margem de fase.
+
+| Série | Duração da janela | Frames observados | Frames esperados | Resíduo em frames | Limite em frames |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Clock de captura, móvel rejeitada | 2,0205647 s | 96.480 | 96.987,1056 | −507,1056 | 486,935528 |
+| Pacotes contíguos, móvel | 2,0305572 s | 97.440 | 97.466,7456 | −26,7456 | 489,333728 |
+| Clock de captura, acumulada | 3,6205407 s | 173.760 | 173.785,9536 | −25,9536 | 870,929768 |
+| Pacotes contíguos, acumulada | 3,7005574 s | 177.600 | 177.626,7552 | −26,7552 | 890,133776 |
+| Clock de render, primeira à última leitura | 3,6064182 s | 173.110 | 173.108,0736 | +1,9264 | — |
+
+O limite móvel foi excedido por 20,170072 frames. As duas janelas móveis têm âncoras e durações diferentes. Seus resíduos diferem em 480,36 frames, valor próximo dos 480 frames de um período. Os acumulados da captura e dos pacotes mostram −149,34 e −150,63 ppm em relação à respectiva referência nominal; o acumulado do render mostra +11,13 ppm. São resíduos descritivos em trechos distintos, sem o intervalo de incerteza e a corroboração exigidos pelo estimador. A diferença móvel é compatível com uma variação de fase. O JSON não identifica a causa física, não demonstra perda de um pacote e não resolve as falhas históricas anteriores. Houve 15 janelas de clock e 170 de pacotes confirmadas pela política nominal B1 antes da parada. A corroboração terminal ficou indisponível após a rejeição.
+
+### Cortes, frescor e ocupação
+
+Das 34 consultas, 20 foram `Available` e 14 `OwnerBusy`. Os motivos do diagnóstico foram 12 `Waiting`, oito `PhaseChanged`, quatro `CheckpointUnavailable` e dez `EvidenceExpired`. Nesse modo, `EvidenceExpired` descreve tempo desde o último corte coerente em uma consulta que encontrou owner ocupado; a falha terminal registrada foi a rejeição do clock. Nos 19 cortes com as três pontas disponíveis, as idades no instante do corte foram 14,6791–113,4714 ms para o clock da captura, 7,0142–97,1202 ms para o de render e 23,0661–33,0022 ms para o pacote. O maior intervalo entre cortes foi 1.651,4855 ms. O último corte precedeu a rejeição em 83,163 ms.
+
+A ocupação nos 20 cortes variou de zero, no corte inicial, a 2.400 frames, com mediana 1.920. Os 19 intervalos adjacentes cobrem 3,636462 s. Ao ponderar os limites de cada intervalo pela duração, o limite inferior da média nesse trecho foi 2.051,593 frames e o superior 2.068,252. A largura mediana dos intervalos foi 8,864 frames, com faixa de 7,615 a 87,006. Os cortes reconciliaram escritos menos lidos e, no render, priming do endpoint + pré-ticket + warmup + tentativas de FIFO.
+
+No último corte coerente, havia 174.240 frames escritos e 171.840 lidos, com 2.400 na FIFO. O priming do endpoint foi de 1.056 frames e o preenchimento inicial comprovado da FIFO foi de 2.400. O corte registrou 480 frames liberados antes do ticket e 2.400 durante warmup, fora das tentativas de leitura. No encerramento, a diferença contábil entre produzidos e lidos foi 1.920 frames. O render liberou 180.096 frames no total, dos quais 176.160 foram leituras da FIFO e 1.056 foram priming do endpoint; restam 2.880 fora das tentativas de FIFO. Esses totais são compatíveis com as categorias medidas no último corte, sem interpolar ocupação ou média entre esse corte e o encerramento.
+
+### Incerteza e próximo passo sob revisão
+
+Nenhuma janela ficou elegível para estimativa de drift. Entre pares válidos nos cortes retidos de uma mesma época, o maior intervalo foi 0,2202324 s. A estimativa exige janela de 3 s, sobreposição mínima de 2,5 s e corroboração do clock com pacotes. Assim, as distribuições de centros, limites, sinais e larguras em ppm têm zero amostras. Os resíduos nominais da tabela não os substituem.
+
+Como análise de sensibilidade, para uma janela **hipotética** de 3 s a 48 kHz, com os dois avanços nominais e erro por ponta igual nas duas séries de clock, 480 frames por ponta dariam faixa de aproximadamente −13.245 a +13.423 ppm, largura de 26.668 ppm. Com 5 frames por ponta, a largura ainda seria 277,78 ppm. Com 2 frames, seria 111,11 ppm. Largura de 200 ppm nessa condição pressupõe aproximadamente 3,6 frames de incerteza por ponta, cuja validade física a coleta não demonstrou. O orçamento de um período é uma hipótese de sensibilidade, e não foi reduzido para obter aprovação.
+
+O menor passo a avaliar em revisão é uma observação SILENT nominal que preserve a separação entre tempo de chegada e avanço dos clocks e dos pacotes durante os trechos provisórios. É preciso justificar como obter segmentos coerentes suficientes ou decidir se uma rota nominal limitada atende aos requisitos de segurança sem observações de drift. A rejeição existente continua válida. A tentativa permanece sem aprovação. Correção física, monitoramento audível e F3 seguem sujeitos à revisão.
+
+O JSON numérico original e o log do runner ficam em `artifacts/wasapi-drift-diagnostic`, ignorados pelo Git. SHA-256 do JSON `E236D02F37364D1C729EC3A58CA04693EF16EB3B74E02584306EBB9843801C26`. Sem nomes, IDs de endpoints, voz ou PCM no relatório. Esta etapa preservou a prova 4, o código, os testes manuais e as evidências das regressões anteriores. Não houve nova tentativa.
+
 ## F2-I6B2B-DRIFT — controle com evidência intervalar e diagnóstico SILENT
 
 Os dois owners continuam exclusivos para COM e para seus lados da FIFO. O mesmo lote do checkpoint inclui a leitura de clock devida, os metadados do último pacote aceito após ReleaseBuffer e, na captura, os frames de preenchimento e o ppm efetivamente aplicado. Versões e ticket vinculam essas evidências e a ocupação ao mesmo corte QPC. O coordenador lê somente valores publicados. O modo padrão B1 continua com diário e controle desativados.
@@ -31,7 +91,7 @@ O próximo ensaio é uma **única coleta diagnóstica SILENT de 10 s, em razão 
 
 O runner dedicado é `WasapiNativeSilentTests.AuthorizedEndpointsCollectSilentDriftEvidenceAtNominalRatio`, marcado `Explicit`. Após revisão e autorização específica de Start, confirmar os sete casos já registrados, app fechado, ausência de chamadas/outros testes e nomes exatos e únicos dos dispositivos ativos nas direções corretas. As variáveis do processo são `WAVESTUDIO_DRIFT_DIAGNOSTIC_START_AUTHORIZED`, `WAVESTUDIO_DRIFT_DIAGNOSTIC_PREREQUISITES_CONFIRMED`, `WAVESTUDIO_DRIFT_DIAGNOSTIC_CAPTURE_NAME` e `WAVESTUDIO_DRIFT_DIAGNOSTIC_HEADSET_NAME`. O teste verifica os dois consentimentos antes da pré-verificação de dispositivos. Selecionar pelo nome exato do teste em Release x64 e conferir o filtro antes de uma execução autorizada.
 
-A aceitação da **coleta** exige duração, Stop/Release confirmados, `TransportObserved` e continuidade confirmada pela captura, pelo menos 60 cortes coerentes e dez janelas estimáveis distribuídas num trecho com pelo menos quatro segundos entre primeira e última. O teste também exige zero comandos, zero atualizações de Tracking e zero ppm aplicado. O JSON de `artifacts/wasapi-drift-diagnostic` contém formatos, tempos, contagens, janelas e âncoras, fase, faixas de ocupação e de ppm, HRESULTs, perdas/underruns, priming e encerramento, sem nomes, IDs ou áudio. Uma janela ampla ou instável serve para identificar limitação de evidência. Para uma prova futura com correção, a análise deve justificar um limite de erro por ponto, demonstrar intervalos repetíveis compatíveis com 200 ppm de largura, distinguir fase de drift e obter nova autorização. A coleta ainda não foi executada.
+A aceitação da **coleta** exige duração, Stop/Release confirmados, `TransportObserved` e continuidade confirmada pela captura, pelo menos 60 cortes coerentes e dez janelas estimáveis distribuídas num trecho com pelo menos quatro segundos entre primeira e última. O teste também exige zero comandos, zero atualizações de Tracking e zero ppm aplicado. O JSON de `artifacts/wasapi-drift-diagnostic` contém formatos, tempos, contagens, janelas e âncoras, fase, faixas de ocupação e de ppm, HRESULTs, perdas/underruns, priming e encerramento, sem nomes, IDs ou áudio. Uma janela ampla ou instável serve para identificar limitação de evidência. Para uma prova futura com correção, a análise deve justificar um limite de erro por ponto, demonstrar intervalos repetíveis compatíveis com 200 ppm de largura, distinguir fase de drift e obter nova autorização. A tentativa e seu resultado estão registrados na seção F2-I6B2B-DIAG-PROOF acima.
 
 ## F2-I6B2A-CHECKPOINT — corte coerente dos dois owners MTA
 

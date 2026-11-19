@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-18 — F2-I6B2B-DIAG-PROOF
+
+- A tentativa diagnóstica nominal SILENT encerrou em 3,7220736 s por rejeição da janela móvel do clock de captura. Os dois streams confirmaram Stop e liberação.
+- Registrados 20 cortes coerentes e zero janelas de drift estimáveis. Correção física desativada, sem voz armazenada. A coleta não foi aprovada e segue para revisão.
+
 ### 2026-11-18 — F2-I6B2B-DRIFT
 
 - Ponte de clocks e pacotes sobre cortes coerentes, controle intervalar exercitado no caminho WASAPI com fakes e preenchimento da FIFO separado do priming do endpoint.

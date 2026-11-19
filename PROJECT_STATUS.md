@@ -2,7 +2,19 @@
 
 Atualizado em 18/11/2026.
 
-## Estado atual — F2-I6B2B-DRIFT, 18/11/2026
+## Estado atual — F2-I6B2B-DIAG-PROOF, 18/11/2026
+
+A única coleta física autorizada **não foi aprovada**. O runner Release x64 executou exclusivamente o teste dedicado, retornou código 2 e registrou uma falha em 5,060 s. A observação QPC encerrou em **3,7220736 s** dos 10 s configurados. O clock de captura rejeitou a leitura 37 por `WindowRateOutsideTolerance`. Em 2,0205647 s, avançou 96.480 frames para 96.987,1056 esperados. O resíduo de −507,1056 frames excedeu o limite de 486,935528. A janela móvel dos pacotes contíguos permaneceu dentro de seu limite. O padrão é compatível com uma diferença de fase próxima de um período, com causa física indeterminada.
+
+Start, Stop e ReleaseBuffer retornaram S_OK em ambos os papéis. Os streams encerraram com liberação confirmada, sem buffers em voo nem recursos retidos. A saída ficou SILENT, com `CorrectionEnabled=false`, zero comandos, zero atualizações de Tracking e zero ppm aplicado. Não houve armazenamento de voz. A captura aceitou 371 pacotes contíguos, com 178.080 frames aceitos e um pacote inicial de 480 frames descartado. A FIFO produziu 178.080 frames e leu 176.160, com zero drops e zero underruns internos.
+
+Houve 34 consultas diagnósticas, **20 cortes coerentes** e **zero janelas estimáveis**. `DurationReached`, `TransportObserved` e `CaptureTiming.Confirmed` ficaram falsos. Os 19 intervalos de ocupação entre cortes cobriram 3,636462 s, com média limitada entre 2.051,593 e 2.068,252 frames nesse trecho. Os dados não demonstram precisão repetível de 200 ppm nem sustentam correção física. [Reprodução numérica, histórico, contabilidade e critérios](docs/WASAPI_BACKEND_PLAN.md#f2-i6b2b-diag-proof--resultado-físico-18112026).
+
+A `main` foi sincronizada por fast-forward de `558a431` a `bcafcda`, cuja diferença é exclusivamente documental. O Release x64 foi recompilado de `bcafcda` com .NET SDK 10.0.404, restore locked auditado e zero avisos ou erros. O proprietário reconfirmou os sete manuais aplicáveis e as condições imediatas. O Windows reportou um endpoint ativo e único por direção para o par confirmado. O runner validou formato exato e ausência do Wave Studio antes de Start. O filtro descobriu um único `Explicit`; a tentativa usou o apphost direto com as quatro variáveis de autorização limitadas ao processo, sem alterar a política Restricted.
+
+O JSON original e os logs permanecem em `artifacts/wasapi-drift-diagnostic`, ignorados pelo Git. Prova 4, código-fonte e regressões anteriores preservados. Não houve nova tentativa. Controle físico, monitoramento audível e F3 aguardam revisão.
+
+## Histórico — F2-I6B2B-DRIFT, 18/11/2026
 
 A pasta oficial partiu limpa e a `main` avançou por fast-forward para `d80a5a1`. HEAD e `origin/main` foram conferidos, com Git 2.56.1, SDK .NET 10.0.404 e `git fsck --connectivity-only --no-dangling` aprovado. A prova silenciosa 4 e os sete casos manuais pós-formatação aprovados por relato foram preservados.
 
