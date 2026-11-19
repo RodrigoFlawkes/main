@@ -26,6 +26,8 @@ Os adendos usam os projetos e dependências existentes. F1-I6-METER não abre ca
 
 O proprietário escolheu a avaliação local com VB-CABLE simples em 19/11/2026. A prova física futura será agrupada, com restauração e quietude do cabo entre os fluxos. O modo A+B foi preservado para avaliação posterior. A preparação não encerra F2, F3 ou autoriza F4. [Roteiro e dependências](EXTERNAL_ROUTE_PROOF.md#f3-i2-single-cable--avaliação-com-um-cabo).
 
+Em F3-I2-SINGLE-CABLE-PROOF, o VB-CABLE simples foi instalado e o OBS portátil foi preparado. A verificação da identidade de adaptador bloqueou a sessão antes de abrir qualquer fluxo. A retomada depende da revisão do pareamento mantendo o isolamento e da autorização específica para a única prova agrupada. [Resultado e evidências](EXTERNAL_ROUTE_PROOF.md#f3-i2-single-cable-proof--bloqueio-antes-do-áudio).
+
 ## F3-I1-EXTERNAL-ROUTE — decisão de transição
 
 Em 19/11/2026, o proprietário autorizou iniciar a Fase 3 com validação integrada das pendências F2. A primeira entrega implementa e testa os dois caminhos de DSP em fakes, prepara um único runner físico opt-in e permite configurar e restaurar a fonte externa por observação manual. A validação futura de navegador e OBS será agrupada com o preflight e os pontos pertinentes de F2. Estabilidade prolongada, recuperação real, latência acústica e necessidade de correção física seguem abertas até evidência pertinente. Preservar o projeto de drivers/APO como decisão de produto após a prova e manter F4 após avaliação da integração real. [Roteiro agrupado](EXTERNAL_ROUTE_PROOF.md).

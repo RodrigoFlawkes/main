@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-19 — F3-I2-SINGLE-CABLE-PROOF
+
+- Verificados os pacotes oficiais e instalado o driver VB-CABLE simples 3.5.2.0 com autorização. OBS 33.0.1 preparado em modo portátil isolado.
+- Conferidos padrões e níveis do Windows. A pré-verificação rejeitou o pareamento da rota antes de captura ou reprodução. A prova agrupada segue pendente.
+
 ### 2026-11-19 — F3-I2-SINGLE-CABLE
 
 - Preparado modo de avaliação por cabo único, com fases sequenciais, consentimentos por fase, identidades distintas por geração e restauração verificável.

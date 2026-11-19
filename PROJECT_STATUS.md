@@ -2,7 +2,15 @@
 
 Atualizado em 19/11/2026.
 
-## Estado atual — F3-I2-SINGLE-CABLE, 19/11/2026
+## Estado atual — F3-I2-SINGLE-CABLE-PROOF, 19/11/2026
+
+**Bloqueada antes de abrir qualquer fluxo.** A `main` avançou por fast-forward de `ca6d7da` para `22811d1`. A base funcional, os hashes dos binários Release x64, o filtro Explicit único e o WAV sintético foram conferidos. As evidências automatizadas anteriores foram reaproveitadas.
+
+Com autorização de instalação, o VB-CABLE simples Pack46 foi instalado com driver assinado 3.5.2.0. O OBS 33.0.1 ficou preparado em modo portátil isolado. Os seis dispositivos padrão por função/direção e os níveis, mute e balanço dos oito endpoints anteriores coincidem com o snapshot. O log registra inicialização do tipo 1 após o desligamento, com o último boot completo anterior à instalação. Uma das duas instâncias PnP do cabo registrou código 10, e os três endpoints ativos pertencem à instância saudável.
+
+A pré-verificação do Wave Studio rejeitou a identidade de adaptador dos quatro endpoints selecionados. Navegador, sondagem de quietude e microfone/OBS ficaram pendentes. Nenhuma preferência dos aplicativos foi aplicada. A autorização física ainda não foi solicitada e nenhuma tentativa foi consumida. A revisão retoma o bloqueio de pareamento antes de agendar uma única prova agrupada. As pendências integradas da Fase 2 e a aceitação da Fase 3 seguem abertas. [Evidências da preparação e do bloqueio](docs/EXTERNAL_ROUTE_PROOF.md#f3-i2-single-cable-proof--bloqueio-antes-do-áudio).
+
+## Histórico — F3-I2-SINGLE-CABLE, 19/11/2026
 
 O proprietário escolheu o VB-CABLE simples para avaliação local, sem adquirir A+B neste momento. A `main` sincronizou por fast-forward de `48b5045` a `422c7fe`. As mudanças posteriores à base funcional `6c7a5d4` eram documentais até esta adaptação. A conectividade do Git foi conferida com Git 2.56.1, SDK .NET 10.0.404 e política Restricted. O estímulo estéreo de 1 kHz foi reaproveitado e seu SHA-256 conferido.
 
