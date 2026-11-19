@@ -1,5 +1,61 @@
 # Backend WASAPI — preparação sem áudio e base isolada
 
+## F2-I6C-NOMINAL-PROOF — resultado físico, 18/11/2026
+
+A tentativa única autorizada foi **aprovada no escopo de transporte nominal limitado**. O proprietário reconfirmou os endpoints físicos, os sete manuais e a ausência de chamadas, gravações e outros testes. O Windows confirmou um endpoint ativo por direção para o par exato e não havia Wave Studio ou outros runners. O teste validou o mix e suporte exatos antes de Start, sem fallback.
+
+O Release x64 foi recompilado de `134f35e70c602092802220d35d3953a3828416ec`, com código idêntico a `287b05d4f340bc3dcd91ef18be53fc678b09932c`. Apphost e DLLs de áudio e testes registraram essa revisão. Restore com `dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1900` e build com `dotnet build WaveStudio.slnx -c Release --no-restore --no-incremental`, com zero erros ou avisos. A descoberta `--list-tests text --filter-method` encontrou somente `WaveStudio.Tests.WasapiNativeSilentTests.AuthorizedEndpointsRunBoundedSilentNominalTransport`. A execução usou apphost direto com o mesmo filtro e `--explicit only --timeout 30s --diagnostic --diagnostic-output-directory`. Os opt-ins ficaram no processo de execução. A política Restricted foi preservada.
+
+| Critério | Resultado |
+| --- | --- |
+| Runner | 1 teste aprovado, código 0, duração de 5,998 s no runner e 6,361 s na medição do processo |
+| Tempo e aceitação | `DurationReached=true`, `NominalObserved=true`. Janela QPC de 49.991.228 × 100 ns, ou 4,9991228 s, 0,8772 ms abaixo dos 5 s programados |
+| Evidência e modo | `PacketRateConfirmed=true`, `RenderSilent=true`, `DriftPrecisionAvailable=false`, `DriftControlEnabled=false`, `Cleanup.TransportObserved=false` |
+| Encerramento | `Completed=true`, ambos os streams liberados, sem buffers em voo, erro de limpeza ou recursos retidos. Nenhuma voz armazenada |
+
+### Frames e FIFO
+
+| Evidência | Captura | Render SILENT |
+| --- | --- | --- |
+| Mix exato | Float32, 48 kHz, mono, máscara 4, 4 bytes/frame | Float32, 48 kHz, LR, máscara 3, 8 bytes/frame |
+| Capacidade e período | 1.056 frames, 10 ms | 1.056 frames, 10 ms |
+| Initialize / Start / último GetBuffer / último ReleaseBuffer / Stop | Confirmado / S_OK / S_OK / S_OK / S_OK | Confirmado / S_OK / S_OK / S_OK / S_OK |
+| Aquisições / liberações | 500 / 500 | 501 / 501 |
+| Frames adquiridos / liberados | 240.000 / 240.000 | 241.056 / 241.056 |
+| Captura aceita e descarte | 499 pacotes, 239.520 frames aceitos. 1 pacote, 480 frames com `DATA_DISCONTINUITY` descartados integralmente no startup | — |
+| FIFO | 239.520 frames produzidos, zero drops | 237.120 frames lidos, zero underruns |
+
+A contabilidade de render fecha em 241.056 = 1.056 priming do endpoint + 0 pré-ticket + 2.880 warmup + 237.120 tentativas FIFO atendidas. O preenchimento da FIFO foi de 2.400 frames e constitui uma contagem distinta do priming nativo e das liberações durante warmup. O saldo terminal escrito menos lido foi de 2.400 frames. As tentativas de leitura coincidiram com os frames lidos. Não houve parada por fronteira.
+
+Com FIFO de 4.096 frames, a margem calculada foi `max(1056, ceil(1056 × 48000 / 48000) + 1) = 1057`. A captura protege o limite alto de 3.039 frames antes de adquirir novo pacote. Após o warmup, o render protege o limite baixo de 1.057 antes de ler a FIFO. Os 191 cortes coerentes tiveram ocupação de 0 a 2.400 frames. Como a faixa agrega a sessão inteira, ela não localiza o mínimo em relação ao warmup nem representa cada fronteira de publicação.
+
+Houve 26 consultas ocupadas e 49 observações independentes em cada papel. Os limites ponderados da média foram 2.091,054482–2.109,499372 frames em 4,9724887 s cobertos (99,467% da janela QPC observada). O intervalo coberto ficou 26,6341 ms abaixo da janela total. O relatório agrega cortes e áreas, sem série por corte para recalcular a distribuição de intervalos ou o maior intervalo entre cortes. O sucesso confirma que o controle não registrou vencimento da regra de 500 ms e que o último corte cumpriu o critério de frescor. A ocupação não mede latência acústica.
+
+### Movimento e evidência temporal
+
+O histórico tem 49 leituras sequenciais em cada papel, sem sobrescrita. A captura reportou 29 válidas, 19 provisórias e uma `NominalEvidenceUnavailable`, com 28 avanços válidos contabilizados. O render reportou 49 válidas e 48 avanços válidos. A frequência foi constante, 192.000 unidades/s na captura e 384.000 no render, e os HRESULTs de frequência e posição foram S_OK. As posições não regrediram, os QPCs foram crescentes e as idades observadas foram 0,7161–19,3268 ms na captura e 0,0002–0,1044 ms no render. O maior erro curto registrado foi de 481,536 frames na captura e 2,1792 no render. O histórico não contém rejeição fatal de integridade.
+
+A leitura 27 da captura, com posição bruta de 524.160 unidades e QPC 58.817.527.646 × 100 ns, registrou `NominalEvidenceUnavailable/WindowRateOutsideTolerance`. A janela móvel avançou 97.440 frames em 2,0194117 s, para 96.931,7616 esperados. O resíduo de +508,2384 superou o limite de 486,658808 em 21,579592 frames. O acumulado daquela leitura permaneceu dentro do limite, com resíduo de +508,488 ante 630,65756. O modo manteve o transporte sob a regra de evidência independente dos pacotes. O relatório conserva o motivo e a janela rejeitada, porém não guarda a janela de pacotes individual no instante 27 para recálculo isolado.
+
+A leitura 28 voltou a `Valid`. Seu resíduo móvel foi de +508,2624 frames ante limite de 510,658688. A regra contabiliza 99,9995 ms entre os QPCs 27 e 28. Entre as observações locais decorreram 100,8234 ms. Do QPC rejeitado até a observação local da recuperação decorreram 116,1264 ms, também abaixo de 500 ms. Essa foi a única indisponibilidade registrada e não habilitou correção.
+
+| Série terminal | Duração | Frames avançados | Frames esperados | Resíduo em frames | Limite em frames |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Clock de captura, móvel | 2,1199892 s | 101.760 | 101.759,4816 | +0,5184 | 510,797408 |
+| Clock de captura, acumulada | 4,8393952 s | 232.800 | 232.290,9696 | +509,0304 | 1.163,454848 |
+| Pacotes, móvel | 2,0194499 s | 96.960 | 96.933,5952 | +26,4048 | 486,667976 |
+| Pacotes, acumulada | 4,9800017 s | 239.040 | 239.040,0816 | −0,0816 | 1.197,200408 |
+
+Houve 28 janelas confirmadas do clock e 299 dos pacotes. Os 239.040 frames entre o início do primeiro e do último pacote aceito, somados aos 480 do último pacote, fecham o total de 239.520 aceitos. `ContinuousPackets=499` coincide com `PacketsAccepted`. A corroboração terminal dos acumulados foi recalculada na sobreposição de 4,8393952 s como 509,109696 frames, ante limite de 1.163,454848, com `CaptureTiming.Confirmed=true`. Essa consistência nominal e a recuperação da janela não identificam causa física nem fornecem uma estimativa calibrada de drift.
+
+### Preservação e pendências
+
+O JSON original fica em `artifacts/wasapi-nominal-silent`, com SHA-256 `B996E9C632B74344DB4244D5EA44321BDA481583974511BB2A15E8A1F8BCC658`. O log bruto é `runner-134f35e.log` nessa pasta, ignorada pelo Git. Foram publicados somente números e conclusões, sem nomes ou IDs de endpoints, voz ou PCM.
+
+Os logs anteriores de alocação em `artifacts/f2-i6c-nominal` mostram 7.912 bytes no Release padrão com seed 20261113 e 6.856 com seed 20261114 no teste do diário. A asserção mede a thread do teste após aquecimento, com exigência de zero bytes na publicação medida. O Release serial com seed 20261113 aprovou os 801 casos comuns, mesmos binários e asserções. A diferença de contexto não estabelece a origem dos bytes. Nenhuma suíte foi repetida nesta prova física.
+
+A prova 4 e a coleta diagnóstica reprovada foram preservadas. A aprovação atual fica restrita ao transporte nominal curto no par e formato testados. Monitoramento audível ou contínuo exige resolver a pendência de alocações e obter revisão e autorização próprias. Controle de drift físico, estabilidade prolongada e F3 permanecem pendentes.
+
 ## F2-I6C-NOMINAL-MONITOR — transporte limitado em razão fixa
 
 `WasapiNominalSession` é uma fachada separada que usa o mesmo ciclo de vida WASAPI, guard, owners MTA, conversão e FIFO de B1/B2. A fachada `WasapiSilentSession` mantém os seus critérios anteriores. O modo nominal tem relatório e critério `NominalObserved` próprios. O relatório nominal sempre declara a precisão de drift indisponível. O modo não constrói o controlador adaptativo, não publica ppm e mantém a razão em zero ppm de correção.
@@ -24,7 +80,7 @@ A prova nativa nominal sempre libera com SILENT. A escrita de amostras existe ex
 
 ### Próximas provas, sujeitas a revisão e autorização
 
-A prova SILENT nominal preparada é `WaveStudio.Tests.WasapiNativeSilentTests.AuthorizedEndpointsRunBoundedSilentNominalTransport`, marcada `Explicit`. A descoberta pode usar `--list-tests text --filter-method` pelo nome qualificado. Em uma futura execução autorizada, verificar os sete manuais aplicáveis, conectar os dispositivos, confirmar Wave Studio fechado, ausência de chamadas, gravações e outros runners, selecionar um endpoint ativo e exato por direção, conferir proveniência Release x64 e usar o filtro único com `--explicit only`. Os opt-ins de processo são `WAVESTUDIO_NOMINAL_SILENT_START_AUTHORIZED`, `WAVESTUDIO_NOMINAL_SILENT_PREFLIGHT_CONFIRMED`, `WAVESTUDIO_NOMINAL_SILENT_CAPTURE_NAME` e `WAVESTUDIO_NOMINAL_SILENT_HEADSET_NAME`.
+A prova SILENT nominal preparada é `WaveStudio.Tests.WasapiNativeSilentTests.AuthorizedEndpointsRunBoundedSilentNominalTransport`, marcada `Explicit`. A descoberta pode usar `--list-tests text --filter-method` pelo nome qualificado. Em uma execução autorizada, verificar os sete manuais aplicáveis, conectar os dispositivos, confirmar Wave Studio fechado, ausência de chamadas, gravações e outros runners, selecionar um endpoint ativo e exato por direção, conferir proveniência Release x64 e usar o filtro único com `--explicit only`. Os opt-ins de processo são `WAVESTUDIO_NOMINAL_SILENT_START_AUTHORIZED`, `WAVESTUDIO_NOMINAL_SILENT_PREFLIGHT_CONFIRMED`, `WAVESTUDIO_NOMINAL_SILENT_CAPTURE_NAME` e `WAVESTUDIO_NOMINAL_SILENT_HEADSET_NAME`.
 
 A aceitação exige duração configurada concluída, movimento em ambos os papéis, evidência nominal de pacotes, cortes coerentes dentro do prazo, contabilidade sem perdas, margem respeitada, Stop e Release confirmados, sem buffers ou guard retidos. O relatório fica em `artifacts/wasapi-nominal-silent`, com números, formatos e motivos, sem nomes, IDs ou voz. `NominalObserved` não aprova B1, a coleta diagnóstica anterior nem a precisão de drift. Em caso de falha, conservar evidência e encerrar sem retry automático.
 

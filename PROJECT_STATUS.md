@@ -2,7 +2,19 @@
 
 Atualizado em 18/11/2026.
 
-## Estado atual — F2-I6C-NOMINAL-MONITOR, 18/11/2026
+## Estado atual — F2-I6C-NOMINAL-PROOF, 18/11/2026
+
+A tentativa física única **foi aprovada para transporte nominal limitado** no par selecionado, a 48 kHz Float32 de captura mono e render LR. O temporizador de 5 s concluiu. A janela QPC foi de **4,9991228 s**, 0,8772 ms abaixo da duração configurada. O runner Release x64 executou somente o teste dedicado, com código 0 em 5,998 s. `DurationReached`, `NominalObserved`, `RenderSilent` e `PacketRateConfirmed` ficaram verdadeiros. `DriftPrecisionAvailable`, `DriftControlEnabled` e `Cleanup.TransportObserved` ficaram falsos.
+
+Os dois streams confirmaram Start, Get/ReleaseBuffer e Stop, todos com S_OK nos resultados reportados. Houve liberação confirmada, nenhum buffer em voo, nenhum recurso retido e nenhuma voz armazenada. Foram aceitos 499 pacotes contíguos e 239.520 frames após o descarte inicial de um pacote de 480 frames. A FIFO escreveu 239.520 e leu 237.120 frames, com saldo contábil de 2.400 e zero drops ou underruns. O render liberou 241.056 frames SILENT, soma de 1.056 de priming do endpoint, zero pré-ticket, 2.880 de warmup e 237.120 de leitura FIFO.
+
+O diário confirmou 191 cortes, com ocupação de 0–2.400 frames e média intervalar de 2.091,054–2.109,499 frames em 4,9724887 s cobertos. O histórico de captura registrou 19 leituras provisórias e uma indisponibilidade da evidência de clock na leitura 27, por `WindowRateOutsideTolerance`. A evidência voltou a ficar disponível na leitura 28, 99,9995 ms de QPC depois, dentro do orçamento de 500 ms. A continuidade e as janelas nominais dos pacotes foram confirmadas. [Histórico, contabilidade e reprodução dos cálculos](docs/WASAPI_BACKEND_PLAN.md#f2-i6c-nominal-proof--resultado-físico-18112026).
+
+A `main` avançou por fast-forward de `287b05d` para `134f35e`. A base funcional é idêntica, e o Release x64 foi recompilado de `134f35e` com SDK 10.0.404, restore locked auditado e zero erros ou avisos. O proprietário reconfirmou as condições imediatas e os sete manuais. O Windows mostrou um único endpoint ativo em cada direção para o par confirmado. O runner verificou a seleção exata, sem fallback. A política Restricted foi preservada. O JSON e os logs originais permanecem em `artifacts/wasapi-nominal-silent`, ignorados pelo Git.
+
+A prova valida somente o transporte nominal limitado neste par e formato. As falhas de alocação Release ainda impedem liberar monitoramento físico audível ou contínuo. Código, provas anteriores e evidências das regressões foram preservados. A investigação de alocações e os próximos passos da Fase 2 aguardam revisão. F3 permanece pendente.
+
+## Histórico — F2-I6C-NOMINAL-MONITOR, 18/11/2026
 
 A `main` avançou por fast-forward de `59cc56e` para `00fc42f`; a diferença desde a base funcional `558a431` era documental. Pasta oficial, referências local/remota, SDK .NET 10.0.404, Git 2.56.1 e conectividade de objetos verificados. O SHA-256 do JSON local coincide com o publicado. A prova 4 e a tentativa diagnóstica reprovada permanecem registradas.
 

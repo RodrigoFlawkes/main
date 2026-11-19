@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-18 — F2-I6C-NOMINAL-PROOF
+
+- A tentativa física nominal SILENT concluiu o temporizador de cinco segundos e foi aprovada no escopo do transporte nominal. Foram observados 4,9991228 s por QPC, 191 cortes coerentes, zero perdas de FIFO e liberação confirmada.
+- A evidência do clock de captura ficou temporariamente indisponível em uma leitura, sem invalidar a continuidade dos pacotes. Correção de drift e monitoramento audível seguem fora do escopo aprovado.
+
 ### 2026-11-18 — F2-I6C-NOMINAL-MONITOR
 
 - Transporte nominal opt-in de até cinco segundos, com verificação independente de pacotes, margem de FIFO e relatório separado de drift.
