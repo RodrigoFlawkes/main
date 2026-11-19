@@ -1,5 +1,13 @@
 # Backend WASAPI — transporte isolado e preparação da prova audível
 
+## F2-I6D-AUDIBLE-PROOF — preflight e resultado pendente
+
+A base funcional `0c1e54b6137d00f6389b70c93b74f1713a5c0a0f` é idêntica à de `e14ff8419b24e5e83645605cfd00cd7d5c8a80be`. Foram executados `dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1900` e `dotnet build WaveStudio.slnx -c Release --no-restore --no-incremental`. O build Release x64 teve zero erros ou avisos. A descoberta `--list-tests text --filter-method WaveStudio.Tests.WasapiNativeAudibleProofTests.AuthorizedHeadsetRunsBoundedAudibleNominalProof` encontrou um teste. Nenhuma regressão comum ou prova anterior foi repetida.
+
+A janela foi aberta em 18/11 às 23:59, horário local, na sessão interativa do Windows, após confirmação do proprietário e verificação da ausência do Wave Studio e de outro runner. O último estado do lançador foi `AguardandoOperador`. A janela encerrou antes da criação do log de execução, que antecede o início do próprio apphost. O estado local está em `artifacts/wasapi-audible-proof/e14ff84-audible-1795057154072-state.json`, com SHA-256 `6666753808496b25f4ba8f9b036abdb33d5e3b389df109ff21dde5650d519487`. Logs de restore, build e descoberta estão na mesma pasta, ignorada pelo Git.
+
+Houve relato de aprovação pelo proprietário, com identificação da execução e confirmação de escuta pendentes. Nenhum código de saída, JSON ou métricas de WASAPI foram localizados. Formato negociado, duração por QPC, PCM submetido, clipping, FIFO, continuidade, encerramento e experiência de escuta permanecem sem comprovação nesta etapa. O relato precisa ser reconciliado antes de qualquer outra execução, preservando o limite de uma tentativa física.
+
 ## F2-I6D-ALLOC-MONITOR — roteiro para revisão
 
 A fachada interna `WasapiAudibleProofSession` reutiliza os proprietários WASAPI, a política nominal, o FIR, a FIFO e o codificador já exercitados no backend simulado. As fachadas nativas B1, B2 e nominal SILENT continuam sem codificador. O novo caminho nativo exige capacidade exata nos dois endpoints e consentimento de uso único associado à rota e ao token de parada. A interface e o monitoramento contínuo ficam fora desta etapa.

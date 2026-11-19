@@ -1,8 +1,16 @@
 # Status do Wave Studio
 
-Atualizado em 18/11/2026.
+Atualizado em 19/11/2026.
 
-## Estado atual — F2-I6D-ALLOC-MONITOR, 18/11/2026
+## Estado atual — F2-I6D-AUDIBLE-PROOF, 19/11/2026
+
+A `main` avançou por fast-forward de `0c1e54b` para `e14ff84`. O diff da revisão autorizada é documental. A conectividade do Git passou. O restore locked com auditoria NuGet passou, e o Release x64 foi recompilado com SDK 10.0.404, zero erros ou avisos e política Restricted preservada. O apphost e as DLLs de áudio e testes registraram a revisão `e14ff84`. A descoberta pelo filtro exato encontrou somente o novo método audível.
+
+O proprietário confirmou o headset USB colocado, volume baixo confortável, microfone conectado, nomes exatos dos endpoints, Wave Studio fechado, ausência de chamadas, gravações e outros testes e validade dos sete manuais. A janela local interativa abriu e aguardou o operador. Após o encerramento da janela, o último estado registrado era `AguardandoOperador`, anterior ao lançamento do apphost. Não houve Start pelo lançador preparado. A seleção ativa e a capacidade exata ainda dependem do pré-teste dentro do apphost.
+
+O proprietário relatou aprovação. A janela acompanhada não gerou log ou código de saída do runner e a busca na pasta oficial e nas demais pastas do Wave Studio não encontrou JSON da prova audível. O relato ainda precisa identificar a execução e esclarecer a experiência de escuta. O resultado físico fica **pendente de verificação**. A tentativa pelo lançador não foi consumida. Qualquer outra execução deve ser esclarecida antes de abrir uma nova janela. [Preflight e evidências locais](docs/WASAPI_BACKEND_PLAN.md#f2-i6d-audible-proof--preflight-e-resultado-pendente).
+
+## Histórico — F2-I6D-ALLOC-MONITOR, 18/11/2026
 
 A `main` sincronizou por fast-forward de `a85af9d` a `dd9b227`, com conectividade Git conferida. Ambiente .NET SDK 10.0.404, CoreCLR 10.0.15 x64, Git 2.56.1 e política Restricted. A prova nominal SILENT aprovada, a prova 4, a coleta diagnóstica reprovada e os sete testes manuais conservam suas evidências originais.
 

@@ -2,6 +2,10 @@
 
 ## Em desenvolvimento
 
+### 2026-11-19 — F2-I6D-AUDIBLE-PROOF
+
+- Sincronizada a revisão autorizada e verificado o apphost Release x64 com filtro único. A janela local encerrou antes de lançar o runner. O resultado físico permanece pendente de evidência verificável.
+
 ### 2026-11-18 — F2-I6D-ALLOC-MONITOR
 
 - Reproduzida no .NET 10.0.15 a supercontagem de alocações por GC em segundo plano. Os quatro ensaios históricos preservam as medições exatas e os limites originais, em processos separados das outras classes, com controles de zero e de alocação conhecida.
