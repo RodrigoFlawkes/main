@@ -4,7 +4,8 @@
 
 ### 2026-11-19 — F2-I6D-AUDIBLE-PROOF
 
-- Sincronizada a revisão autorizada e verificado o apphost Release x64 com filtro único. A janela local encerrou antes de lançar o runner. O resultado físico permanece pendente de evidência verificável.
+- O proprietário confirmou escuta da própria voz no headset e funcionamento do monitoramento. A aprovação manual foi registrada no escopo da escuta.
+- Os artefatos disponíveis documentam o preparo do Release x64 e a janela que encerrou antes do apphost. O resultado automatizado da escuta relatada segue indisponível. A prova e os testes anteriores não foram repetidos.
 
 ### 2026-11-18 — F2-I6D-ALLOC-MONITOR
 

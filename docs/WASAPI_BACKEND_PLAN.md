@@ -1,12 +1,19 @@
 # Backend WASAPI — transporte isolado e preparação da prova audível
 
-## F2-I6D-AUDIBLE-PROOF — preflight e resultado pendente
+## F2-I6D-AUDIBLE-PROOF — aprovação manual e evidência disponível
 
-A base funcional `0c1e54b6137d00f6389b70c93b74f1713a5c0a0f` é idêntica à de `e14ff8419b24e5e83645605cfd00cd7d5c8a80be`. Foram executados `dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1900` e `dotnet build WaveStudio.slnx -c Release --no-restore --no-incremental`. O build Release x64 teve zero erros ou avisos. A descoberta `--list-tests text --filter-method WaveStudio.Tests.WasapiNativeAudibleProofTests.AuthorizedHeadsetRunsBoundedAudibleNominalProof` encontrou um teste. Nenhuma regressão comum ou prova anterior foi repetida.
+Em 19/11/2026, o proprietário confirmou que ouviu a própria voz pelo headset e que o monitoramento funcionou. A aprovação manual cobre a função de escuta. O relato disponível não detalha nível durante a reprodução, timbre, ruído ou distorção, atraso percebido, feedback, desconforto ou acionamento de Esc. O procedimento do teste prevê até cinco segundos e ganho máximo de 0,05. A duração e o ganho efetivos da escuta relatada permanecem desconhecidos.
 
-A janela foi aberta em 18/11 às 23:59, horário local, na sessão interativa do Windows, após confirmação do proprietário e verificação da ausência do Wave Studio e de outro runner. O último estado do lançador foi `AguardandoOperador`. A janela encerrou antes da criação do log de execução, que antecede o início do próprio apphost. O estado local está em `artifacts/wasapi-audible-proof/e14ff84-audible-1795057154072-state.json`, com SHA-256 `6666753808496b25f4ba8f9b036abdb33d5e3b389df109ff21dde5650d519487`. Logs de restore, build e descoberta estão na mesma pasta, ignorada pelo Git.
+| Evidência recuperada | Resultado |
+| --- | --- |
+| Base e binários | `fa0e5f2` equivale funcionalmente a `0c1e54b`. Os hashes SHA-256 do apphost e das DLLs de testes e áudio conferem com o build de `e14ff84` |
+| Preparação | Restore locked com auditoria de todos os pacotes e NU1900 como erro. Build não incremental Release x64 com zero erros e avisos. Descoberta por filtro exato de um único teste `Explicit` |
+| Janela acompanhada | Aberta em 18/11 às 23:59, horário local, após as confirmações de preflight do proprietário e verificação de ausência de Wave Studio e de outro runner. Último estado `AguardandoOperador`, anterior ao lançamento do apphost |
+| Evidência da execução relatada | Busca em `artifacts`, nas demais pastas do Wave Studio e nas pastas locais de documentos, área de trabalho, downloads e temporários acessíveis. Nenhum JSON da prova, log de execução ou código de saída foi recuperado. Os logs de regressão registram a exclusão do método `Explicit` |
 
-Houve relato de aprovação pelo proprietário, com identificação da execução e confirmação de escuta pendentes. Nenhum código de saída, JSON ou métricas de WASAPI foram localizados. Formato negociado, duração por QPC, PCM submetido, clipping, FIFO, continuidade, encerramento e experiência de escuta permanecem sem comprovação nesta etapa. O relato precisa ser reconciliado antes de qualquer outra execução, preservando o limite de uma tentativa física.
+O estado local preservado está em `artifacts/wasapi-audible-proof/e14ff84-audible-1795057154072-state.json`, com SHA-256 `6666753808496b25f4ba8f9b036abdb33d5e3b389df109ff21dde5650d519487`. Os três logs de preparação `e14ff84-restore.log`, `e14ff84-build.log` e `e14ff84-discovery.log` estão na mesma pasta, ignorada pelo Git. Os comandos de preparação estão no registro anterior. [Preflight documentado em 95f4ffd](https://github.com/Wave-Universal-Studio/main/blob/95f4ffd31a3e633c90c77fe81d35b588fb72adef/docs/WASAPI_BACKEND_PLAN.md#f2-i6d-audible-proof--preflight-e-resultado-pendente).
+
+Para a escuta relatada permanecem sem verificação o runner específico, formato negociado, janela QPC, flags de conclusão e cadência nominal, frames SILENT e PCM, pico e clipping, cortes e estado da FIFO, e a confirmação de Stop e Release. A ausência desses arquivos deixa os critérios automatizados indisponíveis. O relato de escuta permanece registrado como evidência manual. O código e as provas anteriores foram preservados. A validação de monitoramento contínuo, drift físico e latência acústica segue pendente de decisão de planejamento. [Status e decisão para a Fase 3](../PROJECT_STATUS.md#decisão-para-iniciar-a-fase-3).
 
 ## F2-I6D-ALLOC-MONITOR — roteiro para revisão
 
