@@ -1,5 +1,9 @@
 # Arquitetura do Wave Studio
 
+## F3-I1-EXTERNAL-ROUTE — integração externa limitada
+
+Transição F2/F3 autorizada expressamente pelo proprietário em 19/11/2026. As pendências de estabilidade prolongada, recuperação real, latência acústica e necessidade de drift integram a validação futura. O núcleo nominal é compartilhado com a nova fachada, com consentimento ligado à topologia/geração, dois donos MTA e um guard para uma rota por vez. O grafo fixa as duas cadeias direcionadas e exige seis endpoints distintos e dois adaptadores virtuais independentes confirmados pela topologia Core Audio, com seleção e formato exatos. A aplicação cliente configura a rota manualmente. Wave Studio compara o snapshot com a observação do operador, identifica valores elegíveis, conflitos e indisponibilidade, e aguarda quiescência antes da restauração. [Fluxos, limites e aceitação integrada](EXTERNAL_ROUTE_PROOF.md).
+
 ## F2-I6D-ALLOC-MONITOR — prova audível limitada
 
 A prova audível tem fachada e consentimento próprios. Usa o núcleo nominal, com encoder disponível só mediante consentimento válido para a rota. Os modos SILENT continuam sem encoder e a UI não chama a nova fachada. [Contrato e roteiro](WASAPI_BACKEND_PLAN.md#f2-i6d-alloc-monitor--roteiro-para-revisão).

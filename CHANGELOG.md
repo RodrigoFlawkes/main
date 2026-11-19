@@ -2,6 +2,12 @@
 
 ## Em desenvolvimento
 
+### 2026-11-19 — F3-I1-EXTERNAL-ROUTE
+
+- Rota WASAPI opt-in e limitada em dois fluxos sequenciais, com processamento no motor existente, validação de identidade dos pares e parada cooperativa.
+- Comparação de bypass seguro com atenuação fixa, telemetria numérica por patamar e contrato de configuração e restauração manual com detecção de conflito.
+- Preparada a aceitação agrupada com VB-CABLE A+B e OBS. A integração física e o fechamento da Fase 2 aguardam revisão e autorização específica.
+
 ### 2026-11-19 — F2-I6D-AUDIBLE-PROOF
 
 - O proprietário confirmou escuta da própria voz no headset e funcionamento do monitoramento. A aprovação manual foi registrada no escopo da escuta.

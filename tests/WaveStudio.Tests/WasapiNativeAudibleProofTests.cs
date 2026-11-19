@@ -56,14 +56,14 @@ public sealed class WasapiNativeAudibleProofTests(ITestOutputHelper output)
         Assert.InRange(actual.PeakAmplitude, float.Epsilon, WasapiAudibleProofSession.ProofGain + .5f / 32768);
     }
 
-    private static void AssertNoOtherTestApphost()
+    internal static void AssertNoOtherTestApphost()
     {
         var processes = System.Diagnostics.Process.GetProcessesByName("WaveStudio.Tests");
         try { Assert.DoesNotContain(processes, process => process.Id != Environment.ProcessId); }
         finally { foreach (var process in processes) process.Dispose(); }
     }
 
-    private static async Task ConfirmStart(CancellationToken token)
+    internal static async Task ConfirmStart(CancellationToken token)
     {
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
         deadline.CancelAfter(TimeSpan.FromSeconds(15));

@@ -2,6 +2,10 @@
 
 Avaliação documental da Fase 0 em 12/11/2026, atualizada com resultados de compilação e execução do Incremento 1. A matriz e a tabela de dependências da Fase 0 são mantidas como referência do planejamento inicial. A seção seguinte registra as escolhas implementadas e as validações ainda pendentes.
 
+## F3-I1-EXTERNAL-ROUTE — rota candidata
+
+O candidato da prova é VB-CABLE A+B com OBS local. Emprega dois cabos independentes documentados e roteamento do navegador por aplicativo. O inventário local de Windows 10 não identificou esse par. Assinatura e compatibilidade HVCI do pacote efetivo precisam ser verificadas antes de instalação autorizada. O caminho fica limitado à prova e não pressupõe redistribuição, adoção comercial ou validação Windows 11. [Comparação, licença e reversão](EXTERNAL_ROUTE_PROOF.md#dependência-concreta-para-a-prova).
+
 ## Validação no Incremento 1
 
 Em 12/11/2026, `NAudio.Wasapi` 3.1.0 foi restaurado, compilado e executado com .NET 10.0.404 no Windows 10 local. A enumeração encontrou 67 endpoints, com padrões independentes e formatos reais dos dispositivos ativos. A cobertura observada é de consulta. Testes de conexão física e Windows 11 permanecem pendentes. Windows 10 é experimental.

@@ -44,18 +44,11 @@ Também estão previstos integração com aplicativos externos, mix-minus e estu
 
 ## Estado atual
 
-**18/11/2026 · Fase 2 — motor de áudio**
+**19/11/2026 · Fase 3 iniciada — rota externa de prova**
 
-| Validação | Resultado |
-| --- | --- |
-| Testes automatizados | 737 em Debug e 737 em Release, conforme último relatório |
-| Aceitação manual | 7 casos aprovados; aceitação integral pendente |
-| WASAPI | Prova física silenciosa 4 aprovada pelo teste com validação por janelas |
-| Próxima etapa | Revisão do checkpoint de comentários em pt-BR |
+A rota limitada para navegador e OBS foi implementada com dois cabos virtuais independentes e exercitada com dispositivos simulados. A prova física externa aguarda revisão e autorização específicas. A Fase 2 segue com pendências de monitoramento contínuo, recuperação em hardware, latência acústica e necessidade de correção de drift. As provas silenciosas anteriores e o aceite manual de escuta têm evidências próprias.
 
-A quarta prova física confirmou as janelas de clock, 499 pacotes contíguos e a liberação dos dois streams. O temporizador de 5 s concluiu, com 4,9997441 s medidos por QPC. O monitoramento audível e a integração externa seguem pendentes de revisão.
-
-[Status detalhado](PROJECT_STATUS.md) · [Próxima tarefa](NEXT_TASK.md) · [Evidências WASAPI](docs/WASAPI_BACKEND_PLAN.md)
+[Status detalhado](PROJECT_STATUS.md) · [Próxima tarefa](NEXT_TASK.md) · [Roteiro agrupado](docs/EXTERNAL_ROUTE_PROOF.md)
 
 ## Roadmap
 

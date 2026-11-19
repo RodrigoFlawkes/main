@@ -1,5 +1,11 @@
 # Plano de testes
 
+## F3-I1-EXTERNAL-ROUTE — dois fluxos e restauração
+
+Os fakes executam os donos WASAPI e verificam o destino exato, entrega de PCM16/Float32, ganho inicial e atenuação, frames e retenção do guard. Exercitam falta de sinal, Get e Release, desconexão, invalidação, cancelamento e Stop incerto. A configuração verifica os dois fluxos, bloqueia cabo compartilhado e divergência de identidade, e cobre restauração parcial, repetição idempotente, conflito, aplicativo inacessível e endpoint original removido. A medição de zero bytes recorrentes usa a janela de encoder com comparador ativo em subprocesso, com os controles do contador fora da janela.
+
+O apphost Release encontra um método Explicit dedicado com dois fluxos sequenciais. A evidência física futura combina verificação de sinal no headset/OBS, métricas DSP, fila, CPU/RSS, parada e restauração, com confirmação pessoal e sem armazenamento de voz. [Roteiro único e dependências](EXTERNAL_ROUTE_PROOF.md).
+
 ## F2-I6D-ALLOC-MONITOR — contagem exata e prova audível preparada
 
 Os quatro casos de zero bytes (diário WASAPI, leitura de EQ, FIR nominal e FIR adaptativo parciais) executam a medição original em apphost separado com filtro exato. O controle negativo e `new byte[37]` confirmam zero e 64 bytes no .NET x64. Um caso força coletas em segundo plano em outro processo enquanto o diário mede sob a mesma asserção de zero. O processo principal mantém o paralelismo padrão. Os demais detalhes e os resultados ficam no [status da etapa](../PROJECT_STATUS.md).

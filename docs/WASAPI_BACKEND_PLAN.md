@@ -1,5 +1,9 @@
 # Backend WASAPI — transporte isolado e preparação da prova audível
 
+## F3-I1-EXTERNAL-ROUTE — modo nominal de prova externa
+
+A nova fachada usa a mesma contabilidade de transporte e codifica PCM somente com consentimento por topologia, rota explícita e prefill confirmado. O limite de 5 s é aplicado por fluxo. As métricas externas adicionais separam patamares de ganho e preservam o significado de PCM confirmado depois de ReleaseBuffer. O guard protege de sobreposição e mantém recursos em caso de quiescência incerta. Os requisitos do modo externo não alteram a fachada SILENT, a prova audível anterior ou o controle simulado de drift. [Orçamento, restauração e aceitação agrupada](EXTERNAL_ROUTE_PROOF.md).
+
 ## F2-I6D-AUDIBLE-PROOF — aprovação manual e evidência disponível
 
 Em 19/11/2026, o proprietário confirmou que ouviu a própria voz pelo headset e que o monitoramento funcionou. A aprovação manual cobre a função de escuta. O relato disponível não detalha nível durante a reprodução, timbre, ruído ou distorção, atraso percebido, feedback, desconforto ou acionamento de Esc. O procedimento do teste prevê até cinco segundos e ganho máximo de 0,05. A duração e o ganho efetivos da escuta relatada permanecem desconhecidos.

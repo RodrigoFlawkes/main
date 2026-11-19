@@ -2,7 +2,30 @@
 
 Atualizado em 19/11/2026.
 
-## Estado atual — F2-I6D-AUDIBLE-PROOF, 19/11/2026
+## Estado atual — F3-I1-EXTERNAL-ROUTE, 19/11/2026
+
+O proprietário autorizou expressamente iniciar o desenvolvimento da Fase 3 e acompanhar as pendências F2 em validação integrada. A `main` foi sincronizada de `d743351` para `31acd2f` por fast-forward seguro, com base funcional inicial `0c1e54b`, Git 2.56.1, .NET SDK 10.0.404 e política Restricted. A prova 4, nominal SILENT aprovada, DIAG-PROOF reprovada, sete manuais e aprovação de escuta sem telemetria foram preservados.
+
+Foi implementada a rota nominal de prova em dois fluxos sequenciais. Na primeira fase, o navegador é direcionado ao cabo A e o motor entrega PCM processado ao headset. Na segunda, o microfone físico alimenta o cabo B e sua captura fica disponível para uma fonte no OBS. Em fakes, os mesmos donos WASAPI, FIR, FIFO e encoder entregaram PCM e demonstraram relação de amplitude aproximada de 0,25 entre efeito e bypass. O teto de segurança é 0,05, com entrega após corte coerente e até 5 s por fluxo. Rejeições de topologia, perda de sinal, parada, mudança de seleção, falhas de endpoint e limpeza incerta impedem progressão indevida. O contrato de restauração compara o snapshot original e as seleções temporárias e atuais, com retorno manual e detecção de conflito.
+
+A escolha para prova é VB-CABLE A+B e OBS local. O inventário local de Windows 10 19045 mostrou seis endpoints presentes e nenhum candidato A+B detectado. A instalação do pacote oficial, a verificação de assinatura/HVCI e o OBS disponível precisam de avaliação e autorização própria antes da execução. A dependência é candidata para a prova, sem redistribuição pelo projeto. [Contratos, comparação e roteiro agrupado](docs/EXTERNAL_ROUTE_PROOF.md).
+
+### Verificações
+
+| Regressão padrão x64 | Seed | Aprovados | Falhas | Explicit excluídos | Duração |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Debug | 20261114 | 819 | 0 | 6 | 91,996 s |
+| Release | 20261113 | 819 | 0 | 6 | 54,693 s |
+
+Restore locked com auditoria de todos os pacotes e NU1900 como erro. Builds Debug/Release x64 não incrementais com zero erros ou avisos. O teste direcionado aprovou 13 casos em Release em 13,156 s. São 806 casos comuns anteriores e 13 novos. A descoberta exata encontrou um novo Explicit agrupado e o excluiu das regressões, junto com os cinco anteriores. A medição isolada cobriu mil codificações externas após aquecimento com zero bytes recorrentes e controle positivo de alocação.
+
+O primeiro build direcionado acusou APIs novas ainda ausentes e, após implementação, duas referências de fixture incompatíveis com o fake existente. O primeiro teste dirigido executado aprovou cinco de nove casos. Quatro cenários usavam a sentinela de render constante do fake SILENT e falharam antes de liberar o buffer. O callback dos novos casos passou a verificar a entrega da rota externa, preservando a sentinela dos testes SILENT. O primeiro probe nativo sem Start encontrou a propriedade de instância PnP ausente nos seis endpoints. A consulta pública à topologia conectada recuperou seis IDs em quatro grupos de adaptadores e registrou formatos sem nomes ou IDs no relatório. As regressões finais foram executadas após essa correção de identidade no preflight. Os pareamentos A+B estão pendentes de confirmação no hardware candidato.
+
+Comandos: `dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1900`; builds não incrementais Debug/Release com `--no-restore -warnaserror`; testes com `dotnet test --solution WaveStudio.slnx -c <configuração> --no-build -- --explicit off --seed <seed> --timeout 165s --long-running 10 --diagnostic --diagnostic-output-directory <pasta>`. Logs e probe somente leitura em `artifacts/f3-external-route`, ignorados pelo Git. Nenhum Start físico, instalação ou mudança de configuração Windows foi executado.
+
+A próxima decisão é a revisão desta entrega seguida de autorização específica para dependências e validação física agrupada. A Fase 2 segue aberta para estabilidade prolongada, comportamento real de parada/recuperação, latência acústica e necessidade de drift. A evidência de integração real de navegador e OBS também está pendente. A fase atual prepara essa prova sem monitoramento contínuo de produção ou correção física.
+
+## Histórico — F2-I6D-AUDIBLE-PROOF, 19/11/2026
 
 **Aprovação manual de escuta registrada.** Em 19/11/2026, o proprietário confirmou que ouviu a própria voz pelo headset e que o monitoramento funcionou. O relato cobre a escuta e o funcionamento percebido. Nível durante a reprodução, timbre, atraso percebido, feedback e eventual uso de Esc durante a sessão não foram informados.
 

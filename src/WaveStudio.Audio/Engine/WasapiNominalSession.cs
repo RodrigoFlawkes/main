@@ -40,11 +40,15 @@ internal sealed record WasapiNominalReport(WasapiSilentSnapshot Cleanup, bool No
     public bool DriftPrecisionAvailable => false;
 }
 
-internal sealed class WasapiNominalControl(WasapiMonitorEncoder? encoder = null, WasapiAudibleConsent? audible = null)
+internal sealed class WasapiNominalControl(WasapiMonitorEncoder? encoder = null, WasapiAudibleConsent? audible = null,
+    bool externalRoute = false)
 {
     public WasapiMonitorEncoder? Encoder { get; } = encoder;
     public WasapiAudibleConsent? Audible { get; } = audible;
-    private bool armed;
+    private bool armed, bypass = true;
+    private readonly object gainControl = new();
+    public bool ExternalRoute => externalRoute;
+    private int capacity, externalReserve;
     public int MarginFrames { get; private set; }
     private long origin, lastCut, coherent, busy, captureObservations, renderObservations, lastCapture, lastRender, covered;
     private long? minimum, maximum;
@@ -56,6 +60,9 @@ internal sealed class WasapiNominalControl(WasapiMonitorEncoder? encoder = null,
         int converted = checked((int)(((long)captureCapacity * outputRate + inputRate - 1) / inputRate)) + 1;
         MarginFrames = Math.Max(converted, (int)renderCapacity);
         if (MarginFrames >= fifoCapacity / 2) throw new NotSupportedException("FIFO sem margem nominal para um bloco.");
+        capacity = fifoCapacity;
+        // Cinco segundos a 500 ppm relativos, mais 2 ms de jitter no domínio de saída.
+        externalReserve = (int)Math.Ceiling(outputRate * (.002 + .0005 * WasapiExternalRouteSession.MaximumDuration.TotalSeconds));
     }
     public void Start(long now) => origin = lastCut = now;
 
@@ -76,8 +83,13 @@ internal sealed class WasapiNominalControl(WasapiMonitorEncoder? encoder = null,
         coherent++;
         if (!armed && Audible is { } consent && !consent.StopToken.IsCancellationRequested && cut.Capture.Evidence.FifoPrimingFrames > 0)
         {
-            Encoder!.SetGain(WasapiAudibleProofSession.ProofGain);
-            armed = true;
+            if (externalRoute && Math.Min(cut.QueuedFrames - MarginFrames, capacity - MarginFrames - cut.QueuedFrames) < externalReserve)
+                return "External/FifoReserve";
+            lock (gainControl)
+            {
+                Encoder!.SetGain(externalRoute ? ExternalGain : WasapiAudibleProofSession.ProofGain);
+                armed = true;
+            }
         }
         minimum = Math.Min(minimum ?? cut.QueuedFrames, cut.QueuedFrames);
         maximum = Math.Max(maximum ?? cut.QueuedFrames, cut.QueuedFrames);
@@ -88,6 +100,18 @@ internal sealed class WasapiNominalControl(WasapiMonitorEncoder? encoder = null,
             maximumArea += bounds.MaximumFrameTicks;
         }
         return null;
+    }
+
+    private float ExternalGain => bypass ? WasapiExternalRouteSession.BypassGain : WasapiExternalRouteSession.EffectGain;
+
+    public void SetExternalBypass(bool value)
+    {
+        if (!externalRoute) throw new InvalidOperationException("Comparação disponível somente na rota externa.");
+        lock (gainControl)
+        {
+            bypass = value;
+            if (armed) Encoder!.SetGain(ExternalGain);
+        }
     }
 
     private static void Count(WasapiCheckpointLedger.Journal journal, ref long previous, ref long count)
@@ -123,7 +147,7 @@ internal sealed class WasapiNominalControl(WasapiMonitorEncoder? encoder = null,
     }
 }
 
-internal sealed class WasapiMonitorEncoder(WasapiPcm format)
+internal sealed class WasapiMonitorEncoder(WasapiPcm format, bool compareGains = false)
 {
     public const float MaximumGain = 0.1f;
     private readonly PcmEncoding encoding = format.Validate();
@@ -146,12 +170,13 @@ internal sealed class WasapiMonitorEncoder(WasapiPcm format)
         float requested = Volatile.Read(ref target);
         if (requested == 0 && gain == 0) return false;
         int stride = encoding == PcmEncoding.Pcm16LittleEndian ? 2 : 4;
-        float peak = 0, peakGain = 0;
+        float peak = 0, peakGain = 0, minimumGain = float.PositiveInfinity;
         int nonZero = 0;
         for (int index = 0; index < samples.Length; index += format.Channels)
         {
             gain += Math.Clamp(requested - gain, -slew, slew);
             peakGain = Math.Max(gain, peakGain);
+            if (compareGains) minimumGain = Math.Min(gain, minimumGain);
             bool frameSignal = false;
             for (int channel = 0; channel < format.Channels; channel++)
             {
@@ -169,7 +194,7 @@ internal sealed class WasapiMonitorEncoder(WasapiPcm format)
             }
             if (frameSignal) nonZero++;
         }
-        block = new(nonZero, peak, peakGain);
+        block = new(nonZero, peak, peakGain, compareGains ? minimumGain : 0);
         return true;
     }
 }

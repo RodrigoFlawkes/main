@@ -22,6 +22,10 @@ Incrementos 1–5 publicados e revisados. F1-I6 fornece checkpoint técnico com 
 
 Os adendos usam os projetos e dependências existentes. F1-I6-METER não abre captura automaticamente nem acrescenta outro worker/stream de áudio. Após publicação, receber resultados A01–A12 por sistema/dispositivo, concluir os subcasos A11 e comparar o medidor A12 com o Windows. Sucesso na função principal de gravação/reprodução foi relatado após ajustes próprios não especificados; a aceitação completa continua pendente. Monitoramento ao vivo permanece no planejamento da Fase 2, que não foi iniciada.
 
+## F3-I1-EXTERNAL-ROUTE — decisão de transição
+
+Em 19/11/2026, o proprietário autorizou iniciar a Fase 3 com validação integrada das pendências F2. A primeira entrega implementa e testa os dois caminhos de DSP em fakes, prepara um único runner físico opt-in e permite configurar e restaurar a fonte externa por observação manual. A validação futura de navegador e OBS será agrupada com o preflight e os pontos pertinentes de F2. Estabilidade prolongada, recuperação real, latência acústica e necessidade de correção física seguem abertas até evidência pertinente. Preservar o projeto de drivers/APO como decisão de produto após a prova e manter F4 após avaliação da integração real. [Roteiro agrupado](EXTERNAL_ROUTE_PROOF.md).
+
 ## Incrementos
 
 F1-I6 executa o escopo técnico de NEXT_TASK.md e REVIEW.md sincronizados até 8d0e688. Arquivos excessivos têm proteção própria, falhas previsíveis de gravação são tratadas, seleção aguarda carga inicial e restauração confere balanço após todos os comandos. Picos por sessão reutilizam o ciclo de consulta do mixer, com wrappers locais à operação e pausa/atraso explícitos. Publicação framework-dependent AMD64 e ensaio de dez minutos do processo estão registrados em ALPHA_ACCEPTANCE.md. Preferências duráveis de sessão aguardam identidade inequívoca. As etapas abaixo preservam os critérios de aceitação física ainda pendentes.

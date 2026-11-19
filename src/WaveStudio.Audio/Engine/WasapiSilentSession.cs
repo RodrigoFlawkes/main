@@ -177,6 +177,9 @@ internal sealed class WasapiSessionCore : IAsyncDisposable
     internal WasapiAudibleOutput? ReadAudibleOutput(WasapiSilentSnapshot result) =>
         nominal?.Audible is not null && result.Completed ? playback.AudibleOutput(monitorClippedSamples) : null;
 
+    internal ExternalRouteLevels? ReadExternalLevels(WasapiSilentSnapshot result) =>
+        nominal?.ExternalRoute == true && result.Completed ? playback.ExternalLevels : null;
+
     public void RequestStop()
     {
         ticket.Invalidate(); // Invalidação irreversível antes de qualquer espera ou parada nativa.
@@ -203,6 +206,8 @@ internal sealed class WasapiSessionCore : IAsyncDisposable
             await Task.WhenAll(capture.Ready.Task, playback.Ready.Task).WaitAsync(timeout);
             if (!stop.IsSet)
             {
+                if (nominal?.ExternalRoute == true && (capture.Period > 200_000 || playback.Period > 200_000 ||
+                    capture.Capacity > 2048 || playback.Capacity > 2048)) throw new NotSupportedException("Orçamento de blocos externo.");
                 path = new(route, capture.Capacity, playback.Capacity, capture.Period, playback.Period);
                 nominal?.Configure(path.CapacityFrames, route.Capture.Mix!.SampleRate, route.Playback.Mix!.SampleRate,
                     capture.Capacity, playback.Capacity);
@@ -310,7 +315,9 @@ internal sealed class WasapiSessionCore : IAsyncDisposable
         public bool HasNominalPackets(long now) => captureTiming?.HasNominalPackets(now) == true;
         private long clockEpoch, appliedCommand100ns, appliedAt100ns;
         private long pcmFrames, nonZeroFrames;
-        private float peakAmplitude, peakGain;
+        private float peakAmplitude, peakGain, bypassPeak, effectPeak;
+        private long bypassNonZeroFrames, effectNonZeroFrames;
+        public ExternalRouteLevels ExternalLevels => new(bypassNonZeroFrames, bypassPeak, effectNonZeroFrames, effectPeak);
         public WasapiAudibleOutput AudibleOutput(long clipped) => new(releasedFrames - pcmFrames, pcmFrames, nonZeroFrames, peakAmplitude, peakGain, clipped);
         private long acceptedPackets, acceptedFrames, startupDiscardedPackets, startupDiscardedFrames;
         private uint padding, flags, startupDiscardFlags;
@@ -621,6 +628,20 @@ internal sealed class WasapiSessionCore : IAsyncDisposable
                     nonZeroFrames += encoded.NonZeroFrames;
                     peakAmplitude = Math.Max(peakAmplitude, encoded.PeakAmplitude);
                     peakGain = Math.Max(peakGain, encoded.PeakGain);
+                    if (session.nominal.ExternalRoute)
+                    {
+                        if (encoded.MinimumGain >= WasapiExternalRouteSession.BypassGain - 1e-6f)
+                        {
+                            bypassNonZeroFrames += encoded.NonZeroFrames;
+                            bypassPeak = Math.Max(bypassPeak, encoded.PeakAmplitude);
+                        }
+                        else if (encoded.PeakGain <= WasapiExternalRouteSession.EffectGain + 1e-6f &&
+                            encoded.MinimumGain >= WasapiExternalRouteSession.EffectGain - 1e-6f)
+                        {
+                            effectNonZeroFrames += encoded.NonZeroFrames;
+                            effectPeak = Math.Max(effectPeak, encoded.PeakAmplitude);
+                        }
+                    }
                 }
             }
             if (!prime && session.nominal is null)

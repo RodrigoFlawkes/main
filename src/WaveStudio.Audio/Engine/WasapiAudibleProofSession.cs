@@ -57,7 +57,7 @@ internal sealed class WasapiAudibleProofSession : IAsyncDisposable
     public ValueTask DisposeAsync() => core.DisposeAsync();
 }
 
-internal readonly record struct WasapiEncodedBlock(int NonZeroFrames, float PeakAmplitude, float PeakGain);
+internal readonly record struct WasapiEncodedBlock(int NonZeroFrames, float PeakAmplitude, float PeakGain, float MinimumGain);
 internal readonly record struct WasapiAudibleOutput(long SilentFrames, long PcmFrames, long NonZeroFrames,
     float PeakAmplitude, float PeakGain, long ClippedSamples);
 internal sealed record WasapiAudibleReport(WasapiNominalReport Transport, WasapiAudibleOutput? Output);
