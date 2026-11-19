@@ -5,6 +5,8 @@ namespace WaveStudio.Audio.Engine;
 internal sealed record ExternalEndpointIds(string BrowserRender, string BrowserCapture, string MicRender,
     string MicCapture, string Headset, string Microphone);
 
+internal sealed record SingleCableEndpointIds(string Render, string Capture, string Headset, string Microphone);
+
 internal static class NativeExternalRoute
 {
     public static async Task<ExternalRouteTopology> ProbeAsync(ExternalEndpointIds ids, long generation, CancellationToken token)
@@ -16,6 +18,19 @@ internal static class NativeExternalRoute
         var headset = await Probe(ids.Headset, EndpointDirection.Playback, generation, null, token);
         var microphone = await Probe(ids.Microphone, EndpointDirection.Capture, generation, null, token);
         var topology = new ExternalRouteTopology(new(aRender, aCapture), new(bRender, bCapture), headset, microphone);
+        topology.Validate();
+        return topology;
+    }
+
+    internal const string SingleCableAdapter = "VB-Audio Virtual Cable";
+
+    public static async Task<SingleCableTopology> ProbeSingleAsync(SingleCableEndpointIds ids, long generation, CancellationToken token)
+    {
+        var render = await Probe(ids.Render, EndpointDirection.Playback, generation, SingleCableAdapter, token);
+        var capture = await Probe(ids.Capture, EndpointDirection.Capture, generation, SingleCableAdapter, token);
+        var headset = await Probe(ids.Headset, EndpointDirection.Playback, generation, null, token);
+        var microphone = await Probe(ids.Microphone, EndpointDirection.Capture, generation, null, token);
+        var topology = new SingleCableTopology(new(render, capture), headset, microphone);
         topology.Validate();
         return topology;
     }
@@ -41,6 +56,11 @@ internal static class NativeExternalRoute
         var name = device.Properties[PropertyKeys.PKEY_DeviceInterface_FriendlyName].Value as string;
         if (cableAdapter is not null && !StringComparer.OrdinalIgnoreCase.Equals(name, cableAdapter))
             throw new InvalidOperationException("Adaptador do cabo candidato não confirmado.");
+        return ConnectedAdapter(device);
+    }
+
+    internal static string ConnectedAdapter(MMDevice device)
+    {
         // O ID da topologia conectada é opaco, independe do nome e não exige abrir um stream.
         var topology = device.DeviceTopology;
         if (topology.ConnectorCount != 1) throw new InvalidOperationException("Topologia ambígua do endpoint.");

@@ -42,18 +42,18 @@ internal sealed class ExternalRouteConfiguration
         return new(topology, stop);
     }
 
-    private static ExternalRestoreState Classify(ExternalSelection before, ExternalSelection applied, ExternalSelection current, bool originalPresent)
+    internal static ExternalRestoreState Classify(ExternalSelection before, ExternalSelection applied, ExternalSelection current, bool originalPresent)
     {
         if (!CanRead(current) || !originalPresent) return ExternalRestoreState.Unavailable;
         if (Matches(before, current)) return ExternalRestoreState.AlreadyRestored;
         return Matches(applied, current) ? ExternalRestoreState.Restore : ExternalRestoreState.Conflict;
     }
 
-    private static bool CanRead(ExternalSelection value) =>
+    internal static bool CanRead(ExternalSelection value) =>
         value.Accessible && value.EndpointPresent && !string.IsNullOrWhiteSpace(value.ClientId) &&
         (value.EndpointId is null || !string.IsNullOrWhiteSpace(value.EndpointId));
 
-    private static bool Matches(ExternalSelection expected, ExternalSelection current) =>
+    internal static bool Matches(ExternalSelection expected, ExternalSelection current) =>
         CanRead(current) && StringComparer.Ordinal.Equals(expected.ClientId, current.ClientId) &&
         StringComparer.OrdinalIgnoreCase.Equals(expected.EndpointId, current.EndpointId);
 }

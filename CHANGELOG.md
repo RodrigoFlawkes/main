@@ -2,6 +2,12 @@
 
 ## Em desenvolvimento
 
+### 2026-11-19 — F3-I2-SINGLE-CABLE
+
+- Preparado modo de avaliação por cabo único, com fases sequenciais, consentimentos por fase, identidades distintas por geração e restauração verificável.
+- A troca entre navegador e OBS exige quietude do cabo, ausência de produtor ativo e Stop/Release confirmados. O grafo A+B mantém os dois adaptadores independentes.
+- Preparado runner Explicit agrupado e roteiro de revisão, instalação e prova futura. Nenhuma compra, instalação ou captura física foi executada.
+
 ### 2026-11-19 — F3-I2-EXTERNAL-ACCEPTANCE
 
 - Conferidos o Release x64 existente e as dependências da prova externa. A disponibilidade do A+B e do OBS ainda precisa de confirmação.

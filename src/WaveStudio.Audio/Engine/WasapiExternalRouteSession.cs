@@ -10,19 +10,29 @@ internal sealed class WasapiExternalRouteSession : IAsyncDisposable
     private readonly WasapiNominalControl nominal;
     private readonly ExternalFlow flow;
     private int attempted;
+    internal ExternalRouteReport? Result { get; private set; }
 
     internal WasapiExternalRouteSession(ExternalRouteTopology topology, ExternalFlow flow, ExternalRouteConsent consent,
         TransportActivityGuard? guard = null, Func<TransportEndpoint, IWasapiPreparationDevice>? open = null,
         WasapiDriftSimulation? pacing = null)
+        : this(Select(topology, flow, consent), flow, consent.Stop, guard, open, pacing) { }
+
+    private static TransportRoute Select(ExternalRouteTopology topology, ExternalFlow flow, ExternalRouteConsent consent)
     {
         topology.Validate();
-        var route = topology.Route(flow);
+        consent.Consume(topology, flow);
+        return topology.Route(flow);
+    }
+
+    internal WasapiExternalRouteSession(TransportRoute route, ExternalFlow flow, CancellationToken stop,
+        TransportActivityGuard? guard, Func<TransportEndpoint, IWasapiPreparationDevice>? open, WasapiDriftSimulation? pacing)
+    {
+        route.Validate();
         if (open is null && route.Capture.Evidence != FormatEvidence.ExactCapability ||
             open is not null && (route.Capture.Evidence != FormatEvidence.SimulatedExact || pacing is not { ApplyCorrection: false }))
             throw new ArgumentException("O modo externo exige capacidade exata e razão nominal.");
-        consent.Consume(topology, flow);
         this.flow = flow;
-        var permission = WasapiAudibleConsent.Confirm(route, true, true, consent.Stop);
+        var permission = WasapiAudibleConsent.Confirm(route, true, true, stop);
         nominal = new(new(route.Playback.Mix!, compareGains: true), permission, externalRoute: true);
         core = new(route, guard, open, simulation: pacing, nominal: nominal);
     }
@@ -38,7 +48,7 @@ internal sealed class WasapiExternalRouteSession : IAsyncDisposable
         if (Interlocked.Exchange(ref attempted, 1) != 0)
             throw new InvalidOperationException("Nova tentativa exige consentimento e seleção conferidos.");
         var result = await core.RunAsync(duration, token).ConfigureAwait(false);
-        return new(flow, core.ReadNominalReport(result), core.ReadAudibleOutput(result), core.ReadExternalLevels(result));
+        return Result = new(flow, core.ReadNominalReport(result), core.ReadAudibleOutput(result), core.ReadExternalLevels(result));
     }
 
     public ValueTask DisposeAsync() => core.DisposeAsync();

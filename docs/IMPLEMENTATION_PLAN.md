@@ -22,6 +22,10 @@ Incrementos 1–5 publicados e revisados. F1-I6 fornece checkpoint técnico com 
 
 Os adendos usam os projetos e dependências existentes. F1-I6-METER não abre captura automaticamente nem acrescenta outro worker/stream de áudio. Após publicação, receber resultados A01–A12 por sistema/dispositivo, concluir os subcasos A11 e comparar o medidor A12 com o Windows. Sucesso na função principal de gravação/reprodução foi relatado após ajustes próprios não especificados; a aceitação completa continua pendente. Monitoramento ao vivo permanece no planejamento da Fase 2, que não foi iniciada.
 
+## F3-I2-SINGLE-CABLE — decisão de avaliação
+
+O proprietário escolheu a avaliação local com VB-CABLE simples em 19/11/2026. A prova física futura será agrupada, com restauração e quietude do cabo entre os fluxos. O modo A+B foi preservado para avaliação posterior. A preparação não encerra F2, F3 ou autoriza F4. [Roteiro e dependências](EXTERNAL_ROUTE_PROOF.md#f3-i2-single-cable--avaliação-com-um-cabo).
+
 ## F3-I1-EXTERNAL-ROUTE — decisão de transição
 
 Em 19/11/2026, o proprietário autorizou iniciar a Fase 3 com validação integrada das pendências F2. A primeira entrega implementa e testa os dois caminhos de DSP em fakes, prepara um único runner físico opt-in e permite configurar e restaurar a fonte externa por observação manual. A validação futura de navegador e OBS será agrupada com o preflight e os pontos pertinentes de F2. Estabilidade prolongada, recuperação real, latência acústica e necessidade de correção física seguem abertas até evidência pertinente. Preservar o projeto de drivers/APO como decisão de produto após a prova e manter F4 após avaliação da integração real. [Roteiro agrupado](EXTERNAL_ROUTE_PROOF.md).

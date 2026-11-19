@@ -1,5 +1,9 @@
 # Arquitetura do Wave Studio
 
+## F3-I2-SINGLE-CABLE — transferência de um cabo
+
+A configuração de quatro endpoints usa o mesmo contrato de pares e tipos da rota A+B, com identidade própria e o mesmo motor. O lote adquire um guard, e cada operação adquire seu lease interno. A contagem de PCM só avança após liberação confirmada. Entre os fluxos, restauração observada e captura de quietude com cadência confirmada são pré-condições de novo consentimento e nova geração. A enumeração de produtores inclui os pinos de render do adaptador e invalida o lote se a evidência se perder. O snapshot privado permite verificar a restauração mesmo se o console fechar. [Roteiro e limites](EXTERNAL_ROUTE_PROOF.md#f3-i2-single-cable--avaliação-com-um-cabo).
+
 ## F3-I1-EXTERNAL-ROUTE — integração externa limitada
 
 Transição F2/F3 autorizada expressamente pelo proprietário em 19/11/2026. As pendências de estabilidade prolongada, recuperação real, latência acústica e necessidade de drift integram a validação futura. O núcleo nominal é compartilhado com a nova fachada, com consentimento ligado à topologia/geração, dois donos MTA e um guard para uma rota por vez. O grafo fixa as duas cadeias direcionadas e exige seis endpoints distintos e dois adaptadores virtuais independentes confirmados pela topologia Core Audio, com seleção e formato exatos. A aplicação cliente configura a rota manualmente. Wave Studio compara o snapshot com a observação do operador, identifica valores elegíveis, conflitos e indisponibilidade, e aguarda quiescência antes da restauração. [Fluxos, limites e aceitação integrada](EXTERNAL_ROUTE_PROOF.md).

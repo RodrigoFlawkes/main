@@ -144,7 +144,7 @@ public sealed class NativeExternalRouteProofTests
         return value;
     }
 
-    private static string ProcessIdentity(Process process, string context) =>
+    internal static string ProcessIdentity(Process process, string context) =>
         $"{process.Id}/{process.StartTime.ToUniversalTime().Ticks}/{context}";
 
     private static ExternalSelection Original(string identity, string name)
@@ -153,7 +153,7 @@ public sealed class NativeExternalRouteProofTests
         return new(identity, value == "DEFAULT" ? null : value, true, true);
     }
 
-    private static async Task<(bool Browser, bool Consumer)> OriginalAvailability(ExternalSelections initial, CancellationToken token)
+    internal static async Task<(bool Browser, bool Consumer)> OriginalAvailability(ExternalSelections initial, CancellationToken token)
     {
         var catalog = await new CoreAudioDeviceService().QueryAsync(token);
         bool IsActive(ExternalSelection selection, EndpointDirection direction) => selection.EndpointId is null ||
@@ -176,10 +176,13 @@ public sealed class NativeExternalRouteProofTests
     }
 
     private static async Task<ExternalSelections> ObserveSettings(ExternalRouteConfiguration settings, Process browser,
-        Process obs, CancellationToken token)
+        Process obs, CancellationToken token) => await ObserveSettings(settings.Before, settings.Applied, browser, obs, token);
+
+    internal static async Task<ExternalSelections> ObserveSettings(ExternalSelections before, ExternalSelections applied,
+        Process browser, Process obs, CancellationToken token)
     {
-        var a = await Observe("navegador", browser, settings.Before.Browser, settings.Applied.Browser);
-        var b = await Observe("OBS", obs, settings.Before.Consumer, settings.Applied.Consumer);
+        var a = await Observe("navegador", browser, before.Browser, applied.Browser);
+        var b = await Observe("OBS", obs, before.Consumer, applied.Consumer);
         return new(a, b);
 
         async Task<ExternalSelection> Observe(string role, Process app, ExternalSelection before, ExternalSelection applied)
@@ -197,7 +200,7 @@ public sealed class NativeExternalRouteProofTests
         }
     }
 
-    private static Task WatchTopology(CancellationTokenSource stop, TaskCompletionSource ready) =>
+    internal static Task WatchTopology(CancellationTokenSource stop, TaskCompletionSource ready) =>
         Task.Run(() =>
         {
             try
@@ -214,7 +217,7 @@ public sealed class NativeExternalRouteProofTests
             }
         });
 
-    private static async Task WatchKeys(WasapiExternalRouteSession session, Process browser, Process obs,
+    internal static async Task WatchKeys(WasapiExternalRouteSession session, Process browser, Process obs,
         CancellationTokenSource phase, CancellationTokenSource stop)
     {
         bool bypass = true;
@@ -241,7 +244,7 @@ public sealed class NativeExternalRouteProofTests
         }
     }
 
-    private static async Task<ConsoleKey> ReadKey(CancellationToken token, params ConsoleKey[] choices)
+    internal static async Task<ConsoleKey> ReadKey(CancellationToken token, params ConsoleKey[] choices)
     {
         while (true)
         {

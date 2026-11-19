@@ -2,7 +2,30 @@
 
 Atualizado em 19/11/2026.
 
-## Estado atual — F3-I2-EXTERNAL-ACCEPTANCE, 19/11/2026
+## Estado atual — F3-I2-SINGLE-CABLE, 19/11/2026
+
+O proprietário escolheu o VB-CABLE simples para avaliação local, sem adquirir A+B neste momento. A `main` sincronizou por fast-forward de `48b5045` a `422c7fe`. As mudanças posteriores à base funcional `6c7a5d4` eram documentais até esta adaptação. A conectividade do Git foi conferida com Git 2.56.1, SDK .NET 10.0.404 e política Restricted. O estímulo estéreo de 1 kHz foi reaproveitado e seu SHA-256 conferido.
+
+O modo de quatro endpoints confirma o par virtual e sua separação dos endpoints físicos. Usa o motor FIR/SPSC/PCM dos dois cabos, com até cinco segundos por rota e ganho máximo 0,05. O navegador usa o cabo primeiro, com OBS na seleção original. Um único coordenador mantém o guard do lote enquanto cada fluxo usa sua própria geração, ticket e recursos. A restauração do navegador e o fechamento seguro são requisitos antes da sondagem. A segunda fase depende de ausência observada de produtores nos pinos ativos do cabo, captura silenciosa contínua e fresca dentro de 3 s, nova seleção conferida e novo consentimento. O método de quietude falha sem dados suficientes e conserva o guard em caso de Stop/Release incertos.
+
+Os testes exercitam os destinos simulados, a relação de amplitudes, restauração, cancelamento, transição bloqueada por produtor ou sinal residual, falhas de captura, fechamento e perda de dados. A configuração A+B conserva seis IDs, dois adaptadores distintos e seu Explicit. A nova prova agrupada tem método independente e roteiro único com snapshot local e revisão de dependências. [Prova com um cabo](docs/EXTERNAL_ROUTE_PROOF.md#f3-i2-single-cable--avaliação-com-um-cabo).
+
+### Verificações
+
+| Regressão padrão x64 | Seed | Aprovados | Falhas | Explicit excluídos | Duração |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Debug | 20261114 | 839 | 0 | 7 | 87,140 s |
+| Release | 20261113 | 839 | 0 | 7 | 50,981 s |
+
+Restore locked com auditoria de todos os pacotes e NU1900 como erro. Builds não incrementais Debug e Release x64 com zero erros ou avisos. Os 33 direcionados em Release (20 novos e 13 da rota A+B) passaram em 10,990 s. Os 20 novos casos elevam a referência de 819 para 839 comuns. A descoberta pelo filtro exato encontrou um novo Explicit, sem executar a prova. O teste isolado de inspeção digital mediu zero bytes recorrentes em mil verificações de cada formato, com controle positivo do contador. O caso de perda de pacotes no fim da janela confirmou a exigência de frescor terminal.
+
+O primeiro build com os testes novos acusou ausência das APIs de cabo único. Após a implementação, o Debug direcionado passou 14 casos em 5,380 s. Uma rodada integrada intermediária aprovou 30 direcionados e 836 comuns por configuração. A revisão final antecipou o vigia de produtores para antes da sondagem, restringiu a exceção do próprio processo ao pino render escolhido e acrescentou três casos adversariais. Os dois builds e as duas regressões foram reexecutados nessa revisão. Nenhuma prova anterior foi repetida.
+
+Comandos finais: `dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1900`, builds Debug/Release com `--no-restore --no-incremental -warnaserror` e regressões com `dotnet test --solution WaveStudio.slnx -c <configuração> --no-build -- --explicit off --seed <seed> --timeout 165s --long-running 10 --diagnostic --diagnostic-output-directory <pasta>`. Logs e hashes dos binários Release em `artifacts/f3-single-cable`, ignorados pelo Git. A integridade de armazenamento e áudio em hardware ainda depende da execução autorizada.
+
+O pacote oficial candidato Pack46 ainda exige verificação concreta e autorização de instalação/elevação, com snapshot de padrões/níveis e reinício conduzido pelo proprietário. A configuração de aplicativos e o áudio exigem autorização específica posterior. Os fluxos reais com navegador e OBS ainda não foram exercitados em hardware. Estabilidade prolongada, recuperação física, latência acústica e necessidade de drift permanecem sob validação integrada. Nenhuma instalação, compra, alteração Windows, correção física ou prova foi realizada e a F4 permanece fora do escopo.
+
+## Histórico — F3-I2-EXTERNAL-ACCEPTANCE, 19/11/2026
 
 **Preparação verificada. Aceitação física aguarda escolha de dependência.** A `main` foi sincronizada por fast-forward de `6c7a5d4` até `fdd2816`. A diferença é exclusivamente documental. A conectividade Git, o SDK 10.0.404, o Git 2.56.1 e a política Restricted foram conferidos.
 

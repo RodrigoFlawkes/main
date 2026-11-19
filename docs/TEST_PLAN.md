@@ -1,5 +1,9 @@
 # Plano de testes
 
+## F3-I2-SINGLE-CABLE — transição e quietude
+
+Os testes reutilizam os donos WASAPI e verificam PCM nos dois destinos, atenuação, formatos, geração e sequência. A sondagem simulada cobre quietude, resíduos, ausência de pacotes, retomada de produtor, timestamp, desconexão, cancelamento e falhas de Release/Stop. Restauração observada, conflitos e recursos retidos impedem iniciar a próxima fase. Uma medição isolada verifica zero bytes recorrentes na inspeção dos buffers, com controle positivo do contador. O runner Explicit é descoberto por filtro exato. [Aceitação agrupada posterior](EXTERNAL_ROUTE_PROOF.md#f3-i2-single-cable--avaliação-com-um-cabo).
+
 ## F3-I1-EXTERNAL-ROUTE — dois fluxos e restauração
 
 Os fakes executam os donos WASAPI e verificam o destino exato, entrega de PCM16/Float32, ganho inicial e atenuação, frames e retenção do guard. Exercitam falta de sinal, Get e Release, desconexão, invalidação, cancelamento e Stop incerto. A configuração verifica os dois fluxos, bloqueia cabo compartilhado e divergência de identidade, e cobre restauração parcial, repetição idempotente, conflito, aplicativo inacessível e endpoint original removido. A medição de zero bytes recorrentes usa a janela de encoder com comparador ativo em subprocesso, com os controles do contador fora da janela.

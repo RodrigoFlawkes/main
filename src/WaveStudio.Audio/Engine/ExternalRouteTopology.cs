@@ -20,10 +20,21 @@ internal sealed record ExternalRouteTopology(ExternalCable BrowserCable, Externa
 
     public void Validate()
     {
-        ExternalEndpoint[] ports = [BrowserCable.Render, BrowserCable.Capture, MicCable.Render, MicCable.Capture, Headset, Microphone];
+        ValidatePorts([BrowserCable.Render, BrowserCable.Capture, MicCable.Render, MicCable.Capture, Headset, Microphone]);
+        if (!SameAdapter(BrowserCable.Render, BrowserCable.Capture) || !SameAdapter(MicCable.Render, MicCable.Capture) ||
+            SameAdapter(BrowserCable.Render, MicCable.Render) ||
+            SameAdapter(Headset, BrowserCable.Render) || SameAdapter(Headset, MicCable.Render) ||
+            SameAdapter(Microphone, BrowserCable.Render) || SameAdapter(Microphone, MicCable.Render))
+            throw new ArgumentException("Pareamento não confirmado, adaptador compartilhado ou retorno para um cabo virtual.");
+        Route(ExternalFlow.Browser).Validate();
+        Route(ExternalFlow.Microphone).Validate();
+    }
+
+    internal static void ValidatePorts(ExternalEndpoint[] ports)
+    {
         var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var generation = Headset.Endpoint.Generation;
-        var evidence = Headset.Info.Evidence;
+        var generation = ports[0].Endpoint.Generation;
+        var evidence = ports[0].Info.Evidence;
         for (int i = 0; i < ports.Length; i++)
         {
             var port = ports[i];
@@ -38,15 +49,8 @@ internal sealed record ExternalRouteTopology(ExternalCable BrowserCable, Externa
                 throw new NotSupportedException("Todos os endpoints precisam estar ativos com capacidade exata.");
             port.Info.Mix.Validate();
         }
-        if (!SameAdapter(BrowserCable.Render, BrowserCable.Capture) || !SameAdapter(MicCable.Render, MicCable.Capture) ||
-            SameAdapter(BrowserCable.Render, MicCable.Render) ||
-            SameAdapter(Headset, BrowserCable.Render) || SameAdapter(Headset, MicCable.Render) ||
-            SameAdapter(Microphone, BrowserCable.Render) || SameAdapter(Microphone, MicCable.Render))
-            throw new ArgumentException("Pareamento não confirmado, adaptador compartilhado ou retorno para um cabo virtual.");
-        Route(ExternalFlow.Browser).Validate();
-        Route(ExternalFlow.Microphone).Validate();
     }
 
-    private static bool SameAdapter(ExternalEndpoint a, ExternalEndpoint b) =>
+    internal static bool SameAdapter(ExternalEndpoint a, ExternalEndpoint b) =>
         StringComparer.OrdinalIgnoreCase.Equals(a.AdapterId, b.AdapterId);
 }

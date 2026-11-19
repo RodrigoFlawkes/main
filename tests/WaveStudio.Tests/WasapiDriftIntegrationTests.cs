@@ -349,9 +349,9 @@ public sealed partial class WasapiDriftTests
         private long desiredCapture, desiredRender;
         public int ExtraRenderCycles, ExtraRenderFrames = 1;
 
-        public VirtualRig(int input, int output, int drift, int phase, bool outputFloat = true)
+        public VirtualRig(int input, int output, int drift, int phase, bool outputFloat = true, TransportRoute? assigned = null)
         {
-            route = WasapiContractTests.Route(inputRate: input, outputRate: output, inputChannels: input == 44100 ? 1 : 2,
+            route = assigned ?? WasapiContractTests.Route(inputRate: input, outputRate: output, inputChannels: input == 44100 ? 1 : 2,
                 outputChannels: output == 44100 ? 2 : 1, outputFloat: outputFloat);
             inputActual = input * (1 + drift * 1e-6);
             outputActual = output;
@@ -394,6 +394,9 @@ public sealed partial class WasapiDriftTests
         internal WasapiExternalRouteSession CreateExternal(ExternalRouteTopology topology, ExternalFlow flow,
             ExternalRouteConsent consent, TransportActivityGuard guard) => new(topology, flow, consent, guard, Calls.Open,
                 new(() => Volatile.Read(ref now), Wait, input => finished[input ? 0 : 1].Set(), default, false));
+
+        internal WasapiDriftSimulation NominalPacing() =>
+            new(() => Volatile.Read(ref now), Wait, input => finished[input ? 0 : 1].Set(), default, false);
 
         private WasapiClockReading Clock(int index, double actualRate, int frequency, int phaseFrames, ulong offset)
         {
