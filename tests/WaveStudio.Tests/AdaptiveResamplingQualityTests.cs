@@ -135,7 +135,10 @@ public sealed class AdaptiveResamplingQualityTests
     }
 
     [Fact]
-    public void PartialOutputHasLinearMappingWorkNoRecurringAllocationsAndEquivalentAudio()
+    public Task PartialOutputHasLinearMappingWorkNoRecurringAllocationsAndEquivalentAudio() =>
+        AllocationIsolation.Run<AdaptiveResamplingQualityTests>(MeasureAllocation, TestContext.Current.CancellationToken);
+
+    private static void MeasureAllocation()
     {
         Measure(512); Measure(1);
         var regular = Measure(512); var tiny = Measure(1);

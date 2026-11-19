@@ -1,4 +1,19 @@
-# Backend WASAPI — preparação sem áudio e base isolada
+# Backend WASAPI — transporte isolado e preparação da prova audível
+
+## F2-I6D-ALLOC-MONITOR — roteiro para revisão
+
+A fachada interna `WasapiAudibleProofSession` reutiliza os proprietários WASAPI, a política nominal, o FIR, a FIFO e o codificador já exercitados no backend simulado. As fachadas nativas B1, B2 e nominal SILENT continuam sem codificador. O novo caminho nativo exige capacidade exata nos dois endpoints e consentimento de uso único associado à rota e ao token de parada. A interface e o monitoramento contínuo ficam fora desta etapa.
+
+O ganho parte de zero. Um corte coerente após o preenchimento da FIFO, com consentimento vigente, permite a rampa de até 5 ms rumo ao teto fixo de 0,05 (cerca de −26 dB de ganho digital em amplitude). Continuam valendo prazo de observação de até cinco segundos, limites de fila, relógios, contabilidade, conversões Float32/PCM16 e política de falhar com segurança. A eventual diferença de até meio passo do PCM16 é arredondamento da amostra submetida. O recorte de saída do FIR é contabilizado antes do descarte do caminho de áudio. O projeto não altera volume nem dispositivo padrão do Windows.
+
+### Preparação da tentativa futura
+
+1. Após revisão e nova autorização para captura temporária **e reprodução audível**, confirmar headset físico colocado, saída sem caixas abertas, volume baixo e parada ao alcance do proprietário. Confirmar a entrada e a saída exatas, Wave Studio fechado normalmente, ausência de chamadas, gravações ou outros runners e os sete manuais já aprovados. A seleção é única por direção, entre dispositivos ativos com formato exato. O teste confere processos do Wave Studio e outros apphosts antes de habilitar a tentativa.
+2. Usar o apphost Release x64 em console interativo de primeiro plano. Opt-ins exclusivos do processo: `WAVESTUDIO_AUDIBLE_PROOF_START_AUTHORIZED`, `WAVESTUDIO_AUDIBLE_PROOF_PREFLIGHT_CONFIRMED`, `WAVESTUDIO_AUDIBLE_PROOF_HEADSET_CONFIRMED` e `WAVESTUDIO_AUDIBLE_PROOF_LOW_LEVEL_CONFIRMED` recebem `1` somente após as respectivas confirmações. Informar os nomes exatos em `WAVESTUDIO_AUDIBLE_PROOF_CAPTURE_NAME` e `WAVESTUDIO_AUDIBLE_PROOF_HEADSET_NAME`. O filtro exato é `WaveStudio.Tests.WasapiNativeAudibleProofTests.AuthorizedHeadsetRunsBoundedAudibleNominalProof`, com `--explicit only --filter-method <método> --timeout 45s`. A prova anterior em SILENT tem autorização própria já consumida.
+3. Testar Esc antes de confirmar a tentativa com Enter. Um segundo Esc antes de Enter cancela a tentativa. A confirmação expira em 15 s. Durante a sessão, Esc ou o cancelamento cooperativo do runner invalida a entrega. Ao perceber desconforto, nível imprevisto ou feedback, usar Esc imediatamente. A perda do acesso às teclas dispara cancelamento. O guard continua reservado até os donos encerrarem e confirmarem liberação. Antes do Release, a entrega revalida a validade do ticket e o prazo e sinaliza SILENT se a entrega foi invalidada. PCM já entregue ao Windows pode completar a reprodução.
+4. O JSON local em `artifacts/wasapi-audible-proof` contém formatos e números, sem nomes, IDs ou PCM. Conferir frames produzidos/lidos, priming, warmup, margem, cortes, prazo, falhas, Stop e Release. Os contadores separam frames SILENT de PCM liberado com S_OK, frames com sinal diferente de zero, ganho digital de pico, pico quantizado e clipping. A aceitação futura exige transporte nominal e PCM não nulo confirmado, além do relato do proprietário sobre som, nível, timbre e ausência de feedback. Margem de fila e latência algorítmica são métricas separadas da latência acústica.
+
+Nesta etapa houve descoberta do método e exercícios com fakes. A coleta física nominal SILENT anterior segue registrada abaixo.
 
 ## F2-I6C-NOMINAL-PROOF — resultado físico, 18/11/2026
 

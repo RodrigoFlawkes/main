@@ -113,7 +113,10 @@ public sealed class EqualizerPreviewTests
         Assert.Equal(4, clip.CreatePlayback(.2f, () => true).Read(new byte[4]));
     }
     [Fact]
-    public void ProcessedReadAllocatesNothingAndInvalidationSuppressesCopiedPacket()
+    public Task ProcessedReadAllocatesNothingAndInvalidationSuppressesCopiedPacket() =>
+        AllocationIsolation.Run<EqualizerPreviewTests>(MeasureAllocation, TestContext.Current.CancellationToken);
+
+    private static void MeasureAllocation()
     {
         var format = WaveFormat.CreateIeeeFloatWaveFormat(48000, 2); using var clip = new BoundedTestAudio(format); clip.Append(Signal(format, 16000));
         int gates = 0; var invalid = clip.CreatePlayback(.2f, () => ++gates == 1, new(true, Enumerable.Repeat(6d, 10)));

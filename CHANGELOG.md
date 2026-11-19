@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-18 — F2-I6D-ALLOC-MONITOR
+
+- Reproduzida no .NET 10.0.15 a supercontagem de alocações por GC em segundo plano. Os quatro ensaios históricos preservam as medições exatas e os limites originais, em processos separados das outras classes, com controles de zero e de alocação conhecida.
+- Preparada a prova WASAPI audível nominal de até cinco segundos, com headset confirmado, ganho inicial zero, teto fixo de 0,05 e parada pelo operador. A execução em hardware aguarda revisão e autorização específica.
+
 ### 2026-11-18 — F2-I6C-NOMINAL-PROOF
 
 - A tentativa física nominal SILENT concluiu o temporizador de cinco segundos e foi aprovada no escopo do transporte nominal. Foram observados 4,9991228 s por QPC, 191 cortes coerentes, zero perdas de FIFO e liberação confirmada.

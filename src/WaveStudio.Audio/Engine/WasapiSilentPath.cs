@@ -18,6 +18,7 @@ internal sealed class WasapiSilentPath : IDisposable
     public long ProducerQueued => Produced - Volatile.Read(ref Read);
     public long ConsumerQueued => Volatile.Read(ref Produced) - Read;
     public double AppliedPpm => resampler.CurrentPpm;
+    public long ClippedSamples => resampler.Protection.OutputClipped;
     public bool SetTargetPpm(long generation, double ppm) => resampler.SetTargetPpm(generation, ppm);
 
     public static int Budget(WasapiPcm input, WasapiPcm output, uint captureCapacity, uint renderCapacity, long capturePeriod, long renderPeriod)
@@ -84,8 +85,9 @@ internal sealed class WasapiSilentPath : IDisposable
         int read = pipe.Render(pipeGeneration, floats); Volatile.Write(ref Read, Read + read); Underrun += frames - read;
         floats.Clear();
     }
-    public bool ConsumeNominal(int frames, DeliveryTicket ticket, WasapiMonitorEncoder? encoder, Span<byte> destination)
+    public bool ConsumeNominal(int frames, DeliveryTicket ticket, WasapiMonitorEncoder? encoder, Span<byte> destination, out WasapiEncodedBlock block)
     {
+        block = default;
         if (!ticket.IsValid) return false;
         var floats = render.AsSpan(0, checked(frames * playback.Channels));
         try
@@ -98,7 +100,7 @@ internal sealed class WasapiSilentPath : IDisposable
                 if (ticket.IsValid) throw new InvalidOperationException("Nominal/Underrun");
                 return false;
             }
-            return encoder is not null && ticket.IsValid && encoder.Encode(floats, destination);
+            return encoder is not null && ticket.IsValid && encoder.Encode(floats, destination, out block);
         }
         catch
         {

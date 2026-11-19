@@ -40,9 +40,11 @@ internal sealed record WasapiNominalReport(WasapiSilentSnapshot Cleanup, bool No
     public bool DriftPrecisionAvailable => false;
 }
 
-internal sealed class WasapiNominalControl(WasapiMonitorEncoder? fakeEncoder = null)
+internal sealed class WasapiNominalControl(WasapiMonitorEncoder? encoder = null, WasapiAudibleConsent? audible = null)
 {
-    public WasapiMonitorEncoder? FakeEncoder { get; } = fakeEncoder;
+    public WasapiMonitorEncoder? Encoder { get; } = encoder;
+    public WasapiAudibleConsent? Audible { get; } = audible;
+    private bool armed;
     public int MarginFrames { get; private set; }
     private long origin, lastCut, coherent, busy, captureObservations, renderObservations, lastCapture, lastRender, covered;
     private long? minimum, maximum;
@@ -72,6 +74,11 @@ internal sealed class WasapiNominalControl(WasapiMonitorEncoder? fakeEncoder = n
         lastCut = cut.Cut100ns;
         Baseline = cut;
         coherent++;
+        if (!armed && Audible is { } consent && !consent.StopToken.IsCancellationRequested && cut.Capture.Evidence.FifoPrimingFrames > 0)
+        {
+            Encoder!.SetGain(WasapiAudibleProofSession.ProofGain);
+            armed = true;
+        }
         minimum = Math.Min(minimum ?? cut.QueuedFrames, cut.QueuedFrames);
         maximum = Math.Max(maximum ?? cut.QueuedFrames, cut.QueuedFrames);
         if (cut.Mean is { } bounds)
@@ -109,7 +116,7 @@ internal sealed class WasapiNominalControl(WasapiMonitorEncoder? fakeEncoder = n
             result.Playback.FramesAcquired == result.Playback.FramesReleased &&
             result.Playback.FramesReleased == result.Playback.PrimedFrames + preTicket + warmup + result.ReadFrames &&
             result.ProducedFrames > 0 && result.ReadFrames > 0 && result.DroppedFrames == 0 && result.UnderrunFrames == 0;
-        return new(result, nominal, packets, FakeEncoder is null, unavailable, result.Playback.PrimedFrames, fifoPrimed,
+        return new(result, nominal, packets, Encoder is null, unavailable, result.Playback.PrimedFrames, fifoPrimed,
             preTicket, warmup, MarginFrames, coherent, busy, captureObservations, renderObservations,
             minimum, maximum, covered == 0 ? null : (double)minimumArea / covered,
             covered == 0 ? null : (double)maximumArea / covered, covered);
@@ -129,26 +136,40 @@ internal sealed class WasapiMonitorEncoder(WasapiPcm format)
         Volatile.Write(ref target, value);
     }
 
-    public bool Encode(ReadOnlySpan<float> samples, Span<byte> destination)
+    public bool Encode(ReadOnlySpan<float> samples, Span<byte> destination) => Encode(samples, destination, out _);
+
+    public bool Encode(ReadOnlySpan<float> samples, Span<byte> destination, out WasapiEncodedBlock block)
     {
+        block = default;
         if (samples.Length % format.Channels != 0 || destination.Length != samples.Length / format.Channels * format.BlockAlign)
             throw new ArgumentException("O render exige frames completos.");
         float requested = Volatile.Read(ref target);
         if (requested == 0 && gain == 0) return false;
         int stride = encoding == PcmEncoding.Pcm16LittleEndian ? 2 : 4;
+        float peak = 0, peakGain = 0;
+        int nonZero = 0;
         for (int index = 0; index < samples.Length; index += format.Channels)
         {
             gain += Math.Clamp(requested - gain, -slew, slew);
+            peakGain = Math.Max(gain, peakGain);
+            bool frameSignal = false;
             for (int channel = 0; channel < format.Channels; channel++)
             {
                 int offset = index + channel;
                 float sample = float.IsFinite(samples[offset]) ? Math.Clamp(samples[offset], -1, 1) * gain : 0;
                 if (encoding == PcmEncoding.Pcm16LittleEndian)
-                    BinaryPrimitives.WriteInt16LittleEndian(destination[(offset * stride)..], (short)Math.Round(sample * 32768));
-                else
-                    BinaryPrimitives.WriteSingleLittleEndian(destination[(offset * stride)..], sample);
+                {
+                    short quantized = (short)Math.Round(sample * 32768);
+                    BinaryPrimitives.WriteInt16LittleEndian(destination[(offset * stride)..], quantized);
+                    sample = quantized / 32768f;
+                }
+                else BinaryPrimitives.WriteSingleLittleEndian(destination[(offset * stride)..], sample);
+                frameSignal |= sample != 0;
+                peak = Math.Max(peak, Math.Abs(sample));
             }
+            if (frameSignal) nonZero++;
         }
+        block = new(nonZero, peak, peakGain);
         return true;
     }
 }

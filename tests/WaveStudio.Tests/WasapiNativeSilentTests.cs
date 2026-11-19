@@ -76,7 +76,7 @@ public sealed class WasapiNativeSilentTests(ITestOutputHelper output)
         Assert.False(result.Cleanup.DriftControlEnabled);
     }
 
-    private static async Task<TransportRoute> Preflight(string captureName, string playbackName, CancellationToken token)
+    internal static async Task<TransportRoute> Preflight(string captureName, string playbackName, CancellationToken token)
     {
         AssertNoPreviewProcess();
         var catalog = await new CoreAudioDeviceService().QueryAsync(token);
@@ -110,7 +110,7 @@ public sealed class WasapiNativeSilentTests(ITestOutputHelper output)
         File.WriteAllText(Path.Combine(directory, $"{prefix}-{Guid.NewGuid():N}.json"), report);
     }
 
-    private static void AssertNoPreviewProcess()
+    internal static void AssertNoPreviewProcess()
     {
         var processes = Process.GetProcessesByName("WaveStudio");
         try { Assert.True(processes.Length == 0, "Feche o Wave Studio normalmente antes da prova."); }

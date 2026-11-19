@@ -13,7 +13,10 @@ public sealed class NominalPartialConsumptionTests(ITestOutputHelper output)
         ulong Hash, double WallMilliseconds, long AllocatedBytes);
 
     [Fact]
-    public void SmallOutputPreservesSamplesButRepeatsChannelMappingWork()
+    public Task SmallOutputPreservesSamplesButRepeatsChannelMappingWork() =>
+        AllocationIsolation.Run<NominalPartialConsumptionTests>(MeasureAllocation, TestContext.Current.CancellationToken);
+
+    private void MeasureAllocation()
     {
         Measure(512); Measure(1); // aquecimento fora dos intervalos relatados
         var regular = Measure(512);

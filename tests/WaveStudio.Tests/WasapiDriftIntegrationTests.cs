@@ -387,6 +387,10 @@ public sealed partial class WasapiDriftTests
                 new(() => Volatile.Read(ref now), Wait, input => finished[input ? 0 : 1].Set(), default, false), timeout);
         }
 
+        internal WasapiAudibleProofSession CreateAudible(TransportActivityGuard guard, WasapiAudibleConsent consent) =>
+            WasapiAudibleProofSession.CreateSimulated(route, consent, guard, Calls.Open,
+                new(() => Volatile.Read(ref now), Wait, input => finished[input ? 0 : 1].Set(), default, false));
+
         private WasapiClockReading Clock(int index, double actualRate, int frequency, int phaseFrames, ulong offset)
         {
             long qpc = now - (index * 29 % 170) - 1;

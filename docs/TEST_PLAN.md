@@ -1,5 +1,11 @@
 # Plano de testes
 
+## F2-I6D-ALLOC-MONITOR — contagem exata e prova audível preparada
+
+Os quatro casos de zero bytes (diário WASAPI, leitura de EQ, FIR nominal e FIR adaptativo parciais) executam a medição original em apphost separado com filtro exato. O controle negativo e `new byte[37]` confirmam zero e 64 bytes no .NET x64. Um caso força coletas em segundo plano em outro processo enquanto o diário mede sob a mesma asserção de zero. O processo principal mantém o paralelismo padrão. Os demais detalhes e os resultados ficam no [status da etapa](../PROJECT_STATUS.md).
+
+Os fakes exercitam a fachada audível, o mesmo encoder, os owners e a entrega nominal. Verificam consentimento ligado à rota, de uso único e com parada obrigatória, saída SILENT até o corte coerente pós-warmup, PCM16 e Float32 com ganho limitado, contabilidade de frames e cancelamento com buffer emprestado. Seguem na regressão os testes existentes de rampa, deadline, FIFO, proteção de formato, invalidação, Get/Release/Stop e guard. O único método audível Explicit foi listado sem execução. [Roteiro e métricas da tentativa futura](WASAPI_BACKEND_PLAN.md#f2-i6d-alloc-monitor--roteiro-para-revisão).
+
 ## F2-I6C-NOMINAL-MONITOR — replay e monitor simulado
 
 O replay usa a série real de 37 leituras de captura da prova diagnóstica. Os pacotes do caso positivo são sintéticos. São testados o motivo de rejeição anterior, a exceção nominal condicionada, o prazo de indisponibilidade, regressão, idade do pacote e HRESULT incerto. O caminho simulado exercita os owners MTA, formato Float32 ou PCM16, taxas de 44,1/48 kHz, drift simulado nos dois sentidos, nível, zero inicial, dropout evitado pelas bordas, cutoff por evidência, troca de seleção, falhas Get/Release/Stop e retenção do guard.

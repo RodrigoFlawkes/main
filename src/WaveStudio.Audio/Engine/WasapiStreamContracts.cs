@@ -107,8 +107,8 @@ internal sealed record WasapiSilentSnapshot(WasapiRoleSnapshot Capture, WasapiRo
     int FifoCapacityFrames, long ProducedFrames, long ReadFrames, long DroppedFrames, long UnderrunFrames, long Observation100ns, bool DurationReached)
 {
     [System.Text.Json.Serialization.JsonIgnore] public bool NominalMode { get; init; }
-    [System.Text.Json.Serialization.JsonIgnore] public bool FakeRender { get; init; }
-    public bool AlwaysSilent => !FakeRender;
+    [System.Text.Json.Serialization.JsonIgnore] public bool PcmRenderSelected { get; init; }
+    public bool AlwaysSilent => !PcmRenderSelected;
     public bool DriftControlEnabled => false;
     public bool MovementProven => Completed && Failure is null && Capture.MovementSamples >= 2 && Playback.MovementSamples >= 2;
     public bool TransportObserved => !NominalMode && DurationReached && MovementProven && (Capture.CaptureTiming is null or { Confirmed: true } &&

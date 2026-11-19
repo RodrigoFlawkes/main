@@ -221,7 +221,10 @@ public sealed class WasapiCheckpointTests
     }
 
     [Fact]
-    public void PublicationUsesBoundedPreallocatedMemoryAndNoRecurringAllocations()
+    public Task PublicationUsesBoundedPreallocatedMemoryAndNoRecurringAllocations() =>
+        AllocationIsolation.Run<WasapiCheckpointTests>(MeasureAllocation, TestContext.Current.CancellationToken);
+
+    private static void MeasureAllocation()
     {
         var warm = new Fixture(history: WasapiCheckpointLedger.MaxHistory);
         warm.Initialize();

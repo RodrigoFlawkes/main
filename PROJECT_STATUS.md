@@ -2,7 +2,46 @@
 
 Atualizado em 18/11/2026.
 
-## Estado atual — F2-I6C-NOMINAL-PROOF, 18/11/2026
+## Estado atual — F2-I6D-ALLOC-MONITOR, 18/11/2026
+
+A `main` sincronizou por fast-forward de `a85af9d` a `dd9b227`, com conectividade Git conferida. Ambiente .NET SDK 10.0.404, CoreCLR 10.0.15 x64, Git 2.56.1 e política Restricted. A prova nominal SILENT aprovada, a prova 4, a coleta diagnóstica reprovada e os sete testes manuais conservam suas evidências originais.
+
+### Diagnóstico da contagem de alocações
+
+| Caso | Bytes registrados no histórico | Janela na thread do teste |
+| --- | --- | --- |
+| `WasapiCheckpointTests.PublicationUsesBoundedPreallocatedMemoryAndNoRecurringAllocations` | 7.912 e 6.856 no Release padrão, seeds 20261113 e 20261114 | 100 mil pares após 20 mil de aquecimento, com limite separado de setup |
+| `EqualizerPreviewTests.ProcessedReadAllocatesNothingAndInvalidationSuppressesCopiedPacket` | 2.632 e 5.640 no Release seed 20261113. O histórico anterior tem 6.040 em Debug | 100 leituras processadas após 100 de aquecimento |
+| `NominalPartialConsumptionTests.SmallOutputPreservesSamplesButRepeatsChannelMappingWork` | 3.992 no Release seed 20261113 | Processamento e flush de 8.192 frames, medidos separadamente com saídas de 512 e 1 frame após aquecimento |
+| `AdaptiveResamplingQualityTests.PartialOutputHasLinearMappingWorkNoRecurringAllocationsAndEquivalentAudio` | 3.992 no Release seed 20261113 | Processamento e flush de 8.192 frames, com saídas de 512 e 1 frame e ajuste do passo ativo |
+
+Antes da correção, três execuções direcionadas dos mesmos 125 testes passaram sem reproduzir os bytes. Foram duas em Release padrão com seeds 20261113 e 20261114 e uma serial com seed 20261113. As reprovações anteriores de suítes completas permanecem no histórico abaixo. O contador é da thread da janela. O probe colocou a carga em outra thread e registrou o índice de coletas concluídas para verificar se bytes poderiam aparecer mesmo sem instruções de alocação.
+
+O probe .NET x64 independente, sem xUnit e com configuração padrão de GC/JIT, pré-alocou as amostras e aqueceu as chamadas. Na thread medida, um objeto mantido vivo antes da leitura abre o contexto de alocação. Dentro da janela negativa há apenas duas leituras de `GC.GetAllocatedBytesForCurrentThread()` e `Thread.SpinWait(240_000)`. O IL conferido não contém instrução de criação de objeto ou boxing. A outra thread rotacionou blocos de 2 KiB em um conjunto de 4 MiB e solicitou `GC.Collect(2, Forced, blocking: false, compacting: false)`. Houve **32/32 janelas vazias em zero** sem carga, **32/32 controles positivos em 64 bytes** com `new byte[37]` e **7.560 bytes em uma de 192 janelas vazias** sob carga. Essa janela coincidiu com a conclusão de um GC em segundo plano. O primeiro probe também mediu a supercontagem e falhou depois ao procurar o método para imprimir o IL. A execução com a consulta do IL corrigida terminou com código 0 e registrou a correlação.
+
+O CoreCLR 10.0.15 calcula o contador a partir dos bytes reservados menos a sobra do contexto corrente. Ao retirar o contexto durante GC em segundo plano, o runtime podia zerar os ponteiros sem debitar essa sobra. O mecanismo reproduz a classe de falso positivo observada, inclusive na ausência do processamento WAV/DSP. A correção aceita no upstream debita o espaço não utilizado. A coleta de stacks de alocação exata ficou indisponível no ambiente. Não houve instalação de profiler. A evidência experimental não identifica o tipo, stack ou instante de cada valor histórico. [Implementação no runtime instalado](https://github.com/dotnet/runtime/blob/v10.0.15/src/coreclr/vm/comutilnative.cpp#L3539-L3553), [relato original](https://github.com/dotnet/runtime/issues/134724), [correção aceita pelo CoreCLR](https://github.com/dotnet/runtime/pull/134855).
+
+A solução no Wave Studio isola somente as medições exatas afetadas, com os mesmos binários e a mesma carga, em subprocessos de teste com filtro por método. Mantém setup, aquecimento, trabalho, limites, asserções de zero, GC/JIT e paralelismo padrão da suíte principal. Cada medição inclui controle positivo e negativo fora da janela. O teste de pressão mantém GC ativo em outro processo enquanto o ensaio do diário mede sua janela original. A correção é de medição e não exige alterar o processamento medido. O controle testa o contador e o isolamento nesta configuração. A aprovação das suítes cobre as janelas verificadas, sem implicar ausência universal de alocações.
+
+### Prova audível preparada para revisão
+
+A fachada interna dedicada exige consentimento de uso único para a rota exata, headset, volume baixo e parada do operador. O ganho começa em zero e sobe até 0,05 somente após prefill e corte coerente. O limite é de cinco segundos em razão nominal. O método Explicit dedicado foi descoberto sem execução. Fakes com Float32 e PCM16 exercitaram encoder, fila, warmup, corte, contadores e cancelamento. As fachadas SILENT mantêm o caminho sem encoder. PCM só é contabilizado após ReleaseBuffer com S_OK. O relatório registra sinal, ganho, amplitude e clipping, sem voz, PCM ou identificação dos dispositivos. A reprodução física, nível percebido, timbre, feedback e latência acústica aguardam revisão e autorização específica. [Roteiro da prova](docs/WASAPI_BACKEND_PLAN.md#f2-i6d-alloc-monitor--roteiro-para-revisão).
+
+### Validações
+
+| Regressão comum, paralelismo padrão | Seed | Aprovados | Falhas | Explicit excluídos | Tempo |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Debug x64 | 20261114 | 806 | 0 | 5 | 87,102 s |
+| Release x64 | 20261113 | 806 | 0 | 5 | 51,694 s |
+| Release x64 | 20261114 | 806 | 0 | 5 | 50,599 s |
+
+Cada execução terminou com código 0. São 801 anteriores, um caso de pressão para o isolamento, um de consentimento, dois de entrega Float32/PCM16 e um de cancelamento audível. Os direcionados passaram com cinco casos de alocação em Release (4,688 s) e 20 de monitoramento em Debug (7,087 s). O primeiro filtro combinado da medição selecionou zero casos e foi corrigido para filtro exato. Em seguida os quatro casos medidos passaram, mas a fixture de pressão não confirmou conclusão de BGC. Aumentar o conjunto retido apenas na fixture de pressão permitiu exigir a conclusão de uma coleta e repetir a medição original sob essa carga.
+
+Restore locked com auditoria de todos os pacotes e NU1900 tratado como erro. Builds não incrementais Debug/Release pela configuração da solução, com `PlatformTarget=x64`, zero erros e avisos. A tentativa inicial com `Platform=x64` foi rejeitada pela solução, e o build preliminar apontou a asserção proposital de token não cancelável. A anotação local da asserção resolveu o aviso sem mudar a condição testada. A descoberta com `--list-tests text --filter-method` encontrou somente o novo Explicit audível. Os testes usaram `dotnet test --solution WaveStudio.slnx -c <configuração> --no-build -- --explicit off --seed <seed> --timeout 165s --long-running 10 --diagnostic --diagnostic-output-directory <pasta>`, sem alterar a política Restricted.
+
+Logs, probe independente e diagnósticos anteriores e finais estão em `artifacts/f2-i6d-alloc`, ignorados pelo Git. A Fase 2 aguarda revisão desta entrega e decisão sobre a primeira prova audível. Nenhuma prova física foi executada nesta etapa.
+
+## Histórico — F2-I6C-NOMINAL-PROOF, 18/11/2026
 
 A tentativa física única **foi aprovada para transporte nominal limitado** no par selecionado, a 48 kHz Float32 de captura mono e render LR. O temporizador de 5 s concluiu. A janela QPC foi de **4,9991228 s**, 0,8772 ms abaixo da duração configurada. O runner Release x64 executou somente o teste dedicado, com código 0 em 5,998 s. `DurationReached`, `NominalObserved`, `RenderSilent` e `PacketRateConfirmed` ficaram verdadeiros. `DriftPrecisionAvailable`, `DriftControlEnabled` e `Cleanup.TransportObserved` ficaram falsos.
 

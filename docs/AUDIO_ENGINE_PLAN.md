@@ -1,5 +1,9 @@
 # Motor de áudio — fundação, conversão e relógios
 
+## F2-I6D-ALLOC-MONITOR — prova audível limitada
+
+A prova audível isolada mantém razão nominal. A rampa de ganho inicia após o preenchimento da fila e um corte coerente, com teto digital de 0,05 e entrega cancelável. A prova futura documentará o PCM submetido e o encerramento. [Roteiro e evidências esperadas](WASAPI_BACKEND_PLAN.md#f2-i6d-alloc-monitor--roteiro-para-revisão).
+
 ## F2-I6C-NOMINAL-MONITOR — amostras em razão fixa
 
 A rota nominal limitada reutiliza FIR, SPSC e dois owners WASAPI. O controle observa evidência de pacotes e clock por owner, e usa cortes coerentes para ocupação. A sessão para antes das bordas com margem de um bloco e não emite comandos ppm. A codificação Float32/PCM16 e o ganho digital suave foram exercitados nos buffers do backend simulado. A fachada de prova física permanece SILENT. [Contrato, limites e roteiro](WASAPI_BACKEND_PLAN.md#f2-i6c-nominal-monitor--transporte-limitado-em-razão-fixa).

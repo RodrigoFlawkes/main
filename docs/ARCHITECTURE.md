@@ -1,5 +1,9 @@
 # Arquitetura do Wave Studio
 
+## F2-I6D-ALLOC-MONITOR — prova audível limitada
+
+A prova audível tem fachada e consentimento próprios. Usa o núcleo nominal, com encoder disponível só mediante consentimento válido para a rota. Os modos SILENT continuam sem encoder e a UI não chama a nova fachada. [Contrato e roteiro](WASAPI_BACKEND_PLAN.md#f2-i6d-alloc-monitor--roteiro-para-revisão).
+
 ## F2-I6C-NOMINAL-MONITOR — fachadas WASAPI por modo
 
 O ciclo de vida dos owners e o guard são comuns. A fachada `WasapiSilentSession` conserva B1/B2 SILENT. `WasapiNominalSession` separa execução nominal, domínio de evidência e relatório. Somente a fábrica de backend simulado dispõe do codificador de render. O modo nativo nominal usa a mesma FIFO e mantém saída SILENT. [Evidências e fronteiras](WASAPI_BACKEND_PLAN.md#f2-i6c-nominal-monitor--transporte-limitado-em-razão-fixa).

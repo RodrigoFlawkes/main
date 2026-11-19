@@ -44,7 +44,7 @@ internal sealed class WasapiSessionCore : IAsyncDisposable
     private readonly DeliveryTicket ticket;
     private readonly Owner capture, playback;
     private IDisposable? lease;
-    private CancellationTokenRegistration cancellation;
+    private CancellationTokenRegistration cancellation, operatorCancellation;
     private WasapiSilentPath? path;
     private WasapiCheckpointLedger? checkpoints;
     private Task<WasapiSilentSnapshot>? run;
@@ -54,6 +54,7 @@ internal sealed class WasapiSessionCore : IAsyncDisposable
     private int faultWritten;
     private long observation100ns, observationEnd100ns;
     private bool durationReached;
+    private long monitorClippedSamples;
 
     public WasapiSessionCore(TransportRoute route, TransportActivityGuard? guard = null,
         Func<TransportEndpoint, IWasapiPreparationDevice>? open = null, TimeSpan? timeout = null,
@@ -61,9 +62,13 @@ internal sealed class WasapiSessionCore : IAsyncDisposable
         WasapiDriftSimulation? simulation = null, bool nativeDriftDiagnostic = false, WasapiNominalControl? nominal = null)
     {
         route.Validate();
-        if (nominal?.FakeEncoder is not null && (open is null || simulation is null ||
-            route.Capture.Evidence != FormatEvidence.SimulatedExact || route.Playback.Evidence != FormatEvidence.SimulatedExact))
-            throw new ArgumentException("Render PCM restrito ao backend simulado.", nameof(open));
+        if (nominal?.Encoder is not null)
+        {
+            bool simulatedRoute = open is not null && simulation is not null &&
+                route.Capture.Evidence == FormatEvidence.SimulatedExact && route.Playback.Evidence == FormatEvidence.SimulatedExact;
+            if (!simulatedRoute && (open is not null || nominal.Audible is null))
+                throw new ArgumentException("Render PCM exige backend simulado ou consentimento da prova audível nativa.", nameof(open));
+        }
         this.nominal = nominal;
         if ((observeCheckpoints || simulation is not null) && open is null)
             throw new ArgumentException("A instrumentação simulada exige backend injetado.", nameof(open));
@@ -75,6 +80,11 @@ internal sealed class WasapiSessionCore : IAsyncDisposable
         if (open is null && (route.Capture.Evidence != FormatEvidence.ExactCapability ||
             route.Playback.Evidence != FormatEvidence.ExactCapability))
             throw new ArgumentException("A prova nativa requer formatos consultados no Windows.", nameof(route));
+        if (nominal?.Audible is { } consent)
+        {
+            if (nominal.Encoder is null) throw new ArgumentException("A prova audível requer codificador.", nameof(nominal));
+            consent.Consume(route);
+        }
         if (route.Capture.Endpoint.Generation == long.MaxValue) throw new ArgumentException("Geração sem espaço para limpeza.");
         this.route = route; this.guard = guard ?? TransportActivityGuard.Shared;
         verifyCaptureTiming = open is null || simulateCaptureTiming || simulation is not null || nominal is not null;
@@ -89,9 +99,11 @@ internal sealed class WasapiSessionCore : IAsyncDisposable
         {
             if (run is not null || stop.IsSet) throw new InvalidOperationException("Sessão de prova é de uso único.");
             token.ThrowIfCancellationRequested();
+            nominal?.Audible?.StopToken.ThrowIfCancellationRequested();
             lease = guard.TryAcquire(AudioActivity.IsolatedTransport) ?? throw new InvalidOperationException("Outra operação de áudio está ativa.");
             lock (live) live.Add(this); // Mantém os proprietários COM e o lease referenciados mesmo se o chamador abandonar uma operação que excedeu o prazo.
             cancellation = token.Register(RequestStop);
+            if (nominal?.Audible is { } consent) operatorCancellation = consent.StopToken.Register(RequestStop);
             try { capture.Launch(); playback.Launch(); }
             catch (Exception error) { Fail("OwnerLaunch", error); capture.NotLaunched(); playback.NotLaunched(); }
             return run = ControlAsync(duration);
@@ -136,7 +148,8 @@ internal sealed class WasapiSessionCore : IAsyncDisposable
     internal bool NominalRunning => nominal is not null && ticket.IsValid;
     internal void SetFakeGain(float gain)
     {
-        var encoder = nominal?.FakeEncoder ?? throw new InvalidOperationException("Este modo renderiza somente SILENT.");
+        if (nominal is not { Encoder: { } encoder, Audible: null })
+            throw new InvalidOperationException("O ajuste de ganho está disponível somente no fake de monitoramento.");
         encoder.SetGain(gain);
     }
     internal void StepNominal()
@@ -161,6 +174,9 @@ internal sealed class WasapiSessionCore : IAsyncDisposable
                 playback.PreTicketRender, playback.WarmupRender, observationEnd100ns);
         }
     }
+    internal WasapiAudibleOutput? ReadAudibleOutput(WasapiSilentSnapshot result) =>
+        nominal?.Audible is not null && result.Completed ? playback.AudibleOutput(monitorClippedSamples) : null;
+
     public void RequestStop()
     {
         ticket.Invalidate(); // Invalidação irreversível antes de qualquer espera ou parada nativa.
@@ -246,8 +262,10 @@ internal sealed class WasapiSessionCore : IAsyncDisposable
         try { await Task.WhenAll(capture.Done.Task, playback.Done.Task).WaitAsync(timeout); }
         catch (TimeoutException) { return Snapshot(); } // Preserva proprietários, COM, memória de trabalho e lease. Nunca interrompe uma chamada nativa.
         if (!capture.Join() || !playback.Join()) return Snapshot();
+            if (nominal?.Audible is not null) monitorClippedSamples = path?.ClippedSamples ?? 0;
             path?.Dispose();
             cancellation.Dispose();
+            operatorCancellation.Dispose();
             lease?.Dispose();
             lease = null;
             completed = true;
@@ -267,7 +285,7 @@ internal sealed class WasapiSessionCore : IAsyncDisposable
     }
     private WasapiSilentSnapshot Snapshot() => new(capture.Snapshot(completed), playback.Snapshot(completed), completed, lease is not null,
         failure, hresult, path?.CapacityFrames ?? 0, path?.Produced ?? 0, path?.Read ?? 0, path?.Dropped ?? 0, path?.Underrun ?? 0,
-        observation100ns, durationReached) { NominalMode = nominal is not null, FakeRender = nominal?.FakeEncoder is not null };
+        observation100ns, durationReached) { NominalMode = nominal is not null, PcmRenderSelected = nominal?.Encoder is not null };
 
     private sealed class Owner
     {
@@ -291,6 +309,9 @@ internal sealed class WasapiSessionCore : IAsyncDisposable
         public long ClockEvidenceUnavailable => captureTiming?.UnavailableReadings ?? 0;
         public bool HasNominalPackets(long now) => captureTiming?.HasNominalPackets(now) == true;
         private long clockEpoch, appliedCommand100ns, appliedAt100ns;
+        private long pcmFrames, nonZeroFrames;
+        private float peakAmplitude, peakGain;
+        public WasapiAudibleOutput AudibleOutput(long clipped) => new(releasedFrames - pcmFrames, pcmFrames, nonZeroFrames, peakAmplitude, peakGain, clipped);
         private long acceptedPackets, acceptedFrames, startupDiscardedPackets, startupDiscardedFrames;
         private uint padding, flags, startupDiscardFlags;
         private ulong packetPosition, packetQpc, startupDiscardPosition, startupDiscardQpc;
@@ -564,35 +585,43 @@ internal sealed class WasapiSessionCore : IAsyncDisposable
             nint data = render!.GetBuffer(frames); bufferInFlight = true; acquired++; acquiredFrames += frames;
             acquireResult = 0;
             uint releaseFlags = Silent;
-            Span<byte> fakeBytes = default;
+            Span<byte> output = default;
+            WasapiEncodedBlock encoded = default;
             try
             {
                 if (data == 0) throw new InvalidOperationException("Buffer de render inválido.");
                 if (!prime && session.nominal is { } nominal)
                 {
                     var path = session.path!;
-                    if (nominal.FakeEncoder is not null)
-                        fakeBytes = new Span<byte>((void*)data, checked((int)frames * info.Mix!.BlockAlign));
+                    if (nominal.Encoder is not null)
+                        output = new Span<byte>((void*)data, checked((int)frames * info.Mix!.BlockAlign));
                     if (!session.ticket.IsValid) preTicketRenderFrames += frames;
                     else if (path.FifoPrimingFrames == 0) warmupRenderFrames += frames;
                     else
                     {
                         if (path.ConsumerQueued <= nominal.MarginFrames) throw new InvalidOperationException("Nominal/FifoLow");
-                        if (path.ConsumeNominal((int)frames, session.ticket, nominal.FakeEncoder, fakeBytes))
+                        if (path.ConsumeNominal((int)frames, session.ticket, nominal.Encoder, output, out encoded))
                             releaseFlags = 0;
                     }
                 }
             }
             finally
             {
-                // O único ramo que permite PCM usa um buffer emprestado do backend de teste.
+                // Só os modos com codificador explícito podem entregar PCM. O ticket ainda precisa estar válido no Release.
                 if (releaseFlags == 0 && (!session.ticket.IsValid || session.NominalDeadlinePassed)) releaseFlags = Silent;
-                if (releaseFlags == Silent) fakeBytes.Clear();
+                if (releaseFlags == Silent) output.Clear();
                 int hr;
                 try { hr = render.ReleaseBuffer(frames, releaseFlags); releaseResult = hr; }
                 catch { bufferUncertain = true; throw; }
                 if (hr != 0) { bufferUncertain = true; throw new WasapiCallException("IAudioRenderClient.ReleaseBuffer", hr); }
                 bufferInFlight = false; released++; releasedFrames += frames; if (prime) primed += frames;
+                if (releaseFlags == 0 && session.nominal?.Audible is not null)
+                {
+                    pcmFrames += frames;
+                    nonZeroFrames += encoded.NonZeroFrames;
+                    peakAmplitude = Math.Max(peakAmplitude, encoded.PeakAmplitude);
+                    peakGain = Math.Max(peakGain, encoded.PeakGain);
+                }
             }
             if (!prime && session.nominal is null)
             {
