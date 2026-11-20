@@ -2,7 +2,17 @@
 
 Atualizado em 19/11/2026.
 
-## Estado atual — F3-I2-POSTBOOT-PAIRING, 19/11/2026
+## Estado atual — F3-I3-ROUTE-READINESS-DESKTOP, 19/11/2026
+
+A janela atual oferece **Roteamento externo (experimental)**. A aba mostra o inventário de reprodução e captura, o formato informado, as escolhas de sessão, o pareamento, a saúde PnP, os padrões do Windows e a compatibilidade de cada fluxo. O cabo simples prevê dois fluxos sequenciais com restauração e quietude entre eles. A+B fica disponível para seleção quando o inventário confirma dois pares ativos independentes.
+
+A consulta local somente leitura encontrou dois pinos de reprodução e um de captura do VB-CABLE simples, com Código 10 em outra instância sem pino ativo associado. Os fluxos selecionados de navegador e microfone passaram na pré-verificação de compatibilidade. A+B ficou como não detectado neste inventário. O diagnóstico técnico fica distinto da prova física pendente. Nenhuma preferência de rota externa é gravada.
+
+Os 16 casos direcionados e as regressões x64 passaram, com 867 aprovados por configuração e sete Explicit excluídos. Os builds Debug e Release terminaram com zero avisos ou erros. [Evidência automatizada](docs/TEST_PLAN.md#f3-i3-route-readiness-desktop--compatibilidade-em-leitura).
+
+A aba oferece instruções textuais de configuração manual e restauração. Em `a109426`, o proprietário relatou o funcionamento dos dois fluxos. Essa aceitação manual foi registrada sem métricas associadas. A prova instrumentada continua pendente, e Config → Idioma segue previsto para a primeira etapa de interface pós-F3. [Uso e limites da aba](docs/EXTERNAL_ROUTE_PROOF.md#f3-i3-route-readiness-desktop--prontidão-na-janela).
+
+## Histórico — F3-I2-POSTBOOT-PAIRING, 19/11/2026
 
 **Pareamento corrigido e conferido em leitura. Prova física pendente.** A `main` avançou de `0a4ccf5` para `ca7fd1b` por fast-forward. O boot completo mais recente registrado antecede a instalação do VB-CABLE. Depois da instalação, houve desligamento e Inicialização Rápida. O proprietário informou que prefere adiar novas reinicializações. Padrões e níveis de áudio foram conferidos com o snapshot original.
 

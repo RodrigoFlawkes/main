@@ -1,5 +1,11 @@
 # Arquitetura do Wave Studio
 
+## F3-I3-ROUTE-READINESS-DESKTOP — consulta de compatibilidade
+
+A nova aba usa um inventário de Core Audio e PnP e um serviço de prontidão injetável. A ligação PnP do cabo simples usa a identidade corrigida e a mesma regra de pinos do runner. A+B preserva o contrato dos conectores e exige instâncias distintas. A leitura de instâncias do cabo simples filtra o serviço com `PRESENT` e `DONOTGENERATE`, e os padrões são consultados nos seis papéis/direções. O serviço aplica a validação de formato exato e geração aos endpoints escolhidos e o contrato de rota existente a cada fluxo. O caminho de consulta termina nos metadados de capacidade, antes de inicializar fluxo.
+
+A aba acompanha as notificações de catálogo da janela. Enquanto a aba estiver selecionada, agrupa mudanças com espera breve, cancela a consulta anterior e publica apenas a revisão atual. As escolhas por ID ficam em memória durante a sessão. A perda de um dispositivo invalida o diagnóstico e mantém sua escolha indisponível até escolha explícita ou nova observação. O fechamento sinaliza cancelamento e aguarda a consulta em andamento.
+
 ## F3-I2-SINGLE-CABLE — transferência de um cabo
 
 A configuração de quatro endpoints usa o mesmo contrato de pares e tipos da rota A+B, com identidade própria e o mesmo motor. O lote adquire um guard, e cada operação adquire seu lease interno. A contagem de PCM só avança após liberação confirmada. Entre os fluxos, restauração observada e captura de quietude com cadência confirmada são pré-condições de novo consentimento e nova geração. A enumeração de produtores inclui os pinos de render do adaptador e invalida o lote se a evidência se perder. O snapshot privado permite verificar a restauração mesmo se o console fechar. [Roteiro e limites](EXTERNAL_ROUTE_PROOF.md#f3-i2-single-cable--avaliação-com-um-cabo).

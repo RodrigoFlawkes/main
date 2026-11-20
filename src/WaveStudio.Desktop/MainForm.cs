@@ -11,6 +11,7 @@ internal sealed partial class MainForm : Form
     private readonly DeviceSelection selection = new();
     private readonly ApplicationMixerPanel mixer = new();
     private readonly MicrophoneTestPanel microphoneTest;
+    private readonly ExternalRouteReadinessPanel routeReadiness;
     private readonly CancellationTokenSource lifetime = new();
     private readonly DevicePanel playback = new("Dispositivo de reprodução / headset");
     private readonly DevicePanel capture = new("Dispositivo de captura / microfone");
@@ -42,6 +43,7 @@ internal sealed partial class MainForm : Form
         if (closeTimeout <= TimeSpan.Zero || closeTimeout > TimeSpan.FromSeconds(30)) throw new ArgumentOutOfRangeException(nameof(shutdownTimeout));
         watch = audioWatch ?? new AudioWatchWorker();
         microphoneTest = new MicrophoneTestPanel(microphoneSession);
+        routeReadiness = new ExternalRouteReadinessPanel(new ExternalRouteReadinessService());
         store = settingsStore ?? new SettingsStore(SettingsStore.DefaultPath);
         InitializeEqualizerProfiles();
         readWorkAreas = workAreas ?? (() => Screen.AllScreens.Select(screen => screen.WorkingArea)
@@ -97,6 +99,9 @@ internal sealed partial class MainForm : Form
         var microphoneTestPage = new TabPage("Testar microfone");
         microphoneTestPage.Controls.Add(microphoneTest);
         tabs.TabPages.Add(microphoneTestPage);
+        var routePage = new TabPage(ExternalRouteText.Tab) { AccessibleDescription = ExternalRouteText.Title };
+        routePage.Controls.Add(routeReadiness);
+        tabs.TabPages.Add(routePage);
         tabs.TabPages.Add(CreatePreferencesPage());
         layout.Controls.Add(tabs, 0, 2);
         layout.SetColumnSpan(tabs, 2);
@@ -143,7 +148,13 @@ internal sealed partial class MainForm : Form
             watch.EnableMetering(visible && (tabs.SelectedTab == devicesPage || tabs.SelectedTab == microphoneTestPage));
             microphoneTest.EnableInputMeter(visible && tabs.SelectedTab == microphoneTestPage);
         }
-        tabs.SelectedIndexChanged += (_, _) => UpdateMetering();
+        tabs.SelectedIndexChanged += (_, _) =>
+        {
+            bool showRoutes = tabs.SelectedTab == routePage;
+            routeReadiness.SetActive(showRoutes);
+            refresh.Visible = !showRoutes;
+            UpdateMetering();
+        };
         Resize += (_, _) => UpdateMetering();
         UpdateMetering();
         closeSteps = [
@@ -151,6 +162,7 @@ internal sealed partial class MainForm : Form
             new("inicialização", () => startupTask),
             new("preferências", async () => { await startupTask; await SaveWindowOnCloseAsync(); }),
             new("catálogo", () => refreshTask),
+            new("roteamento externo", routeReadiness.StopAsync),
             new("reprodução", async () => await playback.StopAsync()),
             new("captura", async () => await capture.StopAsync()),
             new("mixer", async () => await mixer.StopAsync()),
@@ -204,7 +216,12 @@ internal sealed partial class MainForm : Form
         try
         {
             if (IsHandleCreated && !IsDisposed)
-                BeginInvoke(new Action(() => RequestRefresh(resetControls)));
+                BeginInvoke(new Action(() =>
+                {
+                    if (stopping) return;
+                    routeReadiness.InvalidateInventory();
+                    RequestRefresh(resetControls);
+                }));
         }
         catch (InvalidOperationException) { /* O fechamento pode destruir o handle antes do despacho. */ }
     }

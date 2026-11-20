@@ -1,5 +1,27 @@
 # Plano de testes
 
+## F3-I3-ROUTE-READINESS-DESKTOP — compatibilidade em leitura
+
+Testes com inventário injetado cobrem presença e ausência do cabo simples, A+B com pares distintos, seleção física incompatível ou removida, Código 10 selecionado e separado, defaults em pinos adicionais, metadados ausentes ou duplicados, formato incorreto, cancelamento, geração obsoleta e falha COM. Os testes STA verificam escolhas acessíveis, guia somente leitura, agrupamento de mudanças de seleção, hotplug durante consulta, rejeição de resultados obsoletos e encerramento cooperativo.
+
+Restore locked com auditoria NuGet completa e NU1900 tratado como erro. Builds x64 não incrementais Debug e Release com zero avisos ou erros. Antes da implementação, a compilação dirigida confirmou a ausência do novo contrato. Na primeira rodada com a UI, a espera de um teste STA expirou porque comparava o texto genérico de estado com a mensagem específica de compatibilidade do fluxo. A asserção foi alinhada à mensagem do fluxo e os 16 casos dirigidos passaram em 8,389 s.
+
+| Regressão final x64 | Seed | Aprovados | Falhas | Explicit excluídos | Duração |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Debug | 20261114 | 867 | 0 | 7 | 100,552 s |
+| Release | 20261113 | 867 | 0 | 7 | 61,884 s |
+
+A DLL Release foi conferida em uma chamada local somente leitura. O inventário encontrou três pinos ativos do cabo simples e duas instâncias PnP, com códigos 0 e 10. Os quatro endpoints escolhidos, o pareamento e os padrões foram confirmados, e A+B ficou como não detectado. Os cenários A+B foram exercitados com inventário injetado. Logs locais em `artifacts/f3-route-readiness`, ignorados pelo Git.
+
+Após integrar `a109426`, o ajuste no código se restringiu a dois textos sobre a prova instrumentada. Os dois builds x64 passaram sem avisos ou erros e os 16 testes dirigidos passaram em 7,353 s.
+
+Comandos finais
+
+- `dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1900`
+- `dotnet build WaveStudio.slnx -c <Debug|Release> --no-restore --no-incremental -warnaserror`
+- `dotnet test --project tests/WaveStudio.Tests/WaveStudio.Tests.csproj -c Release --no-build -- --explicit off --filter-class '*ExternalRouteReadiness*'`
+- `dotnet test --solution WaveStudio.slnx -c <Debug|Release> --no-build -- --explicit off --seed <seed> --timeout 165s --long-running 10 --diagnostic --diagnostic-output-directory <pasta>`
+
 ## F3-I2-SINGLE-CABLE — transição e quietude
 
 Os testes reutilizam os donos WASAPI e verificam PCM nos dois destinos, atenuação, formatos, geração e sequência. A sondagem simulada cobre quietude, resíduos, ausência de pacotes, retomada de produtor, timestamp, desconexão, cancelamento e falhas de Release/Stop. Restauração observada, conflitos e recursos retidos impedem iniciar a próxima fase. Uma medição isolada verifica zero bytes recorrentes na inspeção dos buffers, com controle positivo do contador. O runner Explicit é descoberto por filtro exato. [Aceitação agrupada posterior](EXTERNAL_ROUTE_PROOF.md#f3-i2-single-cable--avaliação-com-um-cabo).

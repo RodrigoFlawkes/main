@@ -59,7 +59,7 @@ public sealed class CoreAudioDeviceService
         }
     }
 
-    private static string? ReadDefault(MMDeviceEnumerator enumerator, DataFlow flow, Role role,
+    internal static string? ReadDefault(MMDeviceEnumerator enumerator, DataFlow flow, Role role,
         List<string> warnings)
     {
         try
@@ -76,7 +76,7 @@ public sealed class CoreAudioDeviceService
         }
     }
 
-    private static DeviceSnapshot ReadDevice(MMDevice device, EndpointDirection direction,
+    internal static DeviceSnapshot ReadDevice(MMDevice device, EndpointDirection direction,
         string? multimedia, string? communications)
     {
         string id = device.ID;

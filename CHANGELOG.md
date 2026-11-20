@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-19 — F3-I3-ROUTE-READINESS-DESKTOP
+
+- Adicionada a aba experimental de roteamento externo com inventário, seleções locais, diagnóstico do VB-CABLE simples e disponibilidade A+B.
+- Integrados os estados por fluxo e as orientações manuais. A consulta atualiza com mudanças de dispositivos, descarta resultados obsoletos e participa do fechamento cooperativo.
+
 ### 2026-11-19 — F3-I2-POSTBOOT-PAIRING
 
 - Corrigido o pareamento do VB-CABLE simples para usar a instância PnP do dispositivo conectado. Pinos adicionais, driver esperado e estado PnP são verificados antes de abrir a rota.

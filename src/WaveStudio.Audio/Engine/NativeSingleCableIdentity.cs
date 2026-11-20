@@ -11,12 +11,14 @@ internal readonly record struct PnpAudioAdapter(string InstanceId, uint Status, 
     private bool HasCableService => StringComparer.OrdinalIgnoreCase.Equals(Service, "VBAudioVACMME");
     private bool HasCableHardware => HardwareIds.Contains("VBAudioVACWDM", StringComparer.OrdinalIgnoreCase);
     internal bool HasCableMarker => HasCableService || HasCableHardware;
+    internal bool IsSingleCable => HasCableService && HasCableHardware;
+    internal bool IsHealthy => !string.IsNullOrWhiteSpace(InstanceId) && Problem == 0 && (Status & (Started | HasProblem)) == Started;
 
     internal string RequireRole(bool expectsCable)
     {
-        if (string.IsNullOrWhiteSpace(InstanceId) || Problem != 0 || (Status & (Started | HasProblem)) != Started)
+        if (!IsHealthy)
             throw new InvalidOperationException("Instância PnP do endpoint indisponível ou com falha.");
-        if (expectsCable ? !(HasCableService && HasCableHardware) : HasCableMarker)
+        if (expectsCable ? !IsSingleCable : HasCableMarker)
             throw new InvalidOperationException("O driver PnP do endpoint não corresponde ao papel esperado.");
         return InstanceId;
     }
@@ -34,8 +36,18 @@ internal static class NativeSingleCableIdentity
     internal static PnpAudioAdapter Read(MMDeviceEnumerator enumerator, MMDevice endpoint)
     {
         // O ID do conector é específico do subdispositivo. A propriedade do dispositivo conectado identifica o devnode.
-        using var connected = enumerator.GetDevice(NativeExternalRoute.ConnectedAdapter(endpoint));
-        var instance = connected.Properties[PropertyKeys.PKEY_Device_InstanceId].Value as string;
+        return ReadConnected(enumerator, NativeExternalRoute.ConnectedAdapter(endpoint));
+    }
+
+    internal static PnpAudioAdapter ReadConnected(MMDeviceEnumerator enumerator, string connection)
+    {
+        using var connected = enumerator.GetDevice(connection);
+        return ReadInstance(connected.Properties[PropertyKeys.PKEY_Device_InstanceId].Value as string);
+    }
+
+    internal static PnpAudioAdapter ReadInstance(string? instance)
+    {
+
         if (string.IsNullOrWhiteSpace(instance) ||
             CM_Locate_DevNodeW(out uint node, instance, 0) != 0 ||
             CM_Get_DevNode_Status(out uint status, out uint problem, node, 0) != 0)
@@ -44,6 +56,14 @@ internal static class NativeSingleCableIdentity
         var service = ReadProperty(node, ServiceProperty, StringType).TrimEnd('\0');
         var hardware = ReadProperty(node, HardwareIdsProperty, MultiStringType).Split('\0', StringSplitOptions.RemoveEmptyEntries);
         return new(instance, status, problem, service, hardware);
+    }
+
+    internal static string ReadEnumerator(string instance)
+    {
+        const uint EnumeratorNameProperty = 0x17;
+        if (CM_Locate_DevNodeW(out uint node, instance, 0) != 0)
+            throw new InvalidOperationException("Identidade PnP não confirmada.");
+        return ReadProperty(node, EnumeratorNameProperty, StringType).TrimEnd('\0');
     }
 
     private static string ReadProperty(uint node, uint property, uint expectedType)

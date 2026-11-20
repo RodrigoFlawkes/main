@@ -4,6 +4,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="WaveStudio" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="NAudio.Wasapi" Version="[3.1.0]" />
   </ItemGroup>
 </Project>
