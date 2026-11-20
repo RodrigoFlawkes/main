@@ -26,27 +26,27 @@ internal static class NativeExternalRoute
 
     public static async Task<SingleCableTopology> ProbeSingleAsync(SingleCableEndpointIds ids, long generation, CancellationToken token)
     {
-        var render = await Probe(ids.Render, EndpointDirection.Playback, generation, SingleCableAdapter, token);
-        var capture = await Probe(ids.Capture, EndpointDirection.Capture, generation, SingleCableAdapter, token);
-        var headset = await Probe(ids.Headset, EndpointDirection.Playback, generation, null, token);
-        var microphone = await Probe(ids.Microphone, EndpointDirection.Capture, generation, null, token);
+        var render = await Probe(ids.Render, EndpointDirection.Playback, generation, SingleCableAdapter, token, singleCable: true);
+        var capture = await Probe(ids.Capture, EndpointDirection.Capture, generation, SingleCableAdapter, token, singleCable: true);
+        var headset = await Probe(ids.Headset, EndpointDirection.Playback, generation, null, token, singleCable: true);
+        var microphone = await Probe(ids.Microphone, EndpointDirection.Capture, generation, null, token, singleCable: true);
         var topology = new SingleCableTopology(new(render, capture), headset, microphone);
         topology.Validate();
         return topology;
     }
 
     private static async Task<ExternalEndpoint> Probe(string id, EndpointDirection direction, long generation,
-        string? cableAdapter, CancellationToken token)
+        string? cableAdapter, CancellationToken token, bool singleCable = false)
     {
         var endpoint = new TransportEndpoint(id, direction, generation);
         var info = await WasapiEndpointProbe.QueryAsync(endpoint, token).ConfigureAwait(false);
         if (info is not { State: EndpointState.Active, Evidence: FormatEvidence.ExactCapability, Error: null })
             throw new InvalidOperationException("Endpoint externo sem capacidade exata.");
-        string adapterId = await Task.Run(() => ReadAdapter(endpoint, cableAdapter), token).ConfigureAwait(false);
+        string adapterId = await Task.Run(() => ReadAdapter(endpoint, cableAdapter, singleCable), token).ConfigureAwait(false);
         return new(info, adapterId);
     }
 
-    private static string ReadAdapter(TransportEndpoint endpoint, string? cableAdapter)
+    private static string ReadAdapter(TransportEndpoint endpoint, string? cableAdapter, bool singleCable)
     {
         using var enumerator = new MMDeviceEnumerator();
         using var device = enumerator.GetDevice(endpoint.Id);
@@ -56,7 +56,9 @@ internal static class NativeExternalRoute
         var name = device.Properties[PropertyKeys.PKEY_DeviceInterface_FriendlyName].Value as string;
         if (cableAdapter is not null && !StringComparer.OrdinalIgnoreCase.Equals(name, cableAdapter))
             throw new InvalidOperationException("Adaptador do cabo candidato não confirmado.");
-        return ConnectedAdapter(device);
+        return singleCable
+            ? NativeSingleCableIdentity.Read(enumerator, device).RequireRole(expectsCable: cableAdapter is not null)
+            : ConnectedAdapter(device);
     }
 
     internal static string ConnectedAdapter(MMDevice device)

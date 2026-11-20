@@ -2,6 +2,11 @@
 
 ## Em desenvolvimento
 
+### 2026-11-19 — F3-I2-POSTBOOT-PAIRING
+
+- Corrigido o pareamento do VB-CABLE simples para usar a instância PnP do dispositivo conectado. Pinos adicionais, driver esperado e estado PnP são verificados antes de abrir a rota.
+- A pré-verificação somente leitura passou no par instalado. O Código 10 permaneceu em outra instância PnP e a prova física segue pendente.
+
 ### 2026-11-19 — F3-I2-SINGLE-CABLE-PROOF
 
 - Verificados os pacotes oficiais e instalado o driver VB-CABLE simples 3.5.2.0 com autorização. OBS 33.0.1 preparado em modo portátil isolado.

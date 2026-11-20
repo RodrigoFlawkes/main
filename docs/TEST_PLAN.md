@@ -6,6 +6,8 @@ Os testes reutilizam os donos WASAPI e verificam PCM nos dois destinos, atenuaç
 
 Em F3-I2-SINGLE-CABLE-PROOF, os binários Release x64 e a evidência automatizada anterior foram reutilizados. A consulta de topologia rejeitou o pareamento antes de qualquer Start. Navegador, quietude e OBS aguardam a mesma execução agrupada após resolução e autorização. [Resultado da pré-verificação](EXTERNAL_ROUTE_PROOF.md#f3-i2-single-cable-proof--bloqueio-antes-do-áudio).
 
+A correção de pareamento acrescenta 12 casos de identidade, incluindo segundo render, problema PnP, instância divergente, driver incompatível, endpoints ausentes, captura ambígua e função física ligada ao cabo. A consulta local Release confirma o pareamento e os padrões sem abrir fluxos. [Resultados](EXTERNAL_ROUTE_PROOF.md#f3-i2-postboot-pairing--diagnóstico-e-correção).
+
 ## F3-I1-EXTERNAL-ROUTE — dois fluxos e restauração
 
 Os fakes executam os donos WASAPI e verificam o destino exato, entrega de PCM16/Float32, ganho inicial e atenuação, frames e retenção do guard. Exercitam falta de sinal, Get e Release, desconexão, invalidação, cancelamento e Stop incerto. A configuração verifica os dois fluxos, bloqueia cabo compartilhado e divergência de identidade, e cobre restauração parcial, repetição idempotente, conflito, aplicativo inacessível e endpoint original removido. A medição de zero bytes recorrentes usa a janela de encoder com comparador ativo em subprocesso, com os controles do contador fora da janela.

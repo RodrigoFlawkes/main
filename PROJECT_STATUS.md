@@ -2,7 +2,15 @@
 
 Atualizado em 19/11/2026.
 
-## Estado atual — F3-I2-SINGLE-CABLE-PROOF, 19/11/2026
+## Estado atual — F3-I2-POSTBOOT-PAIRING, 19/11/2026
+
+**Pareamento corrigido e conferido em leitura. Prova física pendente.** A `main` avançou de `0a4ccf5` para `ca7fd1b` por fast-forward. O boot completo mais recente registrado antecede a instalação do VB-CABLE. Depois da instalação, houve desligamento e Inicialização Rápida. O proprietário informou que prefere adiar novas reinicializações. Padrões e níveis de áudio foram conferidos com o snapshot original.
+
+O código 10 (`STATUS_DEVICE_BUSY`) persiste numa segunda instância PnP, sem endpoints ativos associados. Os três endpoints do cabo escolhido estão ligados à instância saudável. O pino de captura retorna um ID de topologia diferente dos de reprodução mesmo no mesmo devnode. O caminho de cabo único agora resolve a instância PnP pelo dispositivo conectado, exige driver esperado e estado iniciado sem erro, e reúne todos os pinos ativos dessa instância. A pré-verificação Release, somente leitura, confirmou os quatro dispositivos escolhidos, dois pinos de reprodução, um de captura do cabo e os seis padrões fora do cabo.
+
+A única prova agrupada continua sujeita ao boot completo registrado, às demais pré-condições e a autorização específica. A aceitação física das Fases 2 e 3 segue em aberto. [Diagnóstico e verificações](docs/EXTERNAL_ROUTE_PROOF.md#f3-i2-postboot-pairing--diagnóstico-e-correção).
+
+## Histórico — F3-I2-SINGLE-CABLE-PROOF, 19/11/2026
 
 **Bloqueada antes de abrir qualquer fluxo.** A `main` avançou por fast-forward de `ca6d7da` para `22811d1`. A base funcional, os hashes dos binários Release x64, o filtro Explicit único e o WAV sintético foram conferidos. As evidências automatizadas anteriores foram reaproveitadas.
 
