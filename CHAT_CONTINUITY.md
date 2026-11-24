@@ -4,13 +4,11 @@
 
 Criado em 18/11/2026 na transição do WaveStudio P1. O histórico integral de chats pode não estar acessível. Não presumir leitura completa. As decisões e evidências versionadas são a memória operacional do projeto. Esta fotografia inicial é histórica; sempre consultar o HEAD atual antes de trabalhar.
 
-## Estado de retomada mais recente — 24/11/2026 (F5-I2B integrada)
+## Estado de retomada mais recente — 24/11/2026 (F5-I2C1 integrada)
 
-**Main funcional F5-I2B `8929bc6449b6c5e79a57810dd7e362940a1913c6`** (docs posteriores avançaram). PR #5 com adapter `WasapiCaptureBlockAdapter`/`WasapiRenderBlockAdapter` integrou suporte a pacotes PCM16/float32 WASAPI já adquiridos, mono/estéreo 44,1/48, flags e ticket, sem abrir dispositivos. Base F5-I1 (`BusMixSession`) + F5-I2A (`BoundedBusPcmTransport`) integra matriz PCM e filas seguras. **CI Windows** https://github.com/Wave-Universal-Studio/main/actions/runs/45337303234: Debug 946 aprovados, Release 946, 7 Explicit excluídos/configuração, builds sem avisos/erros. F5-I2B é conversão de pacotes, não prova de WASAPI nativo contínuo.
+**Base funcional F5-I2C1 `26cfb38b732b7b4fb9c6a9ddf2b5daebbe828906`**, com mais commits documentais/colaborativos depois. PR #9 integrou owners MTA para captura/render de pacotes WASAPI já abertos, verificação básica QPC/flags e retenção fail-closed em ReleaseBuffer não confirmado. Inclui F5-I1 BusMixSession, F5-I2A BoundedBusPcmTransport e F5-I2B codecs PCM16/float32. [CI Windows x64](https://github.com/Wave-Universal-Studio/main/actions/runs/45338821387): 954 testes aprovados Debug e 954 Release, 7 Explicit excluídos/configuração, builds limpos. NÃO há serviço WASAPI contínuo, stream OBS/Discord, mic virtual nem áudio por app isolado. README COMPLETO com logo e seção Sobre o aplicativo de três linhas foi preservado.
 
-Próxima **F5-I2C-OWNED-WASAPI-SESSION** detalhada em NEXT_TASK.md/Issue #2: conexão segura de owners WASAPI, clock QPC, captura/render opt-in, Stop e recursos, usando fakes no CI. Não iniciar captura silenciosa, driver, reboot ou provas físicas do usuário. Não inventar separação de PCM por PID. Stream externo precisa autorização e proteção de retorno. A+B físico não instalado; somente cabo simples histórico. O usuário quer autonomia máxima sem pedirmos prompts e aprovou decisões técnicas, mas não autoriza custos/credenciais/hardware automaticamente. Automação horária do ChatGPT monitora GitHub e pode tomar ações disponíveis, NÃO executa Codex Cloud ilimitado.
-
-README público COMPLETO com logo, navegação e mini resumo de três linhas foi preservado; nunca substituir por texto cru. PR #4 adicional de CI e templates existe com status action_required, ainda não validada/mergada. CI antiga teve alguns timeouts de testes em simulação e foi estabilizada; manter atenção a flaky tests. F3 dois fluxos relatados como funcionais manualmente, mas sem prova instrumental; não pedir refazer testes nem boot.
+**Próxima tarefa F5-I2C2-OWNED-BUS-SCHEDULER** (NEXT_TASK.md / Issue #2), coordenar owner/clock/generation sob opt-in, testes fakes, sem Start físico automático. Usuário autorizou autonomia de rotina e quer raríssima intervenção, mas não custos, driver, credencial, mudança Windows ou prova física repetida. Automação GitHub horária ativa, sem garantia de acionar Codex Cloud ilimitado. PR #4 de CI/cache e PR #8 de documentação/Dependabot integradas por colaborador; verificar PRs de manutenção em aberto antes de agir.
 
 ## 1. Missão e papéis
 
@@ -208,6 +206,8 @@ Se o limite ocorrer sem aviso, o próximo chat deve reconstruir a passagem usand
 | 24/11/2026 | F5-I2A PR #3 merge c7eb383, filas PCM SPSC seguras, CI Windows 938/938 Debug/Release, 7 Explicit excluídos, README completo preservado; não equivale a áudio nativo contínuo. | F5-I2B adapter de pacotes WASAPI PCM16/float32 a buffers internos, Issue #2, sem ativar hardware automaticamente. |
 
 | 24/11/2026 | F5-I2B PR #5 squash 8929bc6, adapters PCM16/float32 WASAPI -> float32 mixer e inverso, 8 novos testes; CI Windows 946/946 Debug/Release, 7 Explicit fora, builds limpos. README completo preservado. | Próxima F5-I2C-OWNED-WASAPI-SESSION, lifecycle nativo opt-in/clock QPC/owners com provas injetadas sem alterar hardware. PR #4 CI/templates action_required, não mergeada. |
+
+| 24/11/2026 | F5-I2C1 PR #9 merge 26cfb38, owner MTA de buffers WASAPI adquiridos, release/fail-closed e CI Windows 954/954 Debug/Release, 7 Explicit fora; README intacto. | F5-I2C2 scheduler opt-in com clock e lifecycle testados com fakes, sem hardware automático. |
 
 ## 12. Prompt para abrir o próximo chat ChatGPT
 
