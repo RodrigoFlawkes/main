@@ -100,7 +100,12 @@ internal sealed class BoundedBusPcmTransport : IBusPcmTransport, IDisposable
         }
         // Fechar a ponte deve invalidar também tickets obtidos antes do fechamento.
         Volatile.Write(ref publishedTicket, ticket);
-        if (!Valid(ticket)) return false;
+        if (!Valid(ticket))
+        {
+            // O fechamento pode ocorrer entre publicar o ticket e confirmar a sessão.
+            ticket.Invalidate();
+            return false;
+        }
         bool ok = personal.TryWrite(block, personalPcm, ticket) && stream.TryWrite(block, streamPcm, ticket);
         if (!ok || !Valid(ticket)) { ticket.Invalidate(); return false; }
         return true;
