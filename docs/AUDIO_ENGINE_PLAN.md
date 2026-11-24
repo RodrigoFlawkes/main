@@ -1,5 +1,11 @@
 # Motor de áudio — fundação, conversão e relógios
 
+## F5-I2A-BOUNDED-PCM-BRIDGE (em revisão)
+
+O transporte em filas `BoundedBusPcmTransport` separa a chegada dos blocos de captura do processamento de `BusMixSession` e do consumo de Personal/Stream. Cada lane é SPSC, limitada, pré-alocada, possui identidade estável (ID, direção e geração) e índices de bloco. Escritas duplicadas, fora de ordem, atrasadas ou quando não há espaço são rejeitadas. O consumidor descarta índices anteriores, mantém um índice futuro para a chamada correta e entrega silêncio na ausência do bloco esperado. Sem fila infinita, alocação por bloco ou reordenação implícita de relógios. Capacidade default de 8 blocos; requisito nativo futuro deve considerar atraso e variação observados.
+
+A publicação da saída guarda o `MixDeliveryTicket` original até o consumo; se houver troca de geração ou cancelamento, os dados deixam de estar disponíveis. Mesmo depois de ler um bloco, um render native precisa rever o ticket antes de tocar áudio, porque essa operação final não ocorre nesta etapa. Nenhuma suposição sobre número de pinos VB-CABLE, identidade de processo, captura por aba ou microfone virtual é incorporada. A disciplina de clocks, recuperação de underruns, correspondência WASAPI/stream e serviços contínuos continuam dependências posteriores.
+
 ## F5-I1-BUS-MATRIX-CORE
 
 - **Relógio.** O transporte alinha as entradas à mesma origem de tempo e apresenta blocos de 10 ms (441 ou 480 frames). O agendador chama `Process` com índice monotônico. Um bloco atrasado, incompleto ou de outra geração vira silêncio apenas para a fonte correspondente. Lacunas zeram o histórico do FIR e a reentrada usa rampa de 5 ms. Uma desconexão corta o áudio imediatamente.

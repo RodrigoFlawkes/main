@@ -125,12 +125,22 @@ public sealed class MixerGridTests
             await OnSta(panel =>
             {
                 var button = panel.Controls[0].Controls.OfType<Button>().Single();
-                button.PerformClick();
-                Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
-                button.PerformClick();
-                release.Set();
+                try
+                {
+                    button.PerformClick();
+                    Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
+                    button.PerformClick();
+                }
+                finally
+                {
+                    // Solta o produtor mesmo se alguma asserção falhar;
+                    // o fechamento da janela não pode ficar aguardando essa leitura.
+                    release.Set();
+                }
                 Pump(panel.PendingRead);
-                Assert.Equal(3, reads);
+                // O poll de 1 segundo pode produzir leituras extras durante o teste;
+                // importa provar que a reconciliação enfileirada foi executada.
+                Assert.True(Volatile.Read(ref reads) >= 3, "A reconciliação solicitada não foi executada.");
             }, _ =>
             {
                 if (Interlocked.Increment(ref reads) == 2)
