@@ -8,6 +8,13 @@ on:
 permissions:
   contents: read
 
+# Cancela execuções anteriores do mesmo PR a cada novo push para economizar
+# minutos do runner Windows. Em workflow_dispatch, cada execução mantém seu
+# próprio grupo (run_id) para não cancelar rodadas manuais em andamento.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: '1'
   TESTINGPLATFORM_TELEMETRY_OPTOUT: '1'
@@ -33,6 +40,8 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
       - name: Confirmar arquitetura e SDK
         shell: pwsh
         run: |

@@ -1,0 +1,28 @@
+name: Sugerir melhoria ou recurso
+description: Proponha uma melhoria de áudio, interface, diagnóstico ou fluxo de desenvolvimento.
+title: "[Sugestão]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: Qual problema ou necessidade isso resolve?
+      description: Explique o caso de uso real (ex.: mixagem, microfone, streaming, diagnóstico, acessibilidade).
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposta
+    attributes:
+      label: Solução sugerida
+      description: Descreva como você imagina o comportamento desejado.
+    validations:
+      required: true
+
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto adicional
+      description: Links, referências técnicas ou limitações conhecidas no Windows/WASAPI.
+    validations:
+      required: false
