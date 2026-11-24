@@ -40,11 +40,11 @@ Em **Dispositivos**, selecione a saída. Na **Mesa de som**, ajuste cada aplicat
 
 ## Estado do projeto
 
-**24/11/2026 — F5-I1 e F5-I2A integradas; próxima ponte nativa em preparação.**
+**24/11/2026 — F5-I1, F5-I2A e F5-I2B integradas; ciclo nativo controlado em preparação.**
 
 - **Base da `main`:** mesa de som, balanço Jogo/Comunicação e três idiomas implementados. A última regressão consolidada da F4-I2 registrou **914 testes aprovados em Debug e 914 em Release**, com sete testes físicos `Explicit` excluídos.
 - **[F5-I1 — integrada](https://github.com/Wave-Universal-Studio/main/commit/787df9181f62bc5b340300ee53d1b0ecabf83eca):** núcleo PCM de **Personal Mix** e **Stream Mix**, com matriz de envios, ganho/mute por barramento e isolamento; processamento testado com transporte injetado. **Não** equivale a áudio contínuo independente para OBS/Discord.
-- **Validação:** [GitHub Actions Windows x64 F5-I2A](https://github.com/Wave-Universal-Studio/main/actions/runs/45336327862): **938 testes aprovados em Debug e 938 em Release**, zero falhas, sete Explicit excluídos por configuração e builds limpos. A ponte PCM ainda não opera áudio contínuo em hardware.
+- **Validação:** [GitHub Actions Windows x64 F5-I2B](https://github.com/Wave-Universal-Studio/main/actions/runs/45337303234): **946 testes aprovados em Debug e 946 em Release**, zero falhas, sete Explicit excluídos por configuração e builds limpos. A adaptação PCM nativa não inicia captura ou render contínuo em hardware.
 - **Pendências:** estabilidade e recuperação prolongadas em hardware, latência/drift, aceitação instrumental de rotas externas e conexão dos barramentos com entradas/saídas contínuas.
 
 O proprietário relatou funcionamento manual dos dois fluxos externos estudados; isso não substitui medições instrumentadas. Para o histórico e as evidências, consulte [Status](PROJECT_STATUS.md), [Plano de testes](docs/TEST_PLAN.md) e [Próxima tarefa](NEXT_TASK.md).

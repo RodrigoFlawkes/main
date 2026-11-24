@@ -1,6 +1,6 @@
 # Motor de áudio — fundação, conversão e relógios
 
-## F5-I2B-NATIVE-PCM-PACKET-ADAPTER (em revisão)
+## F5-I2B-NATIVE-PCM-PACKET-ADAPTER (integrada)
 
 Captura: o owner WASAPI futuro obtém `WasapiCaptureBuffer`, valida QPC, identidade e flags e transforma um pacote de 10 ms em bytes; o adaptador `WasapiCaptureBlockAdapter` valida o formato nativo conhecido e decodifica para float32 normalizado, sem alocar a cada pacote. Entrada SILENT sem conteúdo vira zeros. Entrada com dados truncados, timestamp invalido ou descontinuidade não entra no barramento.
 

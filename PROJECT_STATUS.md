@@ -2,11 +2,11 @@
 
 Atualizado em 24/11/2026.
 
-## Em revisão — F5-I2B-NATIVE-PCM-PACKET-ADAPTER, 24/11/2026
+## Implementado — F5-I2B-NATIVE-PCM-PACKET-ADAPTER, 24/11/2026
 
 Adapters de captura/render transformam pacotes WASAPI PCM16/float32 já adquiridos em blocos float32 do `BoundedBusPcmTransport` e de volta em bytes de saída. Validam formatos, canais e 44,1/48 kHz, frames completos, endpoint/generation, SILENT e flags de falha; não usam COM, driver nem criam dispositivos. A saída verifica o ticket de geração antes de disponibilizar bytes. O owner nativo futuro permanece responsável por clock, liberação de buffers e entrega real.
 
-Oito casos novos simulam pacotes reais e verificam conversão, clipping, privacidade, silêncio e invalidade; GitHub Actions Windows x64 ainda vai validar a PR. **Ainda não há serviço contínuo WASAPI, áudio OBS/Discord ou captura separada por aplicativo.**
+Oito casos novos simulam pacotes nativos e verificam conversão, clipping, privacidade, silêncio e invalidez. [CI Windows x64 final](https://github.com/Wave-Universal-Studio/main/actions/runs/45337303234): **946 testes comuns aprovados em Debug e 946 em Release**, zero falhas, sete Explicit excluídos em cada configuração, builds sem avisos/erros. [PR #5](https://github.com/Wave-Universal-Studio/main/pull/5) integrada no commit `8929bc6449b6c5e79a57810dd7e362940a1913c6`. **Ainda não há serviço contínuo WASAPI, áudio OBS/Discord ou captura separada por aplicativo.**
 
 ## Implementado — F5-I2A-BOUNDED-PCM-BRIDGE, 24/11/2026
 

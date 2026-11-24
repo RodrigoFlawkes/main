@@ -1,6 +1,6 @@
 # Arquitetura do Wave Studio
 
-## F5-I2B-NATIVE-PCM-PACKET-ADAPTER (em revisão)
+## F5-I2B-NATIVE-PCM-PACKET-ADAPTER (integrada)
 
 `WasapiCaptureBlockAdapter` recebe buffers já verificados pelo owner externo e os converte com `PcmFloatConverter` para blocos de 10 ms, aceitando somente PCM16/float32 LE e formatos `WasapiPcm.Validate` (44,1/48 kHz, mono/estéreo). Frames incompletos, endpoints/gerações incorretos, descontinuidade, timestamp ruim ou flags desconhecidas são recusados. SILENT aceita ponteiro nulo/ausência de bytes e gera zeros. Não abre `IAudioClient`, não lê QPC nem libera pacotes de COM; tais garantias pertencem ao owner de captura.
 
