@@ -1,5 +1,11 @@
 # Plano de testes
 
+## F5-I2A-BOUNDED-PCM-BRIDGE — integração por filas (em revisão)
+
+Seis testes novos exercitam dados PCM float32 em memória entre produtores `TryOfferCapture`, `BusMixSession` e consumidores `TryReadOutput`/`TryReadExternal`: somas de fontes, saídas independentes, privacidade do microfone, ausência de dados, backpressure, identificação exata de endpoint, recusa de bloco antigo, ticket de geração inválido e fechamento. Não há abertura de dispositivo nem teste físico. Estes casos complementam os 932 testes comuns de base da F5-I1; a nova contagem precisa ser **confirmada na CI Windows x64 do commit final** antes de qualquer merge. Os sete Explicit continuam excluídos.
+
+A etapa não mede latência física, derivações de clocks entre dispositivos, recuperação no hardware, compatibilidade real OBS/Discord ou o isolamento por aplicativo. São requisitos de integração nativa posterior, não resultados simulados.
+
 ## F5-I1-BUS-MATRIX-CORE
 
 Os 18 casos novos exercitam o caminho completo de entrega PCM com transporte simulado. Cobrem soma, dois barramentos, ganho e mute independentes, master, pico/RMS e clipping, privacidade e mix-minus, origem agregada, formatos 44,1/48 kHz, mono e estéreo, sanitização, matriz determinística, entrega atrasada e parcial, troca de geração, cancelamento, Stop e zero alocações gerenciadas após aquecimento no cenário medido.

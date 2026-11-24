@@ -1,5 +1,13 @@
 # Arquitetura do Wave Studio
 
+## F5-I2A-BOUNDED-PCM-BRIDGE (em revisão)
+
+`BoundedBusPcmTransport` implementa `IBusPcmTransport` em produção, mantendo filas SPSC pré-alocadas para cada origem de captura e para as saídas Personal Mix, Stream Mix e, opcionalmente, Stream externo. As fontes são registradas por `TransportEndpoint` (ID/direção/geração), com `PcmFloatFormat` de 44,1/48 kHz, mono ou estéreo; um bloco contém exatamente 10 ms. O produtor oferece PCM com índice de bloco monotonamente crescente; o consumidor do mixer exige o bloco exato e descarta os anteriores. Blocos futuros são conservados. Capacidade é fixa de 2 a 64 blocos, potência de dois; sobrecarga rejeita novo dado sem sobrescrever o que o outro lado ainda não leu.
+
+As filas rejeitam reentrância por lane e não alocam no caminho de dados após a inicialização. As saídas mantêm tickets de geração: invalidação, cancelamento ou fechamento impedem acesso ao PCM, e o consumidor nativo futuro deve verificar o mesmo ticket **novamente** no ponto efetivo de publicação. Personal e Stream têm consumidores independentes. A entrega interna só tenta publicar quando as duas filas possuem espaço; uma falha invalida o ticket, mas isso não configura transação atômica com qualquer dispositivo externo. A fila não introduz relógio ou correção de drift: **quem alimenta o transporte precisa já mapear os pacotes para o mesmo clock de geração**.
+
+Não há ligação a APIs de dispositivos, mudança de padrão Windows, captura persistente, driver virtual ou roteamento OBS. A ponte é uma fundação verificável para futuras fontes/sinks WASAPI, não prova física de F5-I2. [Issue #2](https://github.com/Wave-Universal-Studio/main/issues/2).
+
 ## F5-I1-BUS-MATRIX-CORE
 
 `BusMixSession` usa a identidade `TransportEndpoint` do motor e o formato `PcmFloatFormat`. O transporte `IBusPcmTransport` oferece PCM em blocos identificados por fluxo, geração e índice. Ele recebe os dois barramentos e seus medidores em uma entrega interna. A entrega externa opcional recebe somente Stream Mix. O ticket associa entrega, formato, geração e destino autorizado e deve ser conferido na publicação e no consumo de cópias enfileiradas.

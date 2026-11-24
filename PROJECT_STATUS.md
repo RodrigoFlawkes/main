@@ -2,6 +2,12 @@
 
 Atualizado em 24/11/2026.
 
+## Em revisão — F5-I2A-BOUNDED-PCM-BRIDGE, 24/11/2026
+
+Nova ponte `BoundedBusPcmTransport` liga o núcleo PCM de F5-I1 a produtores de blocos de captura e consumidores independentes de Personal/Stream. As filas SPSC são limitadas por fonte e barramento, identificam geração, formato e bloco de 10 ms, recusam dados antigos/incompletos e só retornam saídas com ticket ainda válido. A saída externa permanece opt-in e não abre nenhum dispositivo. Se o consumidor não acompanhar, a entrega falha fechada, sem substituir áudio ainda não consumido.
+
+São seis novos testes de integração em memória, cobrindo isolamento, privacidade, fila cheia, identidade, gerações obsoletas e fechamento. **Ainda não há conexão nativa contínua, clock WASAPI real, reprodução física, OBS/Discord nem nova interface de usuário.** O GitHub Actions deve validar a branch em Windows x64 antes de aprovar a entrega. [Issue #2](https://github.com/Wave-Universal-Studio/main/issues/2).
+
 ## Implementado — F5-I1-BUS-MATRIX-CORE, 24/11/2026 (PR #1 integrada)
 
 O motor interno soma PCM float32 em **Personal Mix** e **Stream Mix** por uma matriz de envios explícitos. Cada envio e master tem ganho e mute independentes. O transporte injetado exercita conversão, soma, proteção de saída, medição, isolamento, desconexão e renovação de geração usando amostras. A saída externa é opt-in, com autorização específica para conteúdo sensível e proteção contra retorno para a mesma chamada.

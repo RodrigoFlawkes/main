@@ -2,6 +2,12 @@
 
 ## Em desenvolvimento
 
+### 2026-11-24 — F5-I2A-BOUNDED-PCM-BRIDGE (em revisão)
+
+- Adicionada ponte de transporte PCM com filas SPSC limitadas por captura, Personal Mix, Stream Mix e destino externo autorizado, sem abrir áudio nativo.
+- Confiabilidade: identidade endpoint/geração, slots 10 ms, backpressure, descarte de blocos obsoletos e tickets válidos até o ponto de publicação.
+- Seis novos testes sem dispositivos físicos. Integração real WASAPI permanece para etapa posterior.
+
 ### 2026-11-24 — F5-I1-BUS-MATRIX-CORE
 
 - Motor PCM float32 de dois barramentos com matriz de envios autorizados, ganho e mute independentes, rampas, proteção contra clipping e medição de pico/RMS.
