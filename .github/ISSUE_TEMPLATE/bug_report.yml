@@ -1,0 +1,62 @@
+name: Relatar bug
+description: Informe um problema encontrado ao compilar ou executar o Wave Studio.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por ajudar a melhorar o **Wave Studio**! Preencha o máximo de detalhes reais do seu ambiente Windows e dos seus dispositivos de áudio.
+
+  - type: textarea
+    id: descricao
+    attributes:
+      label: O que aconteceu?
+      description: Descreva o problema de forma clara e objetiva.
+    validations:
+      required: true
+
+  - type: textarea
+    id: passos
+    attributes:
+      label: Passos para reproduzir
+      description: Como outra pessoa pode reproduzir o mesmo comportamento?
+      placeholder: |
+        1. Abrir o Wave Studio
+        2. Selecionar o dispositivo '...'
+        3. Clicar em '...'
+    validations:
+      required: true
+
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Comportamento esperado
+      description: O que deveria acontecer nesse cenário?
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Versão do Windows
+      placeholder: "Ex.: Windows 11 24H2 x64 (build 26100)"
+    validations:
+      required: true
+
+  - type: input
+    id: dispositivos
+    attributes:
+      label: Dispositivos de áudio envolvidos
+      description: Informe headset, microfone, interface, conexão (USB, P2/P3, Bluetooth, HDMI) e se usa cabo virtual/OBS/Discord.
+      placeholder: "Ex.: Headset USB X, Microfone Y, OBS 31"
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs, mensagens de erro ou capturas de tela
+      description: Cole saídas de erro (remova dados pessoais sensíveis, se houver).
+    validations:
+      required: false
