@@ -31,7 +31,11 @@ O EQ atual atua **somente sobre a gravação curta reproduzida dentro do Wave St
 
 Escolha a saída em **Dispositivos**. Em **Mesa de som**, arraste o fader do aplicativo ou use as setas, alterne o mute e atribua grupos às sessões presentes. Use o seletor acima das faixas para filtrar os grupos. A aba **Detalhes das sessões** mantém a grade com volume numérico, PID e instância. O pico de cada faixa é uma amostra instantânea e pode perder eventos breves. O master mostra o pico agregado e controla o volume e mute dessa saída no Windows.
 
-Em **Configurações → Idioma**, escolha **Português (Brasil)** ou **Seguir Windows**. Quando o idioma do Windows não estiver entre as traduções completas, o Wave Studio mostra a interface em pt-BR. A formatação de números segue a configuração regional do Windows.
+Para usar **Balanço Jogo / Comunicação**, atribua pelo menos uma sessão ativa a cada grupo. Mova o controle para o lado que deseja ouvir em destaque. O outro lado é atenuado a partir dos volumes originais. **Centralizar** tenta restaurar esses volumes. Ao sair da mesa, trocar de saída ou fechar normalmente, o Wave Studio também tenta restaurar os valores que ainda correspondem aos que aplicou. Se houver conflito ou faltar confirmação, a mesa mostra um aviso e conserva valores alterados externamente.
+
+O balanço altera os volumes de sessão do Windows na saída selecionada e pode afetar o que chega à transmissão. Solo de sessão fica fora desta versão porque exigiria silenciar outros aplicativos, inclusive chamadas, com restauração sujeita a concorrência.
+
+Em **Configurações → Idioma**, escolha **Português (Brasil)**, **English (United States)**, **español (España)** ou **Seguir Windows**. A escolha é salva automaticamente e vale na próxima abertura do Wave Studio. Seguir Windows usa o inglês ou espanhol quando corresponde a uma dessas famílias e pt-BR para idiomas sem tradução disponível. A formatação numérica segue a configuração regional do Windows.
 
 ### Visão do produto
 
@@ -50,7 +54,7 @@ Também estão previstos integração com aplicativos externos, mix-minus e estu
 
 ## Estado atual
 
-**23/11/2026 · F4-I1 — mesa de sessões e idioma**
+**24/11/2026 · F4-I2 — balanço Jogo / Comunicação e três idiomas**
 
 A mesa usa as sessões de reprodução do dispositivo escolhido. Os dois fluxos externos foram confirmados manualmente pelo proprietário e seguem sem telemetria associada a uma prova instrumentada. Monitoramento contínuo, recuperação em hardware, latência acústica e drift permanecem como pendências técnicas de release.
 
@@ -99,7 +103,7 @@ dotnet test --solution WaveStudio.slnx -c Debug --no-build
 
 `src/` — aplicação e motor · `tests/` — testes · `assets/` — identidade visual · `docs/` — documentação
 
-Os testes físicos Explicit são separados das regressões e exigem autorização específica. Comentários do código próprio em português brasileiro; internacionalização da UI planejada em Config → Idioma.
+Os testes físicos Explicit são separados das regressões e exigem autorização específica. Os comentários do código próprio estão em português brasileiro. A interface oferece três idiomas em Configurações → Idioma.
 
 ## Documentação
 

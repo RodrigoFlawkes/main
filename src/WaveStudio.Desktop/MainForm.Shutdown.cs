@@ -3,6 +3,7 @@ namespace WaveStudio.Desktop;
 internal sealed partial class MainForm
 {
     private readonly TimeSpan closeTimeout;
+    private readonly Action<string> showBalanceWarning;
     private CloseStep[] closeSteps = [];
     private bool closeAttemptRunning;
     private Task closeAttemptTask = Task.CompletedTask;
@@ -18,6 +19,7 @@ internal sealed partial class MainForm
             // Inicia cada limpeza independente, mesmo quando uma criação anterior lança uma exceção síncrona.
             foreach (var step in closeSteps) step.BeginOrRetry();
             await Task.WhenAll(closeSteps.Select(step => step.Task!)).WaitAsync(closeTimeout);
+            if (mixer.BalanceCloseWarning is { } warning) showBalanceWarning(warning);
             closing = true;
             Close();
         }

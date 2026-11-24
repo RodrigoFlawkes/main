@@ -105,6 +105,23 @@ internal sealed partial class ApplicationMixerPanel : UserControl
     public void SelectDevice(DeviceSnapshot? device)
     {
         if (stopped) return;
+        pendingDevice = device;
+        if (selectingDevice) return;
+        CancelBalanceEdit();
+        balanceCatalogValid = false;
+        if (balanceLease is null && !balanceWriting)
+        {
+            SelectDeviceCore(device);
+            return;
+        }
+        selectingDevice = true;
+        revision++;
+        views.Enabled = refresh.Enabled = false;
+        selectionTransition = SwitchAfterBalanceAsync();
+    }
+
+    private void SelectDeviceCore(DeviceSnapshot? device)
+    {
         // Cancela as edições antes de mudar a seleção para que CellEndEdit não atue no próximo endpoint.
         binding = true;
         try
@@ -124,12 +141,13 @@ internal sealed partial class ApplicationMixerPanel : UserControl
         endpointName.Text = device is null ? StudioStrings.Get("ApplicationMixerPanel.ReproducaoIndisponivel") : StudioStrings.Format("ApplicationMixerPanel.SessoesDeReproducao0", device.Name);
         message.Text = StudioStrings.Get("ApplicationMixerPanel.SelecioneUmDispositivoDeReproducao");
         poll.Enabled = target.DeviceId is not null;
+        UpdateBalanceControls();
         PendingRead = ReadAsync();
     }
 
     private Task ReadAsync()
     {
-        if (stopped || target.DeviceId is null || grid.IsCurrentCellInEditMode) return Task.CompletedTask;
+        if (stopped || selectingDevice || target.DeviceId is null || grid.IsCurrentCellInEditMode) return Task.CompletedTask;
         readRequested = true;
         if (!reading && !writing) PendingRead = DrainReadsAsync();
         return PendingRead;
@@ -140,7 +158,7 @@ internal sealed partial class ApplicationMixerPanel : UserControl
         reading = true;
         try
         {
-            while (readRequested && !writing && !stopped && target.DeviceId is not null && !grid.IsCurrentCellInEditMode)
+            while (readRequested && !writing && !stopped && !selectingDevice && target.DeviceId is not null && !grid.IsCurrentCellInEditMode)
             {
                 readRequested = false;
                 var request = target;
@@ -157,6 +175,7 @@ internal sealed partial class ApplicationMixerPanel : UserControl
                     if (request == target && requestedRevision == revision && !writing && !stopped)
                     {
                         ClearRows();
+                        ObserveBalance(catalogValid: false);
                         message.Text = EndpointVolumeOperations.Describe(error);
                     }
                 }
@@ -169,7 +188,7 @@ internal sealed partial class ApplicationMixerPanel : UserControl
 
     internal void ShowCatalog(EndpointSelection request, ApplicationSessionCatalog catalog)
     {
-        if (request != target || stopped || grid.IsCurrentCellInEditMode) return;
+        if (request != target || stopped || selectingDevice || grid.IsCurrentCellInEditMode) return;
         binding = true;
         try
         {
@@ -204,6 +223,7 @@ internal sealed partial class ApplicationMixerPanel : UserControl
         }
         finally { binding = false; }
         FilterStrips();
+        ObserveBalance(catalog.Warnings.Count == 0);
         UpdatePeakCells(Stopwatch.GetTimestamp(), paused: false);
         message.Text = catalog.Warnings.Count > 0 ? string.Join(Environment.NewLine, catalog.Warnings.Distinct())
             : catalog.Sessions.Count == 0 ? StudioStrings.Get("ApplicationMixerPanel.NenhumaSessaoEncontradaNesteDispositivo")
@@ -251,9 +271,15 @@ internal sealed partial class ApplicationMixerPanel : UserControl
         return RunWriteAsync(bound.Selection, async () => { await service.ApplyAsync(bound.Selection, bound.Snapshot.Key, command); });
     }
 
-    private async Task RunWriteAsync(EndpointSelection request, Func<Task> action)
+    private Task RunWriteAsync(EndpointSelection request, Func<Task> action)
     {
-        if (binding || writing || stopped || request != target) return;
+        if (binding || writing || stopped || selectingDevice || request != target) return Task.CompletedTask;
+        pendingWrite = WriteAsync(request, action);
+        return pendingWrite;
+    }
+
+    private async Task WriteAsync(EndpointSelection request, Func<Task> action)
+    {
         writing = true;
         revision++;
         CancelStripEdits();
@@ -272,23 +298,36 @@ internal sealed partial class ApplicationMixerPanel : UserControl
         finally
         {
             writing = false;
-            if (!stopped) views.Enabled = true;
+            if (!stopped && !selectingDevice) views.Enabled = true;
         }
-        // Mantém erros de comando durante as consultas periódicas até outra ação explícita.
-        if (!stopped) PendingRead = ReadAsync();
+        if (!stopped && !selectingDevice)
+        {
+            if (exitBalanceRequested)
+            {
+                exitBalanceRequested = false;
+                if (balanceLease is { Position: not 0 }) await ChangeBalanceAsync(0, suspended: true);
+            }
+            // Mantém erros de comando até outra ação explícita.
+            PendingRead = ReadAsync();
+        }
     }
 
     public async ValueTask StopAsync()
     {
         stopped = true;
         poll.Stop();
+        CancelBalanceEdit();
         CancelStripEdits();
         views.Enabled = false;
         binding = true;
         try { edit = null; grid.CancelEdit(); grid.EndEdit(); }
         finally { binding = false; }
+        await selectionTransition;
+        await pendingWrite;
+        await ReleaseBalanceAsync();
         await Task.WhenAll(service.DisposeAsync().AsTask(), masterService.DisposeAsync().AsTask());
         await PendingRead;
         poll.Dispose();
+        balanceTimer.Dispose();
     }
 }

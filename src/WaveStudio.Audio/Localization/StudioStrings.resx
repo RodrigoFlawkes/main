@@ -412,7 +412,7 @@
     <value>Use passos de 1 dB nas bandas e 0,1 dB no ajuste de entrada.</value>
   </data>
   <data name="EqualizerPreferences.UseUmNomeDe1" xml:space="preserve">
-    <value>Use um nome de 1 a 48 letras, números, espaços, hífen ou parênteses. Padrão é reservado.</value>
+    <value>Use de 1 a 48 caracteres. São aceitos letras, números, espaços, hífens, sublinhados ou parênteses. O nome “Padrão” é reservado.</value>
   </data>
   <data name="EqualizerPreviewPanel.0000DB" xml:space="preserve">
     <value>{0:+0;-0;0} dB</value>
@@ -1236,10 +1236,10 @@ Saída: {2}{3}</value>
     <value>Idioma em uso — {0}.</value>
   </data>
   <data name="Language.Fallback" xml:space="preserve">
-    <value>Idioma em uso — {0}. A opção escolhida ainda não tem tradução completa.</value>
+    <value>A opção escolhida ainda não tem tradução completa. Nesses casos, o Wave Studio usa {0}.</value>
   </data>
   <data name="Language.NextOpening" xml:space="preserve">
-    <value>O idioma escolhido será aplicado na próxima abertura do Wave Studio.</value>
+    <value>{0} será o idioma na próxima abertura do Wave Studio.</value>
   </data>
   <data name="Language.Hint" xml:space="preserve">
     <value>A preferência vale para o Wave Studio. Números seguem a formatação regional do Windows.</value>
@@ -1335,4 +1335,46 @@ Saída: {2}{3}</value>
     <value>Canal {0} — {1}</value>
   </data>
   <data name="Mixer.NoChannelsInGroup" xml:space="preserve"><value>Nenhum canal neste grupo.</value></data>
+  <data name="Balance.Title" xml:space="preserve">
+    <value>Balanço Jogo / Comunicação</value>
+  </data>
+  <data name="Balance.CenterButton" xml:space="preserve">
+    <value>Centralizar</value>
+  </data>
+  <data name="Balance.SliderHelp" xml:space="preserve">
+    <value>Use as setas para ajustar e Esc para cancelar. Para o lado Jogo, reduz Comunicação. Para o lado Comunicação, reduz Jogo.</value>
+  </data>
+  <data name="Balance.Center" xml:space="preserve">
+    <value>Centro · níveis originais</value>
+  </data>
+  <data name="Balance.GamePosition" xml:space="preserve">
+    <value>Jogo · Comunicação reduzida em {0}%</value>
+  </data>
+  <data name="Balance.ChatPosition" xml:space="preserve">
+    <value>Comunicação · Jogo reduzido em {0}%</value>
+  </data>
+  <data name="Balance.Scope" xml:space="preserve">
+    <value>Ajusta os volumes do Windows na saída selecionada. O ajuste pode afetar a transmissão e não cria uma mixagem separada.</value>
+  </data>
+  <data name="Balance.ChooseGroups" xml:space="preserve">
+    <value>Atribua sessões ativas de aplicativos aos grupos Jogo e Comunicação nesta saída. Os sons do sistema ficam fora do balanço.</value>
+  </data>
+  <data name="Balance.Incomplete" xml:space="preserve">
+    <value>Balanço suspenso. Houve conflito ou faltou confirmar a restauração em {0} sessão(ões). Confira os faders. Se Centralizar estiver disponível, tente novamente.</value>
+  </data>
+  <data name="Balance.Suspended" xml:space="preserve">
+    <value>Balanço suspenso. Os níveis sob controle do Wave Studio foram restaurados. Para retomar, ajuste o controle novamente.</value>
+  </data>
+  <data name="Language.FocusLabel" xml:space="preserve">
+    <value>&amp;Idioma</value>
+  </data>
+  <data name="Balance.PreviousOutput" xml:space="preserve">
+    <value>Saída anterior: {0} ocorrência(s) de conflito ou restauração sem confirmação. Confira os níveis no Windows.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.ProfileLabel" xml:space="preserve">
+    <value>Perfil:</value>
+  </data>
+  <data name="MicrophoneTestPanel.StopRecording" xml:space="preserve">
+    <value>&amp;Parar</value>
+  </data>
 </root>

@@ -2,6 +2,12 @@
 
 ## Em desenvolvimento
 
+### 2026-11-24 — F4-I2-GAMECHAT-SOLO-LANG
+
+- Adicionado balanço proporcional entre sessões Windows ativas atribuídas a Jogo e Comunicação, com restauração condicional, leitura de confirmação e aviso de conflito.
+- Adicionados os catálogos completos de inglês (Estados Unidos) e espanhol (Espanha), com preferência persistente, Seguir Windows e fallback em português brasileiro.
+- Solo ficou fora da entrega porque o mute compartilhado de sessões no Windows pode atingir chamadas e sua restauração não é atômica.
+
 ### 2026-11-23 — F4-I1-REAL-MIXER
 
 - Mesa com faders, mute e pico por sessão real, master do dispositivo, filtro por grupos locais e a grade em Detalhes das sessões.

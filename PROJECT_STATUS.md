@@ -1,8 +1,20 @@
 # Status do Wave Studio
 
-Atualizado em 23/11/2026.
+Atualizado em 24/11/2026.
 
-## Estado atual — F4-I1-REAL-MIXER, 23/11/2026
+## Estado atual — F4-I2-GAMECHAT-SOLO-LANG, 24/11/2026
+
+A Mesa de som ajusta o balanço das sessões ativas que o usuário atribui a **Jogo** e **Comunicação** na saída selecionada. O gesto atenua o grupo oposto até zero em relação ao volume original de cada instância. **Centralizar**, mudar os participantes, trocar de saída, sair da mesa ou fechar normalmente restauram apenas os níveis que ainda correspondem à atuação do aplicativo. Conflitos e restauração sem confirmação são sinalizados. O controle atua nas sessões do Windows e pode afetar a transmissão.
+
+Solo fica fora da entrega. O mute aplicado a outras sessões pode atingir chamadas, e a API de sessões oferece operações de leitura e escrita separadas. A restauração seria condicional e ficaria exposta à concorrência e ao término inesperado do processo. O estudo de solo em monitoramento próprio permanece no planejamento posterior.
+
+Configurações → Idioma oferece pt-BR, en-US, es-ES e Seguir Windows. A escolha persiste no esquema 3 e passa a valer após reabrir o aplicativo. O idioma de exibição acompanha a escolha. A formatação numérica mantém a cultura regional do Windows.
+
+Restore locked com auditoria NuGet, builds x64 não incrementais sem avisos ou erros e regressões finais com 914 aprovados em Debug e 914 em Release, zero falhas e sete Explicit excluídos por configuração. A validação desta etapa foi automatizada.
+
+A aprovação dos dois fluxos externos continua registrada como relato do proprietário. Estabilidade prolongada, recuperação em hardware, latência acústica, necessidade de drift e aceitação instrumentada dos fluxos externos seguem como pendências de release. [Uso da mesa e idioma](README.md#mesa-de-som-e-idioma) · [Validações](docs/TEST_PLAN.md#f4-i2-gamechat-solo-lang--balanço-e-idiomas).
+
+## Histórico — F4-I1-REAL-MIXER, 23/11/2026
 
 A aba **Mesa de som** mostra as sessões reais da saída escolhida em **Dispositivos**. Cada sessão tem faixa própria, fader vertical de 0–100%, mute e pico instantâneo quando a leitura está disponível e atual. O master controla o volume e o mute do dispositivo no Windows e mostra o pico agregado dessa saída. A grade existente continua acessível em **Detalhes das sessões**. É possível atribuir grupos a canais presentes e filtrar a mesa durante a sessão.
 

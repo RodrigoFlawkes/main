@@ -49,7 +49,7 @@ internal sealed class EqualizerPreviewPanel : UserControl
         Add(new Label { Text = StudioStrings.Get("EqualizerPreviewPanel.EQDe10BandasPrevia"), AutoSize = true, Font = new Font(Font, FontStyle.Bold) });
         Add(new Label { Text = StudioStrings.Get("EqualizerPreviewPanel.CompareAMesmaGravacaoOriginal"), AutoSize = true, MaximumSize = new Size(700, 0) });
         var profileRow = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true };
-        profileRow.Controls.AddRange([new Label { Text = "Perfil:", AutoSize = true }, ProfileList, ProfileName]);
+        profileRow.Controls.AddRange([new Label { Text = StudioStrings.Get("EqualizerPreviewPanel.ProfileLabel"), AutoSize = true }, ProfileList, ProfileName]);
         Add(profileRow);
         var actions = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true };
         actions.Controls.AddRange([CreateProfile, SaveProfile, RenameProfile, DeleteProfile]); Add(actions);

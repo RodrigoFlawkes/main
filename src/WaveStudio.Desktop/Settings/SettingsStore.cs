@@ -5,7 +5,24 @@ namespace WaveStudio.Desktop.Settings;
 
 internal enum SettingsFileState { Uninitialized, Missing, Ready, Corrupt, Unsupported, Oversized, Unreadable, Conflict }
 internal sealed class SettingsFileTooLargeException() : IOException(StudioStrings.Get("SettingsStore.ConfiguracaoExcedeOLimiteDe"));
-internal sealed record SettingsLoadResult(StudioSettings Settings, SettingsFileState State, string Message, bool CanRecoverBackup);
+internal sealed record SettingsLoadResult(StudioSettings Settings, SettingsFileState State, bool CanRecoverBackup)
+{
+    // Na abertura, a preferência de idioma só fica conhecida depois que o arquivo é lido.
+    public string Message => State switch
+    {
+        SettingsFileState.Ready => StudioStrings.Get("SettingsStore.PreferenciasCarregadasOsNiveisAtuais"),
+        SettingsFileState.Missing when CanRecoverBackup => StudioStrings.Get("SettingsStore.ArquivoPrincipalAusenteBackupValido"),
+        SettingsFileState.Missing => StudioStrings.Get("SettingsStore.PrimeiraExecucaoPreferenciasLocaisSerao"),
+        SettingsFileState.Oversized => OversizedMessage,
+        SettingsFileState.Unsupported => StudioStrings.Get("SettingsStore.VersaoDeConfiguracaoIncompativelArquivo"),
+        SettingsFileState.Corrupt => StudioStrings.Get("SettingsStore.ConfiguracaoInvalidaPreservadaPadroesSeguros"),
+        SettingsFileState.Unreadable => StudioStrings.Get("SettingsStore.NaoFoiPossivelLerA"),
+        _ => throw new InvalidOperationException()
+    };
+
+    internal static string OversizedMessage => StudioStrings.Get("SettingsStore.ConfiguracaoMaiorQue1MiB")
+        + StudioStrings.Get("SettingsStore.InspecioneOArquivoComO");
+}
 internal sealed record SettingsSaveResult(bool Success, string Message);
 
 internal interface ISettingsWriter
@@ -71,7 +88,6 @@ internal sealed class SettingsStore
             {
                 token.ThrowIfCancellationRequested();
                 StudioSettings settings = new();
-                string message;
                 CanRecoverBackup = false;
                 baseline = null;
                 try
@@ -79,35 +95,27 @@ internal sealed class SettingsStore
                     baseline = ReadOptional(FilePath);
                     settings = baseline is null ? new() : SettingsJson.Decode(baseline);
                     State = baseline is null ? SettingsFileState.Missing : SettingsFileState.Ready;
-                    message = baseline is null ? StudioStrings.Get("SettingsStore.PrimeiraExecucaoPreferenciasLocaisSerao")
-                        : StudioStrings.Get("SettingsStore.PreferenciasCarregadasOsNiveisAtuais");
                 }
                 catch (SettingsFileTooLargeException)
                 {
-                    State = SettingsFileState.Oversized;
-                    message = ProtectOversizedFile();
+                    ProtectOversizedFile();
                 }
                 catch (NotSupportedException)
                 {
                     State = SettingsFileState.Unsupported;
-                    message = StudioStrings.Get("SettingsStore.VersaoDeConfiguracaoIncompativelArquivo");
                 }
                 catch (Exception error) when (IsInvalid(error))
                 {
                     State = SettingsFileState.Corrupt;
-                    message = StudioStrings.Get("SettingsStore.ConfiguracaoInvalidaPreservadaPadroesSeguros");
                 }
                 catch (Exception error) when (IsStorageError(error))
                 {
                     State = SettingsFileState.Unreadable;
-                    message = StudioStrings.Get("SettingsStore.NaoFoiPossivelLerA");
                 }
                 if (State is SettingsFileState.Corrupt or SettingsFileState.Missing)
                     CanRecoverBackup = ReadValidBackup() is not null;
-                if (State == SettingsFileState.Missing && CanRecoverBackup)
-                    message = StudioStrings.Get("SettingsStore.ArquivoPrincipalAusenteBackupValido");
                 token.ThrowIfCancellationRequested();
-                return new SettingsLoadResult(settings, State, message, CanRecoverBackup);
+                return new SettingsLoadResult(settings, State, CanRecoverBackup);
             }, token).ConfigureAwait(false);
         }
         finally { gate.Release(); }
@@ -184,7 +192,8 @@ internal sealed class SettingsStore
         }
         catch (SettingsFileTooLargeException)
         {
-            return new(false, ProtectOversizedFile());
+            ProtectOversizedFile();
+            return new(false, SettingsLoadResult.OversizedMessage);
         }
         catch (Exception error) when (IsStorageError(error))
         {
@@ -198,13 +207,11 @@ internal sealed class SettingsStore
         }
     }
 
-    private string ProtectOversizedFile()
+    private void ProtectOversizedFile()
     {
         State = SettingsFileState.Oversized;
         baseline = null;
         CanRecoverBackup = false;
-        return StudioStrings.Get("SettingsStore.ConfiguracaoMaiorQue1MiB")
-            + StudioStrings.Get("SettingsStore.InspecioneOArquivoComO");
     }
 
     private byte[]? ReadValidBackup()

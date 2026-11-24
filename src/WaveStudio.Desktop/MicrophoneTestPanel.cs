@@ -11,7 +11,7 @@ internal sealed class MicrophoneTestPanel : UserControl
     private readonly Label status = new() { AutoSize = true, Dock = DockStyle.Fill, AccessibleName = StudioStrings.Get("MicrophoneTestPanel.EstadoDoTesteDeMicrofone") };
     private readonly Label time = new() { AutoSize = true, Dock = DockStyle.Fill };
     private readonly Button record = new() { Text = StudioStrings.Get("MicrophoneTestPanel.GravarTeste"), AutoSize = true };
-    private readonly Button stop = new() { Text = "&Parar", AutoSize = true };
+    private readonly Button stop = new() { Text = StudioStrings.Get("MicrophoneTestPanel.StopRecording"), AutoSize = true };
     private readonly Button play = new() { Text = StudioStrings.Get("MicrophoneTestPanel.OuvirGravacao"), AutoSize = true };
     private readonly Button playEqualized = new() { Text = StudioStrings.Get("MicrophoneTestPanel.OuvirComEQ"), AutoSize = true };
     private readonly EqualizerPreviewPanel equalizer = new();

@@ -1,5 +1,27 @@
 # Plano de testes
 
+## F4-I2-GAMECHAT-SOLO-LANG — balanço e idiomas
+
+Os casos com sessões simuladas verificam centro, atenuação proporcional nos dois lados e nos extremos, instâncias com o mesmo PID, ordem das reduções antes das devoluções, valores externos, ausência de escrita em sessões não atribuídas, duplicidade, geração obsoleta, expiração, falha COM após a escrita, leitura divergente e falha de descarte. Os casos STA verificam reassociação de grupo, proteção dos sons do sistema, restauração antes da mudança de saída, aviso após desconexão e fechamento cooperativo.
+
+A validação de idiomas compara as 450 chaves do catálogo neutro com cada satélite, sem fallback durante a inspeção. São verificadas as ocorrências de parâmetros, alinhamento, formato e espaços de concatenação. Os testes cobrem variantes regionais em Seguir Windows, fallback, preferência persistente, separação entre cultura da interface e cultura numérica, JSON no esquema 3 e controles de idioma em janelas compactas nos três idiomas. As regressões continuam cobrindo a migração dos esquemas 1 e 2, mixer e master, medição, DSP, EQ, teste de microfone e roteamento externo.
+
+O restore locked com auditoria NuGet passou. Os builds x64 não incrementais passaram com zero avisos e erros. Na rodada dirigida, passaram 52 casos. A regressão final acrescentou 41 casos aos 873 da base, com Debug e Release sobre a mesma versão do código e dos testes.
+
+| Regressão x64 | Seed | Aprovados | Falhas | Explicit excluídos | Duração |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Debug | 20261114 | 914 | 0 | 7 | 98,813 s |
+| Release | 20261113 | 914 | 0 | 7 | 62,414 s |
+
+Comandos e critérios da rodada consolidada x64
+
+- `dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1900`
+- `dotnet build WaveStudio.slnx -c <Debug|Release> --no-restore --no-incremental -warnaserror --nologo`
+- `dotnet test --solution WaveStudio.slnx -c <Debug|Release> --no-build -- --explicit off --seed <seed> --timeout 165s --long-running 10 --diagnostic --diagnostic-output-directory <pasta>`
+
+Os sete casos Explicit ficam fora da regressão comum. A rodada automatizada não aciona prova física. Os logs locais ficam em `artifacts/f4-gamechat`, excluídos do Git.
+
+
 ## F4-I1-REAL-MIXER — mesa e idioma
 
 Os casos focados preservam a grade e confirmam fader durante atualização, escrita única ao soltar, separação de sessões com mesmo PID, mute, master do endpoint, agrupamento, troca de geração, identidade duplicada, preferências versionadas e fallback de idioma. Os testes STA usam backends simulados para as escritas. Casos de visibilidade verificam que a mesa amostra a saída e que o microfone mantém suas regras de medição. O desenvolvimento encontrou uma asserção antes do carregamento da página de idioma. O teste passou a esperar a página pronta.

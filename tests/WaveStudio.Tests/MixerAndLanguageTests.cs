@@ -14,19 +14,25 @@ public sealed class MixerAndLanguageTests
     public void ResolvesOnlyCompleteSupportedCulturesAndKeepsNumberCultureSeparate()
     {
         var american = CultureInfo.GetCultureInfo("en-US");
-        Assert.Equal("pt-BR", StudioLanguage.Resolve(StudioLanguage.FollowWindows, american).Name);
-        Assert.Equal("pt-BR", StudioLanguage.Resolve("es-ES", american).Name);
+        Assert.Equal("en-US", StudioLanguage.Resolve(StudioLanguage.FollowWindows, american).Name);
+        Assert.Equal("es-ES", StudioLanguage.Resolve("es-ES", american).Name);
         Assert.Equal("pt-BR", StudioLanguage.Resolve("pt-BR", american).Name);
-        Assert.Equal(["pt-BR"], StudioLanguage.SupportedCultures.Select(culture => culture.Name));
+        Assert.Equal(["pt-BR", "en-US", "es-ES"], StudioLanguage.SupportedCultures.Select(culture => culture.Name));
         Assert.Equal("pt-BR", StudioStrings.NeutralCulture.Name);
         var previousNumberCulture = CultureInfo.CurrentCulture;
+        var previousUiCulture = CultureInfo.CurrentUICulture;
         try
         {
             CultureInfo.CurrentCulture = american;
+            CultureInfo.CurrentUICulture = StudioStrings.NeutralCulture;
             Assert.Equal("12.5%", StudioStrings.Format("Mixer.Percent", 12.5));
             Assert.Equal("Idioma", StudioStrings.Get("Language.Title"));
         }
-        finally { CultureInfo.CurrentCulture = previousNumberCulture; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousNumberCulture;
+            CultureInfo.CurrentUICulture = previousUiCulture;
+        }
     }
 
     [Fact]
@@ -145,7 +151,7 @@ public sealed class MixerAndLanguageTests
         using var directory = new TemporarySettingsDirectory();
         var source = new MicrophoneTestTests.FakeBackend();
         using var form = new MainForm(new SettingsStore(directory.FilePath), _ => { },
-            microphoneSession: new MicrophoneTestSession(source), windowsUiCulture: CultureInfo.GetCultureInfo("en-US"))
+            microphoneSession: new MicrophoneTestSession(source), windowsUiCulture: CultureInfo.GetCultureInfo("fr-CA"))
             { ShowInTaskbar = false, Opacity = 0 };
         form.Show();
         try
@@ -156,7 +162,7 @@ public sealed class MixerAndLanguageTests
             var language = Assert.Single(PreferencesUiTests.Descendants(tabs.SelectedTab!).OfType<ComboBox>(),
                 control => control.AccessibleName == "Idioma");
             await PreferencesUiTests.PumpUntilAsync(() => language.Enabled);
-            Assert.Equal(2, language.Items.Count);
+            Assert.Equal(4, language.Items.Count);
             Assert.Equal(1, language.SelectedIndex);
             Assert.True(language.Enabled);
             language.SelectedIndex = 0;

@@ -124,5 +124,31 @@ public sealed class ApplicationSessionService : IAsyncDisposable
         });
     }
 
+    internal Task<GameChatResult> BalanceAsync(EndpointSelection selection, IReadOnlyList<GameChatMember> members,
+        GameChatLease? lease, int position)
+    {
+        if (position is < -100 or > 100) throw new ArgumentOutOfRangeException(nameof(position));
+        if (lease is not null && lease.Selection != selection)
+            return Task.FromResult(new GameChatResult(lease, lease.Levels.Count(x => x.NeedsRestore), true));
+        if (position == 0 && lease is null) return Task.FromResult(new GameChatResult(null, 0, false));
+        var assigned = members.ToArray();
+        return queue.RunAsync(selection, (id, token) =>
+        {
+            IApplicationSessionEndpoint? endpoint = null;
+            try
+            {
+                endpoint = openEndpoint(id);
+                return GameChatBalance.Apply(endpoint, selection, assigned, lease, position, token);
+            }
+            catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error))
+            {
+                // Sem leitura do endpoint, nenhum valor residual pode ser considerado restaurado.
+                return new GameChatResult(lease is null ? null : lease with { Position = 0 },
+                    lease?.Levels.Count(x => x.NeedsRestore) ?? 0, true);
+            }
+            finally { GameChatBalance.ReleaseAccess(endpoint); }
+        });
+    }
+
     public ValueTask DisposeAsync() => queue.DisposeAsync();
 }

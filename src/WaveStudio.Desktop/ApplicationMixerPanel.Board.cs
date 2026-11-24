@@ -23,9 +23,10 @@ internal sealed partial class ApplicationMixerPanel
     {
         var board = new TabPage(StudioStrings.Get("Mixer.Board"));
         var gridView = new TabPage(StudioStrings.Get("Mixer.Details"));
-        var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, Padding = new Padding(4) };
+        var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 3, Padding = new Padding(4), MinimumSize = new Size(0, 365) };
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 165));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
@@ -39,17 +40,31 @@ internal sealed partial class ApplicationMixerPanel
         toolbar.Controls.Add(new Label { AutoSize = true, MaximumSize = new Size(410, 0), Text = StudioStrings.Get("Mixer.BoardHint") });
         layout.Controls.Add(toolbar, 0, 0);
         layout.SetColumnSpan(toolbar, 2);
+        var balance = CreateBalanceControl();
+        layout.Controls.Add(balance, 0, 1);
+        layout.SetColumnSpan(balance, 2);
         var masterArea = new Panel { Dock = DockStyle.Fill, AutoScroll = true, AutoScrollMinSize = new Size(0, master.Height) };
         masterArea.Controls.Add(master);
-        layout.Controls.Add(masterArea, 0, 1);
+        layout.Controls.Add(masterArea, 0, 2);
         stripsLayout.Controls.Add(emptyGroup);
-        layout.Controls.Add(stripsLayout, 1, 1);
-        board.Controls.Add(layout);
+        layout.Controls.Add(stripsLayout, 1, 2);
+        var boardScroll = new Panel { Dock = DockStyle.Fill, AutoScroll = true, AutoScrollMinSize = new Size(0, 365) };
+        boardScroll.Controls.Add(layout);
+        board.Controls.Add(boardScroll);
         gridView.Controls.Add(grid);
         views.TabPages.Add(board);
         views.TabPages.Add(gridView);
-        views.SelectedIndexChanged += (_, _) => CancelStripEdits();
-        VisibleChanged += (_, _) => { if (!Visible) CancelStripEdits(); };
+        views.SelectedIndexChanged += (_, _) =>
+        {
+            CancelStripEdits();
+            if (views.SelectedIndex != 0) RequestBalanceExit();
+        };
+        VisibleChanged += (_, _) =>
+        {
+            if (Visible) return;
+            CancelStripEdits();
+            RequestBalanceExit();
+        };
         master.Fader.Committed += async percent => await ApplyMasterAsync(new SetEndpointVolume(percent));
         master.Mute.Click += async (_, _) =>
         {
@@ -67,7 +82,11 @@ internal sealed partial class ApplicationMixerPanel
             strip = new MixerStrip { Tag = channel };
             strips.Add(current.Snapshot.Key, strip);
             stripsLayout.Controls.Add(strip);
-            strip.GroupChanged += FilterStrips;
+            strip.GroupChanged += () =>
+            {
+                FilterStrips();
+                if (!binding) ObserveBalance(balanceCatalogValid);
+            };
             strip.Fader.Committed += async value =>
             {
                 if (strip.Binding is { } bound) await ApplyAsync(bound, new SetSessionVolume(value));

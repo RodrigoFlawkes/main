@@ -34,7 +34,8 @@ internal sealed partial class MainForm
             WrapContents = false, Padding = new Padding(12)
         };
         storageStatus.AccessibleName = StudioStrings.Get("MainForm.Preferences.EstadoDoArmazenamentoDePreferencias");
-        layout.Controls.Add(new TextBox { ReadOnly = true, Width = 720, Text = store.FilePath, AccessibleName = StudioStrings.Get("MainForm.Preferences.ArquivoDePreferenciasLocais") });
+        var settingsPath = new TextBox { ReadOnly = true, Text = store.FilePath, AccessibleName = StudioStrings.Get("MainForm.Preferences.ArquivoDePreferenciasLocais") };
+        layout.Controls.Add(settingsPath);
         layout.Controls.Add(preferencesSummary);
         layout.Controls.Add(new Label
         {
@@ -50,9 +51,27 @@ internal sealed partial class MainForm
         layout.Controls.Add(recoverPreferences);
         layout.Controls.Add(resetPreferences);
         page.Controls.Add(layout);
+        page.ClientSizeChanged += (_, _) => FitPreferencesWidth();
+        FitPreferencesWidth();
         resetPreferences.Click += (_, _) => RunPreferenceAction(() => RecoverOrResetAsync(useBackup: false));
         recoverPreferences.Click += (_, _) => RunPreferenceAction(() => RecoverOrResetAsync(useBackup: true));
         return page;
+
+        void FitPreferencesWidth()
+        {
+            // Reserva espaço para a rolagem vertical e permite quebrar o texto na largura visível.
+            int available = page.ClientSize.Width - layout.Padding.Horizontal - SystemInformation.VerticalScrollBarWidth;
+            if (available <= 0) return;
+            layout.SuspendLayout();
+            try
+            {
+                foreach (var label in layout.Controls.OfType<Label>())
+                    label.MaximumSize = new Size(Math.Clamp(available - label.Margin.Horizontal, 1, 800), 0);
+                settingsPath.Width = Math.Clamp(available - settingsPath.Margin.Horizontal, 1, 720);
+                language.Width = Math.Clamp(available - language.Margin.Horizontal, 1, 260);
+            }
+            finally { layout.ResumeLayout(); }
+        }
     }
 
     private async void RunPreferenceAction(Func<Task> action)

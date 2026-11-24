@@ -52,6 +52,7 @@ internal sealed partial class MainForm : Form
         readWorkAreas = workAreas ?? (() => Screen.AllScreens.Select(screen => screen.WorkingArea)
             .Select(area => new WindowArea(area.X, area.Y, area.Width, area.Height)).ToArray());
         showStorageWarning = storageWarning ?? (message => MessageBox.Show(this, message, StudioStrings.Get("MainForm.PreferenciasLocais"), MessageBoxButtons.OK, MessageBoxIcon.Warning));
+        showBalanceWarning = storageWarning ?? (message => MessageBox.Show(this, message, StudioStrings.Get("Balance.Title"), MessageBoxButtons.OK, MessageBoxIcon.Warning));
         Text = StudioStrings.Get("MainForm.WaveStudioV010");
         Icon = brandIcon;
         ShowIcon = true;
@@ -152,6 +153,7 @@ internal sealed partial class MainForm : Form
             watch.EnableMetering(visible && (tabs.SelectedTab == devicesPage || tabs.SelectedTab == microphoneTestPage || tabs.SelectedTab == mixerPage),
                 includeCapture: tabs.SelectedTab != mixerPage);
             microphoneTest.EnableInputMeter(visible && tabs.SelectedTab == microphoneTestPage);
+            if (!stopping && (!visible || tabs.SelectedTab != mixerPage)) mixer.RequestBalanceExit();
         }
         tabs.SelectedIndexChanged += (_, _) =>
         {
