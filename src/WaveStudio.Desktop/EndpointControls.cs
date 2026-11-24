@@ -10,8 +10,8 @@ internal sealed class EndpointControls : UserControl
     private readonly NumericUpDown volumeNumber = new() { Minimum = 0, Maximum = 100, DecimalPlaces = 1, Dock = DockStyle.Fill };
     private readonly TrackBar balanceSlider = new() { Minimum = -100, Maximum = 100, TickFrequency = 50, Dock = DockStyle.Fill };
     private readonly NumericUpDown balanceNumber = new() { Minimum = -100, Maximum = 100, Dock = DockStyle.Fill };
-    private readonly Button mute = new() { AutoSize = true, Text = "Mute indisponível" };
-    private readonly Button center = new() { AutoSize = true, Text = "Centralizar balanço" };
+    private readonly Button mute = new() { AutoSize = true, Text = StudioStrings.Get("EndpointControls.MuteIndisponivel") };
+    private readonly Button center = new() { AutoSize = true, Text = StudioStrings.Get("EndpointControls.CentralizarBalanco") };
     private readonly Label message = new() { AutoSize = true, Dock = DockStyle.Fill, MaximumSize = new Size(430, 0) };
     private EndpointSelection target = new(null, 0);
     private EndpointVolumeState? current;
@@ -35,12 +35,12 @@ internal sealed class EndpointControls : UserControl
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
-        layout.Controls.Add(new Label { Text = "Volume (%)", AutoSize = true }, 0, 0);
+        layout.Controls.Add(new Label { Text = StudioStrings.Get("EndpointControls.Volume"), AutoSize = true }, 0, 0);
         layout.Controls.Add(volumeSlider, 1, 0);
         layout.Controls.Add(volumeNumber, 2, 0);
         layout.Controls.Add(mute, 0, 1);
         layout.SetColumnSpan(mute, 3);
-        layout.Controls.Add(new Label { Text = "Balanço L/R", AutoSize = true }, 0, 2);
+        layout.Controls.Add(new Label { Text = StudioStrings.Get("EndpointControls.BalancoLR"), AutoSize = true }, 0, 2);
         layout.Controls.Add(balanceSlider, 1, 2);
         layout.Controls.Add(balanceNumber, 2, 2);
         layout.Controls.Add(center, 0, 3);
@@ -48,10 +48,10 @@ internal sealed class EndpointControls : UserControl
         layout.Controls.Add(message, 0, 4);
         layout.SetColumnSpan(message, 3);
         Controls.Add(layout);
-        volumeSlider.AccessibleName = "Volume do endpoint do Windows em porcentagem";
-        volumeNumber.AccessibleName = "Volume numérico do endpoint do Windows";
-        balanceSlider.AccessibleName = "Balanço, negativo à esquerda e positivo à direita";
-        balanceNumber.AccessibleName = "Balanço numérico";
+        volumeSlider.AccessibleName = StudioStrings.Get("EndpointControls.VolumeDoEndpointDoWindows");
+        volumeNumber.AccessibleName = StudioStrings.Get("EndpointControls.VolumeNumericoDoEndpointDo");
+        balanceSlider.AccessibleName = StudioStrings.Get("EndpointControls.BalancoNegativoAEsquerdaE");
+        balanceNumber.AccessibleName = StudioStrings.Get("EndpointControls.BalancoNumerico");
         volumeSlider.Scroll += (_, _) => PreviewSlider(volumeSlider, volumeNumber);
         volumeSlider.MouseUp += async (_, _) => await CommitSliderAsync(true);
         volumeSlider.KeyUp += async (_, _) => await CommitSliderAsync(true);
@@ -92,7 +92,7 @@ internal sealed class EndpointControls : UserControl
         current = null;
         volumeFailure = muteFailure = balanceFailure = null;
         DisableEditors();
-        message.Text = target.DeviceId is null ? "Controles indisponíveis — selecione um dispositivo ativo." : "Consultando volume do Windows…";
+        message.Text = target.DeviceId is null ? StudioStrings.Get("EndpointControls.ControlesIndisponiveisSelecioneUmDispositivo") : StudioStrings.Get("EndpointControls.ConsultandoVolumeDoWindows");
         poll.Enabled = target.DeviceId is not null;
         _ = ReadAsync();
     }
@@ -138,7 +138,7 @@ internal sealed class EndpointControls : UserControl
     private void RequireIdle()
     {
         if (stopped || target.DeviceId is null || writing || volumeDirty || balanceDirty)
-            throw new InvalidOperationException("Conclua o ajuste atual e selecione um dispositivo disponível.");
+            throw new InvalidOperationException(StudioStrings.Get("EndpointControls.ConcluaOAjusteAtualE"));
     }
 
     private async Task ReadAsync()
@@ -171,7 +171,7 @@ internal sealed class EndpointControls : UserControl
         stateRevision++;
         writing = true;
         DisableEditors();
-        message.Text = "Aplicando ao dispositivo selecionado…";
+        message.Text = StudioStrings.Get("EndpointControls.AplicandoAoDispositivoSelecionado");
         try
         {
             var snapshot = await session.ApplyAsync(requestedTarget, command);
@@ -183,7 +183,7 @@ internal sealed class EndpointControls : UserControl
         {
             if (requestedTarget == target && !stopped)
             {
-                string reason = $"{EndpointVolumeOperations.Describe(error)} Use Atualizar dispositivos para tentar novamente.";
+                string reason = StudioStrings.Format("EndpointControls.0UseAtualizarDispositivosPara", EndpointVolumeOperations.Describe(error));
                 switch (command)
                 {
                     case SetEndpointVolume: volumeFailure = reason; break;
@@ -216,12 +216,12 @@ internal sealed class EndpointControls : UserControl
             volumeSlider.Enabled = volumeNumber.Enabled = snapshot.VolumePercent.HasValue && volumeFailure is null;
             mute.Enabled = snapshot.Muted.HasValue && muteFailure is null;
             balanceSlider.Enabled = balanceNumber.Enabled = center.Enabled = snapshot.Stereo is not null && balanceFailure is null;
-            mute.Text = snapshot.Muted switch { true => "Desativar mute", false => "Ativar mute", _ => "Mute indisponível" };
+            mute.Text = snapshot.Muted switch { true => StudioStrings.Get("EndpointControls.DesativarMute"), false => StudioStrings.Get("EndpointControls.AtivarMute"), _ => StudioStrings.Get("EndpointControls.MuteIndisponivel") };
             var reasons = new[] { volumeFailure ?? snapshot.VolumeError, muteFailure ?? snapshot.MuteError,
                 balanceFailure ?? snapshot.BalanceError }.Where(reason => reason is not null);
             message.Text = string.Join(Environment.NewLine, reasons);
             if (message.Text.Length == 0)
-                message.Text = "Volume do Windows no endpoint. Balanço de −100 (esquerda) a +100 (direita).";
+                message.Text = StudioStrings.Get("EndpointControls.VolumeDoWindowsNoEndpoint");
         }
         finally { applyingSnapshot = false; }
     }

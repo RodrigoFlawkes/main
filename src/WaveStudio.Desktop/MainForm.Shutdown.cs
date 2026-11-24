@@ -28,8 +28,8 @@ internal sealed partial class MainForm
     {
         if (IsDisposed) return;
         string pending = string.Join(", ", closeSteps.Where(step => step.Task?.IsCompletedSuccessfully != true).Select(step => step.Name));
-        status.Text = $"Encerramento não confirmado ({pending}). A janela permanece aberta e novos comandos estão bloqueados. " +
-            $"Aguarde e tente fechar novamente. {error.GetType().Name}";
+        status.Text = StudioStrings.Format("MainForm.Shutdown.EncerramentoNaoConfirmado0A", pending) +
+            StudioStrings.Format("MainForm.Shutdown.AguardeETenteFecharNovamente", error.GetType().Name);
         status.AccessibleDescription = status.Text;
         status.ForeColor = Color.Firebrick;
     }

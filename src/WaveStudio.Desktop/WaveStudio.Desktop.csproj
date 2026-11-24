@@ -22,5 +22,6 @@
     <EmbeddedResource Include="../../assets/branding/icons/WaveStudio.ico" LogicalName="WaveStudio.Brand.Icon" />
     <EmbeddedResource Include="../../assets/branding/icons/WaveStudio-256.png" LogicalName="WaveStudio.Brand.Logo" />
     <ProjectReference Include="../WaveStudio.Audio/WaveStudio.Audio.csproj" />
+    <Using Include="WaveStudio.Audio.Localization" />
   </ItemGroup>
 </Project>

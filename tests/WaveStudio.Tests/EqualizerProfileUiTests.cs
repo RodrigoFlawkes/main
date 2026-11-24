@@ -121,19 +121,19 @@ public sealed class EqualizerProfileUiTests
     [Trait("Category", "WindowsIntegration")]
     public Task V1StartupAndFutureVersionKeepOriginalBytesUntilAnAuthorizedSave() => OnSta(async () =>
     {
-        foreach (int version in new[] { 1, 3 })
+        foreach (int version in new[] { 1, StudioSettings.CurrentVersion + 1 })
         {
             using var directory = new TemporarySettingsDirectory(); byte[] original = System.Text.Encoding.UTF8.GetBytes($"{{\"schemaVersion\":{version}}}");
             File.WriteAllBytes(directory.FilePath, original); var backend = new MicrophoneTestTests.FakeBackend();
             using var form = NewForm(directory.FilePath, new MicrophoneTestSession(backend)); form.Show(); await Ready(form);
             var eq = Descendants(form).OfType<EqualizerPreviewPanel>().Single();
             Assert.Equal(original, File.ReadAllBytes(directory.FilePath)); Assert.False(eq.Activate.Checked);
-            if (version == 3)
+            if (version > StudioSettings.CurrentVersion)
             {
                 Assert.False(eq.CreateProfile.Enabled); eq.Activate.Checked = true; eq.Bands[0].Value = 2;
             }
             form.Close(); await PumpUntilAsync(() => form.IsDisposed);
-            if (version == 3) Assert.Equal(original, File.ReadAllBytes(directory.FilePath));
+            if (version > StudioSettings.CurrentVersion) Assert.Equal(original, File.ReadAllBytes(directory.FilePath));
             Assert.Empty(backend.Calls);
         }
     });
@@ -145,7 +145,7 @@ public sealed class EqualizerProfileUiTests
         await PumpUntilAsync(() => Descendants(form).OfType<Label>().Any(label =>
             label.AccessibleName?.StartsWith("Estado do armazenamento de preferências", StringComparison.Ordinal) == true && label.Text.Length > 0));
         await form.StartupTask; await form.RefreshTask;
-        var tabs = Descendants(form).OfType<TabControl>().Single(); tabs.SelectedTab = tabs.TabPages.Cast<TabPage>().Single(page => page.Text == "Testar microfone");
+        var tabs = form.Controls[0].Controls.OfType<TabControl>().Single(); tabs.SelectedTab = tabs.TabPages.Cast<TabPage>().Single(page => page.Text == "Testar microfone");
         await PumpUntilAsync(() => Descendants(form).OfType<EqualizerPreviewPanel>().Single().Enabled);
     }
     private sealed class CountingWriter : ISettingsWriter

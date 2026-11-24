@@ -87,12 +87,12 @@ public sealed class MeterVisibilityTests
             {
                 await PreferencesUiTests.PumpUntilAsync(() => form.StartupTask.IsCompleted);
                 var controls = Descendants(form).ToArray();
-                var tabs = controls.OfType<TabControl>().Single();
+                var tabs = form.Controls[0].Controls.OfType<TabControl>().Single();
                 var microphone = controls.OfType<MicrophoneTestPanel>().Single();
                 foreach (var (page, minimized, enabled) in new[]
                 {
                     ("Dispositivos", false, true), ("Testar microfone", false, true),
-                    ("Mixer de aplicativos", false, false), ("Preferências locais", false, false),
+                    ("Mesa de som", false, true), ("Configurações", false, false),
                     ("Testar microfone", true, false), ("Testar microfone", false, true)
                 })
                 {
@@ -104,6 +104,7 @@ public sealed class MeterVisibilityTests
                         throw new TimeoutException($"Aba={page}; minimizar={minimized}; estado={form.WindowState}; selecionada={tabs.SelectedTab?.Text}; medindo={worker.MeteringEnabled}; esperado={enabled}.", error);
                     }
                     Assert.Equal(page == "Testar microfone" && !minimized, microphone.InputMeter.MeteringEnabled);
+                    Assert.Equal(enabled && page != "Mesa de som", worker.CaptureMeteringEnabled);
                     if (!enabled)
                     {
                         Assert.Equal(0, microphone.InputMeter.PeakBar.Value);

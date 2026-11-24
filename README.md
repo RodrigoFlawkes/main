@@ -20,12 +20,18 @@
 ### Disponíveis na prévia
 
 - Seleção de entrada e saída, volume, mute e balanço estéreo quando suportado.
-- Mixer de aplicativos do Windows e medidores reais de áudio.
+- Mesa de som com faders, mute e picos de sessões reais, grupos e master da saída do Windows.
 - Teste de microfone de até 10 segundos, com reprodução explícita.
 - EQ de 10 bandas, preamp, bypass, comparação A/B e perfis locais.
-- Preferências persistentes, backup, restauração e detecção de dispositivos.
+- Preferências persistentes, backup, restauração, detecção de dispositivos e idioma da interface.
 
 O EQ atual atua **somente sobre a gravação curta reproduzida dentro do Wave Studio**. Não modifica o áudio de jogos, Discord ou OBS. O áudio do teste permanece temporariamente em memória.
+
+### Mesa de som e idioma
+
+Escolha a saída em **Dispositivos**. Em **Mesa de som**, arraste o fader do aplicativo ou use as setas, alterne o mute e atribua grupos às sessões presentes. Use o seletor acima das faixas para filtrar os grupos. A aba **Detalhes das sessões** mantém a grade com volume numérico, PID e instância. O pico de cada faixa é uma amostra instantânea e pode perder eventos breves. O master mostra o pico agregado e controla o volume e mute dessa saída no Windows.
+
+Em **Configurações → Idioma**, escolha **Português (Brasil)** ou **Seguir Windows**. Quando o idioma do Windows não estiver entre as traduções completas, o Wave Studio mostra a interface em pt-BR. A formatação de números segue a configuração regional do Windows.
 
 ### Visão do produto
 
@@ -44,9 +50,9 @@ Também estão previstos integração com aplicativos externos, mix-minus e estu
 
 ## Estado atual
 
-**19/11/2026 · Fase 3 iniciada — rota externa de prova**
+**23/11/2026 · F4-I1 — mesa de sessões e idioma**
 
-A rota limitada para navegador e OBS foi implementada com dois cabos virtuais independentes e exercitada com dispositivos simulados. A prova física externa aguarda revisão e autorização específicas. A Fase 2 segue com pendências de monitoramento contínuo, recuperação em hardware, latência acústica e necessidade de correção de drift. As provas silenciosas anteriores e o aceite manual de escuta têm evidências próprias.
+A mesa usa as sessões de reprodução do dispositivo escolhido. Os dois fluxos externos foram confirmados manualmente pelo proprietário e seguem sem telemetria associada a uma prova instrumentada. Monitoramento contínuo, recuperação em hardware, latência acústica e drift permanecem como pendências técnicas de release.
 
 [Status detalhado](PROJECT_STATUS.md) · [Próxima tarefa](NEXT_TASK.md) · [Roteiro agrupado](docs/EXTERNAL_ROUTE_PROOF.md)
 

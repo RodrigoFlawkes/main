@@ -11,21 +11,23 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
-        CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("pt-BR");
-        CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("pt-BR");
+        CultureInfo windowsUi = CultureInfo.CurrentUICulture;
         ApplicationConfiguration.Initialize();
         if (args.Length != 0 && (args.Length != 2 || args[0] != "--settings-file" || !Path.IsPathFullyQualified(args[1])))
         {
-            MessageBox.Show("Use --settings-file seguido de um caminho absoluto para armazenamento isolado.", "Wave Studio");
+            MessageBox.Show(StudioStrings.Get("Program.UseSettingsFileSeguidoDe"), "Wave Studio");
             return;
         }
         SettingsStore store;
         try { store = new SettingsStore(args.Length == 2 ? args[1] : SettingsStore.DefaultPath); }
         catch (Exception error) when (error is ArgumentException or NotSupportedException or InvalidOperationException)
         {
-            MessageBox.Show("Não foi possível definir o arquivo de preferências. " + error.Message, "Wave Studio");
+            MessageBox.Show(StudioStrings.Get("Program.NaoFoiPossivelDefinirO") + error.Message, "Wave Studio");
             return;
         }
-        Application.Run(new MainForm(store));
+        var loaded = store.LoadAsync().GetAwaiter().GetResult();
+        var uiLanguage = StudioLanguage.Resolve(loaded.Settings.Language, windowsUi);
+        CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.CurrentUICulture = uiLanguage;
+        Application.Run(new MainForm(store, initialSettings: loaded, windowsUiCulture: windowsUi));
     }
 }

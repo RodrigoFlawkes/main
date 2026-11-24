@@ -1,5 +1,13 @@
 # Arquitetura do Wave Studio
 
+## F4-I1-REAL-MIXER — faixas do Windows e idioma
+
+A mesa e a grade usam a mesma seleção e os mesmos snapshots de `ApplicationSessionService`. A reconciliação preserva a faixa pelo par endpoint/instância de sessão. Identidades duplicadas são suprimidas, e a escrita localiza uma única instância ativa ou inativa e verifica sua resposta. Os grupos classificam faixas presentes, são mantidos em memória e não alteram um destino de áudio. A troca de dispositivo invalida a geração e descarta gestos e grupos daquela seleção.
+
+O fader mantém o valor em edição durante a consulta de aproximadamente 1 s. O arraste confirma uma escrita ao soltar, e o teclado agrupa mudanças por 180 ms. O painel serializa a aplicação da mesa e atualiza os controles pelo estado de retorno. O nível das faixas usa a leitura instantânea de `AudioMeterInformation` da própria sessão. Uma amostra atrasada ou indisponível recebe indicação própria. O master usa `EndpointVolumeSession` para volume e mute do Windows e `AudioWatchWorker` para o pico agregado da saída. A mesa amostra a reprodução sem consultar o pico do microfone. [Semântica do pico Core Audio](https://learn.microsoft.com/en-us/windows/win32/api/endpointvolume/nf-endpointvolume-iaudiometerinformation-getpeakvalue).
+
+`StudioStrings.resx` é o recurso neutro pt-BR da interface, incluindo acessibilidade, guias e mensagens próprias de áudio e armazenamento. Uma tradução futura precisa cobrir o conjunto integral antes de ser adicionada à lista de culturas aceitas. A inicialização resolve a cultura da interface antes de criar os controles. A cultura numérica continua sendo a regional do Windows. O esquema 3 acrescenta `language` e migra em memória os esquemas 1 e 2. A gravação usa o mesmo backup e a mesma proteção contra concorrência de configurações. [Recursos e fallback do .NET](https://learn.microsoft.com/en-us/dotnet/fundamentals/runtime-libraries/system-resources-resourcemanager).
+
 ## F3-I3-ROUTE-READINESS-DESKTOP — consulta de compatibilidade
 
 A nova aba usa um inventário de Core Audio e PnP e um serviço de prontidão injetável. A ligação PnP do cabo simples usa a identidade corrigida e a mesma regra de pinos do runner. A+B preserva o contrato dos conectores e exige instâncias distintas. A leitura de instâncias do cabo simples filtra o serviço com `PRESENT` e `DONOTGENERATE`, e os padrões são consultados nos seis papéis/direções. O serviço aplica a validação de formato exato e geração aos endpoints escolhidos e o contrato de rota existente a cada fluxo. O caminho de consulta termina nos metadados de capacidade, antes de inicializar fluxo.

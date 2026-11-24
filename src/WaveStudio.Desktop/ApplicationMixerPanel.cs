@@ -4,7 +4,7 @@ using WaveStudio.Audio;
 
 namespace WaveStudio.Desktop;
 
-internal sealed class ApplicationMixerPanel : UserControl
+internal sealed partial class ApplicationMixerPanel : UserControl
 {
     private readonly ApplicationSessionService service;
     private readonly Dictionary<SessionKey, DataGridViewRow> rows = new();
@@ -17,7 +17,7 @@ internal sealed class ApplicationMixerPanel : UserControl
     };
     private readonly Label message = new() { AutoSize = true, Dock = DockStyle.Fill };
     private readonly Label endpointName = new() { AutoSize = true, Dock = DockStyle.Fill };
-    private readonly Button refresh = new() { Text = "Atualizar mixer", AutoSize = true };
+    private readonly Button refresh = new() { Text = StudioStrings.Get("ApplicationMixerPanel.AtualizarMixer"), AutoSize = true };
     private EndpointSelection target = new(null, 0);
     private bool reading;
     private bool readRequested;
@@ -31,36 +31,37 @@ internal sealed class ApplicationMixerPanel : UserControl
     internal EndpointSelection Selection => target;
     internal Task PendingRead { get; private set; } = Task.CompletedTask;
 
-    public ApplicationMixerPanel() : this(new ApplicationSessionService()) { }
-    internal ApplicationMixerPanel(ApplicationSessionService service)
+    public ApplicationMixerPanel() : this(new ApplicationSessionService(), new EndpointVolumeSession()) { }
+    internal ApplicationMixerPanel(ApplicationSessionService service, EndpointVolumeSession masterService)
     {
         this.service = service;
+        this.masterService = masterService;
         Dock = DockStyle.Fill;
         var layout = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 4, ColumnCount = 1, Padding = new Padding(8) };
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "App", HeaderText = "Aplicativo", ReadOnly = true, MinimumWidth = 140 });
-        grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "PID", HeaderText = "PID", ReadOnly = true, MinimumWidth = 55, FillWeight = 30 });
-        grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "State", HeaderText = "Estado", ReadOnly = true, MinimumWidth = 80, FillWeight = 45 });
-        grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Peak", HeaderText = "Pico (%) · 1 s", ReadOnly = true, MinimumWidth = 100, FillWeight = 45 });
-        grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Volume", HeaderText = "Volume (%)", MinimumWidth = 85, FillWeight = 40 });
-        grid.Columns.Add(new DataGridViewButtonColumn { Name = "Mute", HeaderText = "Mute", MinimumWidth = 110, FillWeight = 65 });
-        grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Instance", HeaderText = "Instância da sessão", ReadOnly = true, MinimumWidth = 150 });
+        grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "App", HeaderText = StudioStrings.Get("ApplicationMixerPanel.Aplicativo"), ReadOnly = true, MinimumWidth = 140 });
+        grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "PID", HeaderText = StudioStrings.Get("ApplicationMixerPanel.PID"), ReadOnly = true, MinimumWidth = 55, FillWeight = 30 });
+        grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "State", HeaderText = StudioStrings.Get("ApplicationMixerPanel.Estado"), ReadOnly = true, MinimumWidth = 80, FillWeight = 45 });
+        grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Peak", HeaderText = StudioStrings.Get("ApplicationMixerPanel.Pico1S"), ReadOnly = true, MinimumWidth = 100, FillWeight = 45 });
+        grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Volume", HeaderText = StudioStrings.Get("ApplicationMixerPanel.Volume"), MinimumWidth = 85, FillWeight = 40 });
+        grid.Columns.Add(new DataGridViewButtonColumn { Name = "Mute", HeaderText = StudioStrings.Get("ApplicationMixerPanel.Mute"), MinimumWidth = 110, FillWeight = 65 });
+        grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Instance", HeaderText = StudioStrings.Get("ApplicationMixerPanel.InstanciaDaSessao"), ReadOnly = true, MinimumWidth = 150 });
         layout.Controls.Add(endpointName, 0, 0);
         layout.Controls.Add(refresh, 0, 1);
-        layout.Controls.Add(grid, 0, 2);
+        layout.Controls.Add(CreateViews(), 0, 2);
         layout.Controls.Add(message, 0, 3);
         Controls.Add(layout);
-        grid.AccessibleName = "Mixer de sessões do dispositivo de reprodução";
+        grid.AccessibleName = StudioStrings.Get("ApplicationMixerPanel.MixerDeSessoesDoDispositivo");
         grid.CellValidating += (_, args) =>
         {
             if (!binding && ValidCell(args.RowIndex, args.ColumnIndex) && grid.Columns[args.ColumnIndex].Name == "Volume" && grid.IsCurrentCellInEditMode
                 && (!double.TryParse(Convert.ToString(args.FormattedValue), out double value) || !double.IsFinite(value) || value < 0 || value > 100))
             {
                 args.Cancel = true;
-                message.Text = "Informe um volume entre 0 e 100%. Use Esc para cancelar a edição.";
+                message.Text = StudioStrings.Get("ApplicationMixerPanel.InformeUmVolumeEntre0");
             }
         };
         grid.CellBeginEdit += (_, args) =>
@@ -87,8 +88,13 @@ internal sealed class ApplicationMixerPanel : UserControl
                 && bound.Snapshot is { Muted: bool muted, Activity: not SessionActivity.Expired })
                 await ApplyAsync(bound, new SetSessionMute(!muted));
         };
-        grid.DataError += (_, args) => { args.ThrowException = false; message.Text = "Valor inválido. Revise a edição ou pressione Esc."; };
-        refresh.Click += async (_, _) => { commandError = null; await (PendingRead = ReadAsync()); };
+        grid.DataError += (_, args) => { args.ThrowException = false; message.Text = StudioStrings.Get("ApplicationMixerPanel.ValorInvalidoReviseAEdicao"); };
+        refresh.Click += async (_, _) =>
+        {
+            commandError = null;
+            ClearMasterBlocks();
+            await (PendingRead = ReadAsync());
+        };
         poll.Tick += async (_, _) =>
         {
             UpdatePeakCells(Stopwatch.GetTimestamp(), grid.IsCurrentCellInEditMode || writing || !Visible);
@@ -107,14 +113,16 @@ internal sealed class ApplicationMixerPanel : UserControl
             grid.CancelEdit();
             grid.EndEdit();
             target = service.Select(device?.State == EndpointState.Active ? device.Id : null);
+            SelectMaster(target.DeviceId);
             grid.Rows.Clear();
             rows.Clear();
+            ClearStrips();
         }
         finally { binding = false; }
         revision++;
         commandError = null;
-        endpointName.Text = device is null ? "Reprodução indisponível" : $"Sessões de reprodução — {device.Name}";
-        message.Text = "Selecione um dispositivo de reprodução disponível.";
+        endpointName.Text = device is null ? StudioStrings.Get("ApplicationMixerPanel.ReproducaoIndisponivel") : StudioStrings.Format("ApplicationMixerPanel.SessoesDeReproducao0", device.Name);
+        message.Text = StudioStrings.Get("ApplicationMixerPanel.SelecioneUmDispositivoDeReproducao");
         poll.Enabled = target.DeviceId is not null;
         PendingRead = ReadAsync();
     }
@@ -152,6 +160,8 @@ internal sealed class ApplicationMixerPanel : UserControl
                         message.Text = EndpointVolumeOperations.Describe(error);
                     }
                 }
+                if (request == target && requestedRevision == revision && !stopped && !writing)
+                    await ReadMasterAsync(request, requestedRevision);
             }
         }
         finally { reading = false; }
@@ -168,32 +178,36 @@ internal sealed class ApplicationMixerPanel : UserControl
             {
                 grid.Rows.Remove(rows[key]);
                 rows.Remove(key);
+                RemoveStrip(key);
             }
             foreach (var snapshot in catalog.Sessions)
             {
                 if (snapshot.Key.EndpointId != request.DeviceId) continue;
-                string state = snapshot.Activity switch { SessionActivity.Active => "Ativa", SessionActivity.Expired => "Encerrada", _ => "Inativa" };
+                string state = snapshot.Activity switch { SessionActivity.Active => StudioStrings.Get("ApplicationMixerPanel.Ativa"), SessionActivity.Expired => StudioStrings.Get("ApplicationMixerPanel.Encerrada"), _ => StudioStrings.Get("ApplicationMixerPanel.Inativa") };
                 if (!rows.TryGetValue(snapshot.Key, out var row))
                 {
                     row = grid.Rows[grid.Rows.Add()];
                     rows.Add(snapshot.Key, row);
                 }
                 SetCell(row, "App", snapshot.Name);
-                SetCell(row, "PID", snapshot.ProcessId?.ToString() ?? "Indisponível");
+                SetCell(row, "PID", snapshot.ProcessId?.ToString() ?? StudioStrings.Get("ApplicationMixerPanel.Indisponivel"));
                 SetCell(row, "State", state);
-                SetCell(row, "Volume", snapshot.VolumePercent?.ToString("F1", CultureInfo.CurrentCulture) ?? "Indisponível");
-                SetCell(row, "Mute", snapshot.Muted switch { true => "Desativar mute", false => "Ativar mute", _ => "Indisponível" });
+                SetCell(row, "Volume", snapshot.VolumePercent?.ToString("F1", CultureInfo.CurrentCulture) ?? StudioStrings.Get("ApplicationMixerPanel.Indisponivel"));
+                SetCell(row, "Mute", snapshot.Muted switch { true => StudioStrings.Get("ApplicationMixerPanel.DesativarMute"), false => StudioStrings.Get("ApplicationMixerPanel.AtivarMute"), _ => StudioStrings.Get("ApplicationMixerPanel.Indisponivel") });
                 SetCell(row, "Instance", snapshot.Key.InstanceId);
-                row.Tag = new ApplicationSessionBinding(request, snapshot);
+                var current = new ApplicationSessionBinding(request, snapshot);
+                row.Tag = current;
+                BindStrip(current, state);
                 row.Cells["Volume"].ReadOnly = snapshot.VolumePercent is null || snapshot.Activity == SessionActivity.Expired;
                 row.ErrorText = snapshot.Error ?? "";
             }
         }
         finally { binding = false; }
+        FilterStrips();
         UpdatePeakCells(Stopwatch.GetTimestamp(), paused: false);
         message.Text = catalog.Warnings.Count > 0 ? string.Join(Environment.NewLine, catalog.Warnings.Distinct())
-            : catalog.Sessions.Count == 0 ? "Nenhuma sessão encontrada neste dispositivo."
-            : $"{catalog.Sessions.Count} sessão(ões). Edite o volume e confirme com Enter. Pico instantâneo consultado a cada segundo.";
+            : catalog.Sessions.Count == 0 ? StudioStrings.Get("ApplicationMixerPanel.NenhumaSessaoEncontradaNesteDispositivo")
+            : StudioStrings.Format(views.SelectedIndex == 0 ? "Mixer.ChannelCount" : "ApplicationMixerPanel.0SessaoOesEditeO", catalog.Sessions.Count);
         if (commandError is not null) message.Text = commandError;
     }
 
@@ -203,15 +217,17 @@ internal sealed class ApplicationMixerPanel : UserControl
         {
             if (row.Tag is not ApplicationSessionBinding bound || !bound.IsCurrent(target)) continue;
             var snapshot = bound.Snapshot;
-            var peak = snapshot.Peak;
+            var peak = snapshot.Activity == SessionActivity.Expired ? null : snapshot.Peak;
+            if (strips.TryGetValue(snapshot.Key, out var strip))
+                strip.ShowPeak(peak, snapshot.PeakRecordedAt, now, paused);
             string value;
-            if (paused) value = "Pausado";
-            else if (peak?.Scalar is not double scalar) value = "Indisponível";
+            if (paused) value = StudioStrings.Get("ApplicationMixerPanel.Pausado");
+            else if (peak?.Scalar is not double scalar) value = StudioStrings.Get("ApplicationMixerPanel.Indisponivel");
             else if (snapshot.PeakRecordedAt == 0 || Stopwatch.GetElapsedTime(snapshot.PeakRecordedAt, now) > TimeSpan.FromSeconds(2))
-                value = "Leitura atrasada";
-            else value = scalar == 0 ? "0,0 (silêncio)" : (scalar * 100).ToString("F1", CultureInfo.CurrentCulture);
+                value = StudioStrings.Get("ApplicationMixerPanel.LeituraAtrasada");
+            else value = scalar == 0 ? StudioStrings.Format("ApplicationMixerPanel.Silence", 0d) : (scalar * 100).ToString("F1", CultureInfo.CurrentCulture);
             SetCell(row, "Peak", value);
-            row.Cells["Peak"].ToolTipText = peak?.Error ?? "Pico instantâneo do Windows. Consulta de 1 s pode perder eventos breves. Edição pausa a medição.";
+            row.Cells["Peak"].ToolTipText = peak?.Error ?? StudioStrings.Get("ApplicationMixerPanel.PicoInstantaneoDoWindowsConsulta");
         }
     }
 
@@ -225,20 +241,26 @@ internal sealed class ApplicationMixerPanel : UserControl
     private void ClearRows()
     {
         binding = true;
-        try { edit = null; grid.CancelEdit(); grid.EndEdit(); grid.Rows.Clear(); rows.Clear(); }
+        try { edit = null; grid.CancelEdit(); grid.EndEdit(); grid.Rows.Clear(); rows.Clear(); ClearStrips(); }
         finally { binding = false; }
     }
 
-    private async Task ApplyAsync(ApplicationSessionBinding bound, ApplicationSessionCommand command)
+    private Task ApplyAsync(ApplicationSessionBinding bound, ApplicationSessionCommand command)
     {
-        if (binding || writing || stopped || !bound.IsCurrent(target)) return;
+        if (!bound.IsCurrent(target) || !rows.ContainsKey(bound.Snapshot.Key)) return Task.CompletedTask;
+        return RunWriteAsync(bound.Selection, async () => { await service.ApplyAsync(bound.Selection, bound.Snapshot.Key, command); });
+    }
+
+    private async Task RunWriteAsync(EndpointSelection request, Func<Task> action)
+    {
+        if (binding || writing || stopped || request != target) return;
         writing = true;
         revision++;
-        var request = target;
-        grid.Enabled = false;
+        CancelStripEdits();
+        views.Enabled = false;
         try
         {
-            await service.ApplyAsync(request, bound.Snapshot.Key, command);
+            await action();
             if (request == target && !stopped) commandError = null;
         }
         catch (OperationCanceledException) { }
@@ -250,7 +272,7 @@ internal sealed class ApplicationMixerPanel : UserControl
         finally
         {
             writing = false;
-            if (!stopped) grid.Enabled = true;
+            if (!stopped) views.Enabled = true;
         }
         // Mantém erros de comando durante as consultas periódicas até outra ação explícita.
         if (!stopped) PendingRead = ReadAsync();
@@ -260,10 +282,13 @@ internal sealed class ApplicationMixerPanel : UserControl
     {
         stopped = true;
         poll.Stop();
+        CancelStripEdits();
+        views.Enabled = false;
         binding = true;
         try { edit = null; grid.CancelEdit(); grid.EndEdit(); }
         finally { binding = false; }
-        await service.DisposeAsync();
+        await Task.WhenAll(service.DisposeAsync().AsTask(), masterService.DisposeAsync().AsTask());
+        await PendingRead;
         poll.Dispose();
     }
 }

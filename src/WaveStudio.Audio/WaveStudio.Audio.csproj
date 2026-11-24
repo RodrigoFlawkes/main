@@ -2,9 +2,11 @@
   <PropertyGroup>
     <!-- Necessário apenas para o gerador de código-fonte COM do SDK, já auditado. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NeutralLanguage>pt-BR</NeutralLanguage>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="WaveStudio" />
+    <Using Include="WaveStudio.Audio.Localization" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NAudio.Wasapi" Version="[3.1.0]" />

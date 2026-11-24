@@ -4,7 +4,7 @@ using System.Text.Json;
 namespace WaveStudio.Desktop.Settings;
 
 internal enum SettingsFileState { Uninitialized, Missing, Ready, Corrupt, Unsupported, Oversized, Unreadable, Conflict }
-internal sealed class SettingsFileTooLargeException() : IOException("Configuração excede o limite de 1 MiB.");
+internal sealed class SettingsFileTooLargeException() : IOException(StudioStrings.Get("SettingsStore.ConfiguracaoExcedeOLimiteDe"));
 internal sealed record SettingsLoadResult(StudioSettings Settings, SettingsFileState State, string Message, bool CanRecoverBackup);
 internal sealed record SettingsSaveResult(bool Success, string Message);
 
@@ -49,7 +49,7 @@ internal sealed class SettingsStore
         get
         {
             string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            if (string.IsNullOrWhiteSpace(local)) throw new InvalidOperationException("Pasta local do usuário indisponível.");
+            if (string.IsNullOrWhiteSpace(local)) throw new InvalidOperationException(StudioStrings.Get("SettingsStore.PastaLocalDoUsuarioIndisponivel"));
             return Path.Combine(local, "WaveStudio", "settings.json");
         }
     }
@@ -58,7 +58,7 @@ internal sealed class SettingsStore
     {
         FilePath = Path.GetFullPath(path);
         if (string.IsNullOrEmpty(Path.GetFileName(FilePath)) || Path.GetDirectoryName(FilePath) is null)
-            throw new ArgumentException("Informe o caminho de um arquivo de preferências.", nameof(path));
+            throw new ArgumentException(StudioStrings.Get("SettingsStore.InformeOCaminhoDeUm"), nameof(path));
         this.writer = writer ?? new SettingsWriter();
     }
 
@@ -79,8 +79,8 @@ internal sealed class SettingsStore
                     baseline = ReadOptional(FilePath);
                     settings = baseline is null ? new() : SettingsJson.Decode(baseline);
                     State = baseline is null ? SettingsFileState.Missing : SettingsFileState.Ready;
-                    message = baseline is null ? "Primeira execução. Preferências locais serão salvas após suas ações."
-                        : "Preferências carregadas. Os níveis atuais são consultados no Windows.";
+                    message = baseline is null ? StudioStrings.Get("SettingsStore.PrimeiraExecucaoPreferenciasLocaisSerao")
+                        : StudioStrings.Get("SettingsStore.PreferenciasCarregadasOsNiveisAtuais");
                 }
                 catch (SettingsFileTooLargeException)
                 {
@@ -90,22 +90,22 @@ internal sealed class SettingsStore
                 catch (NotSupportedException)
                 {
                     State = SettingsFileState.Unsupported;
-                    message = "Versão de configuração incompatível. Arquivo preservado e gravação bloqueada. Use uma versão compatível do Wave Studio.";
+                    message = StudioStrings.Get("SettingsStore.VersaoDeConfiguracaoIncompativelArquivo");
                 }
                 catch (Exception error) when (IsInvalid(error))
                 {
                     State = SettingsFileState.Corrupt;
-                    message = "Configuração inválida preservada. Padrões seguros estão em memória. Recupere o backup ou redefina explicitamente as preferências locais.";
+                    message = StudioStrings.Get("SettingsStore.ConfiguracaoInvalidaPreservadaPadroesSeguros");
                 }
                 catch (Exception error) when (IsStorageError(error))
                 {
                     State = SettingsFileState.Unreadable;
-                    message = "Não foi possível ler a configuração. Gravação bloqueada. Confira acesso à pasta e reinicie o aplicativo.";
+                    message = StudioStrings.Get("SettingsStore.NaoFoiPossivelLerA");
                 }
                 if (State is SettingsFileState.Corrupt or SettingsFileState.Missing)
                     CanRecoverBackup = ReadValidBackup() is not null;
                 if (State == SettingsFileState.Missing && CanRecoverBackup)
-                    message = "Arquivo principal ausente. Backup válido disponível. Escolha Recuperar backup ou Redefinir preferências locais.";
+                    message = StudioStrings.Get("SettingsStore.ArquivoPrincipalAusenteBackupValido");
                 token.ThrowIfCancellationRequested();
                 return new SettingsLoadResult(settings, State, message, CanRecoverBackup);
             }, token).ConfigureAwait(false);
@@ -127,13 +127,13 @@ internal sealed class SettingsStore
         try { encoded = SettingsJson.Encode(settings); }
         catch (Exception error) when (SettingsJson.IsValidationError(error))
         {
-            return new(false, "Preferências inválidas. A configuração válida foi preservada. " + error.Message);
+            return new(false, StudioStrings.Get("SettingsStore.PreferenciasInvalidasAConfiguracaoValida") + error.Message);
         }
         await gate.WaitAsync(token).ConfigureAwait(false);
         try
         {
             if (!(CanSave || recovery && (State is SettingsFileState.Corrupt or SettingsFileState.Missing)))
-                return new(false, "Gravação protegida. O arquivo existente foi preservado.");
+                return new(false, StudioStrings.Get("SettingsStore.GravacaoProtegidaOArquivoExistente"));
             return await Task.Run(() => Write(encoded, recovery, useBackup, token), token).ConfigureAwait(false);
         }
         finally { gate.Release(); }
@@ -152,12 +152,12 @@ internal sealed class SettingsStore
             if (!SameContent(current, baseline))
             {
                 State = SettingsFileState.Conflict;
-                return new(false, "A configuração foi modificada por outra instância. Arquivo preservado. Feche e reabra para carregar a versão atual.");
+                return new(false, StudioStrings.Get("SettingsStore.AConfiguracaoFoiModificadaPor"));
             }
             if (useBackup)
             {
                 byte[]? backup = ReadValidBackup();
-                if (backup is null) return new(false, "Backup ausente ou inválido. O arquivo original foi preservado.");
+                if (backup is null) return new(false, StudioStrings.Get("SettingsStore.BackupAusenteOuInvalidoO"));
                 encoded = backup;
             }
             string? archived = null;
@@ -171,7 +171,7 @@ internal sealed class SettingsStore
             if (!SameContent(ReadOptional(FilePath), baseline))
             {
                 State = SettingsFileState.Conflict;
-                return new(false, "O arquivo mudou durante a gravação. Conteúdo atual preservado. Reabra o aplicativo para carregar a alteração.");
+                return new(false, StudioStrings.Get("SettingsStore.OArquivoMudouDuranteA"));
             }
             // Somente um arquivo principal reconhecidamente válido vira o próximo backup. A recuperação mantém o backup válido.
             string? backupPath = State == SettingsFileState.Ready ? BackupPath : null;
@@ -179,8 +179,8 @@ internal sealed class SettingsStore
             baseline = encoded;
             State = SettingsFileState.Ready;
             CanRecoverBackup = false;
-            return new(true, archived is null ? "Preferências salvas localmente."
-                : "Preferências recuperadas. O original inválido foi preservado em " + Path.GetFileName(archived) + ".");
+            return new(true, archived is null ? StudioStrings.Get("SettingsStore.PreferenciasSalvasLocalmente")
+                : StudioStrings.Get("SettingsStore.PreferenciasRecuperadasOOriginalInvalido") + Path.GetFileName(archived) + ".");
         }
         catch (SettingsFileTooLargeException)
         {
@@ -188,7 +188,7 @@ internal sealed class SettingsStore
         }
         catch (Exception error) when (IsStorageError(error))
         {
-            return new(false, "Falha ao gravar preferências. Confira permissão, espaço em disco e outra instância em execução. " + error.GetType().Name);
+            return new(false, StudioStrings.Get("SettingsStore.FalhaAoGravarPreferenciasConfira") + error.GetType().Name);
         }
         finally
         {
@@ -203,8 +203,8 @@ internal sealed class SettingsStore
         State = SettingsFileState.Oversized;
         baseline = null;
         CanRecoverBackup = false;
-        return "Configuração maior que 1 MiB preservada. Gravação, redefinição e recuperação automáticas bloqueadas. "
-            + "Inspecione o arquivo com o aplicativo fechado e reabra após corrigir seu tamanho.";
+        return StudioStrings.Get("SettingsStore.ConfiguracaoMaiorQue1MiB")
+            + StudioStrings.Get("SettingsStore.InspecioneOArquivoComO");
     }
 
     private byte[]? ReadValidBackup()
@@ -229,7 +229,7 @@ internal sealed class SettingsStore
             stream.ReadExactly(bytes);
             long finalLength = stream.Length;
             if (finalLength > SettingsJson.MaximumBytes) throw new SettingsFileTooLargeException();
-            if (finalLength != length) throw new IOException("O arquivo mudou durante a leitura.");
+            if (finalLength != length) throw new IOException(StudioStrings.Get("SettingsStore.OArquivoMudouDuranteA2"));
             return bytes;
         }
         catch (FileNotFoundException) { return null; }

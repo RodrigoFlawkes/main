@@ -13,6 +13,7 @@ public sealed class AudioWatchWorker : IAsyncDisposable
     private bool stopping;
     private bool restart;
     private bool metering = true;
+    private bool captureMetering = true;
     private long epoch;
     private string? terminalError;
     private bool pendingRefresh;
@@ -21,12 +22,13 @@ public sealed class AudioWatchWorker : IAsyncDisposable
     public AudioWatchSnapshot? Latest => Volatile.Read(ref latest);
     public string? ShutdownError { get; private set; }
     internal bool MeteringEnabled { get { lock (sync) return metering; } }
+    internal bool CaptureMeteringEnabled { get { lock (sync) return metering && captureMetering; } }
 
     public AudioWatchWorker() : this(signal => new CoreAudioWatchBackend(signal)) { }
     public AudioWatchWorker(Func<Action, IAudioWatchBackend> factory)
     {
         this.factory = factory;
-        var thread = new Thread(Run) { IsBackground = true, Name = "Wave Studio — medição e dispositivos" };
+        var thread = new Thread(Run) { IsBackground = true, Name = StudioStrings.Get("AudioWatchWorker.WaveStudioMedicaoEDispositivos") };
         thread.SetApartmentState(ApartmentState.MTA);
         thread.Start();
     }
@@ -38,7 +40,7 @@ public sealed class AudioWatchWorker : IAsyncDisposable
             ObjectDisposedException.ThrowIf(stopping, this);
             selection = new AudioWatchSelection(playbackId, captureId, selection.Revision + 1);
             epoch++;
-            PublishUnavailable(terminalError ?? "Consultando medidores do dispositivo selecionado…", terminalError is not null);
+            PublishUnavailable(terminalError ?? StudioStrings.Get("AudioWatchWorker.ConsultandoMedidoresDoDispositivoSelecionado"), terminalError is not null);
             wake.Set();
             return selection;
         }
@@ -50,20 +52,23 @@ public sealed class AudioWatchWorker : IAsyncDisposable
         {
             if (stopping) return;
             epoch++;
-            PublishUnavailable(terminalError ?? "Recuperando medidores e dispositivos…", terminalError is not null);
+            PublishUnavailable(terminalError ?? StudioStrings.Get("AudioWatchWorker.RecuperandoMedidoresEDispositivos"), terminalError is not null);
             restart = true;
             wake.Set();
         }
     }
 
-    public void EnableMetering(bool enabled)
+    public void EnableMetering(bool enabled) => EnableMetering(enabled, includeCapture: true);
+
+    internal void EnableMetering(bool enabled, bool includeCapture)
     {
         lock (sync)
         {
-            if (stopping || metering == enabled) return;
+            if (stopping || metering == enabled && captureMetering == includeCapture) return;
             metering = enabled;
+            captureMetering = includeCapture;
             epoch++;
-            PublishUnavailable(terminalError ?? (enabled ? "Consultando medidores…" : "Medição pausada."), terminalError is not null);
+            PublishUnavailable(terminalError ?? (enabled ? StudioStrings.Get("AudioWatchWorker.ConsultandoMedidores") : StudioStrings.Get("AudioWatchWorker.MedicaoPausada")), terminalError is not null);
             wake.Set();
         }
     }
@@ -79,6 +84,7 @@ public sealed class AudioWatchWorker : IAsyncDisposable
                 AudioWatchSelection target;
                 bool recover;
                 bool measure;
+                bool measureCapture;
                 long requestedEpoch;
                 lock (sync)
                 {
@@ -87,9 +93,10 @@ public sealed class AudioWatchWorker : IAsyncDisposable
                     recover = restart;
                     restart = false;
                     measure = metering;
+                    measureCapture = captureMetering;
                     requestedEpoch = epoch;
                 }
-                var snapshot = engine.Tick(clock.ElapsedMilliseconds, target, recover, measure);
+                var snapshot = engine.Tick(clock.ElapsedMilliseconds, target, recover, measure, measureCapture);
                 lock (sync)
                 {
                     if (stopping) break;
@@ -117,7 +124,7 @@ public sealed class AudioWatchWorker : IAsyncDisposable
             ShutdownError = EndpointVolumeOperations.Describe(error);
             lock (sync)
             {
-                terminalError = "O serviço de medição parou. Reinicie o Wave Studio. " + ShutdownError;
+                terminalError = StudioStrings.Get("AudioWatchWorker.OServicoDeMedicaoParou") + ShutdownError;
                 PublishUnavailable(terminalError, failed: true);
             }
         }

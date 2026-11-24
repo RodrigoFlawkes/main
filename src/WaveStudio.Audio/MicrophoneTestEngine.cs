@@ -24,7 +24,7 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
     private bool captureStarted, playbackStarted, stopRequested;
     private long deliveryEpoch;
     private Exception? primaryError, cleanupError;
-    private string message = "Selecione o microfone e a saída na aba Dispositivos. Nenhuma gravação iniciada.";
+    private string message = StudioStrings.Get("MicrophoneTestEngine.SelecioneOMicrofoneEA");
     internal MicrophoneTestState State { get; private set; }
     internal bool Busy => capture is not null || playback is not null;
     internal MicrophoneTestSnapshot Snapshot => new(State, clip?.Duration ?? TimeSpan.Zero, elapsed, message,
@@ -41,7 +41,7 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
         generation = revision;
         captureId = input;
         playbackId = output;
-        Clear("Teste descartado após seleção/atualização dos dispositivos. Grave um novo teste.");
+        Clear(StudioStrings.Get("MicrophoneTestEngine.TesteDescartadoAposSelecaoAtualizacao"));
     }
 
     internal void Record(long revision, TimeSpan now, Func<bool>? requested = null)
@@ -65,7 +65,7 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
             captureStarted = true; // Uma falha em Start pode ocorrer depois da criação da thread de callback.
             capture.Start(data => { if (Current()) recording.Append(data); });
             State = MicrophoneTestState.Recording;
-            message = "GRAVANDO — fale por até 10 segundos. Clique em Parar quando terminar.";
+            message = StudioStrings.Get("MicrophoneTestEngine.GRAVANDOFalePorAte10");
         }
         catch (Exception error) { Fail(error, true); }
     }
@@ -83,7 +83,7 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
         {
             playbackSource = clip.CreatePlayback(level, Current, equalizer);
             limitedSamples = sanitizedSamples = 0;
-            playbackMode = equalizer?.Enabled == true ? "Processado com EQ" : "Original (sem EQ)";
+            playbackMode = equalizer?.Enabled == true ? StudioStrings.Get("MicrophoneTestEngine.ProcessadoComEQ") : StudioStrings.Get("MicrophoneTestEngine.OriginalSemEQ");
             playback = backend.OpenPlayback(playbackId, playbackSource);
             if (!Current()) { ReleasePlayback(); ResetPlayback(); Finish(); return; }
             startedAt = now;
@@ -92,7 +92,7 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
             playbackStarted = true;
             playback.Start();
             State = MicrophoneTestState.Playing;
-            message = $"{playbackMode}: reproduzindo na saída selecionada. Captura desligada.";
+            message = StudioStrings.Format("MicrophoneTestEngine.0ReproduzindoNaSaidaSelecionada", playbackMode);
         }
         catch (Exception error) { Fail(error, false); }
     }
@@ -104,18 +104,19 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
         stopRequested = true;
         clip?.Seal();
         State = MicrophoneTestState.Stopping;
-        message = "Parando o teste…";
+        message = StudioStrings.Get("MicrophoneTestEngine.ParandoOTeste");
         RequestStop();
     }
 
-    internal void Clear(string reason = "Teste apagado da memória. Nenhuma gravação iniciada.")
+    internal void Clear(string? reason = null)
     {
+        reason ??= StudioStrings.Get("MicrophoneTestEngine.TesteApagadoDaMemoriaNenhuma");
         discard = true;
         clip?.Seal();
         if (Busy)
         {
             Stop();
-            message = "Descarte pendente; parada ainda não confirmada. Recursos preservados até o término. " + FailureMessage();
+            message = StudioStrings.Get("MicrophoneTestEngine.DescartePendenteParadaAindaNao") + FailureMessage();
         }
         else { DropClip(); State = MicrophoneTestState.Idle; message = reason; }
     }
@@ -124,7 +125,7 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
     {
         if (!Busy) return;
         elapsed = now - startedAt;
-        if (!isCurrent(generation)) Clear("Operação cancelada: seleção ou disponibilidade mudou.");
+        if (!isCurrent(generation)) Clear(StudioStrings.Get("MicrophoneTestEngine.OperacaoCanceladaSelecaoOuDisponibilidade"));
         if (State == MicrophoneTestState.Recording &&
             (elapsed >= TimeSpan.FromSeconds(BoundedTestAudio.MaximumSeconds) || clip?.Full == true)) Stop();
         if (State == MicrophoneTestState.Playing && elapsed >= TimeSpan.FromSeconds(BoundedTestAudio.MaximumSeconds + 2)) Stop();
@@ -149,7 +150,7 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
 
     private void Finish()
     {
-        if (Busy) throw new InvalidOperationException("Término exige quiescência do diagnóstico.");
+        if (Busy) throw new InvalidOperationException(StudioStrings.Get("MicrophoneTestEngine.TerminoExigeQuiescenciaDoDiagnostico"));
         // A conclusão confirma que os callbacks estão inativos. Uma falha em Dispose deixa incerta a propriedade do recurso nativo.
         if (cleanupError is null)
         {
@@ -168,8 +169,8 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
         }
         State = clip?.Length > 0 ? MicrophoneTestState.Ready : MicrophoneTestState.Idle;
         message = clip?.Length > 0
-            ? "Teste pronto em memória. Use fones e clique em Ouvir gravação. Não há reprodução automática."
-            : "Nenhum áudio recebido. Confira permissões, conexão e mute do microfone.";
+            ? StudioStrings.Get("MicrophoneTestEngine.TesteProntoEmMemoriaUse")
+            : StudioStrings.Get("MicrophoneTestEngine.NenhumAudioRecebidoConfiraPermissoes");
     }
     private bool AcquireActivity()
     {
@@ -180,16 +181,16 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
         }
         activity = activities.TryAcquire(AudioActivity.ShortDiagnostic);
         if (activity is not null) return true;
-        message = "Outra operação de áudio está ativa. Aguarde o término antes de testar.";
+        message = StudioStrings.Get("MicrophoneTestEngine.OutraOperacaoDeAudioEsta");
         return false;
     }
 
     internal void MarkDisposed()
     {
-        if (Busy) throw new InvalidOperationException("Encerre os streams antes do descarte.");
+        if (Busy) throw new InvalidOperationException(StudioStrings.Get("MicrophoneTestEngine.EncerreOsStreamsAntesDo"));
         DropClip();
         State = MicrophoneTestState.Disposed;
-        message = "Teste encerrado e áudio descartado." + (primaryError is not null || cleanupError is not null ? " " + FailureMessage() : "");
+        message = StudioStrings.Get("MicrophoneTestEngine.TesteEncerradoEAudioDescartado") + (primaryError is not null || cleanupError is not null ? " " + FailureMessage() : "");
     }
 
     private bool Valid(long revision) => generation == revision && isCurrent(revision) && State != MicrophoneTestState.Disposed;
@@ -229,7 +230,7 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
         primaryError ??= error; discard = true; stopRequested = true;
         Interlocked.Increment(ref deliveryEpoch); clip?.Seal();
         State = Busy ? MicrophoneTestState.Stopping : MicrophoneTestState.Error;
-        message = Busy ? "Parada ainda não confirmada; recursos preservados. " + FailureMessage() : FailureMessage();
+        message = Busy ? StudioStrings.Get("MicrophoneTestEngine.ParadaAindaNaoConfirmadaRecursos") + FailureMessage() : FailureMessage();
     }
     private void Fail(Exception error, bool clearAudio)
     {
@@ -243,18 +244,18 @@ internal sealed class MicrophoneTestEngine(IMicrophoneTestBackend backend, Func<
         if (Busy)
         {
             stopRequested = true; State = MicrophoneTestState.Stopping;
-            RequestStop(); message = "Parada ainda não confirmada; recursos preservados. " + FailureMessage();
+            RequestStop(); message = StudioStrings.Get("MicrophoneTestEngine.ParadaAindaNaoConfirmadaRecursos") + FailureMessage();
             try { Tick(startedAt); } catch (Exception secondary) { ReportControlFailure(secondary); }
         }
         else Finish();
     }
     private string FailureMessage() => (primaryError is null ? "" : Describe(primaryError)) +
-        (cleanupError is null ? "" : " Liberação do dispositivo não confirmada. Reinicie o Wave Studio antes de iniciar outro teste. " + Describe(cleanupError));
+        (cleanupError is null ? "" : StudioStrings.Get("MicrophoneTestEngine.LiberacaoDoDispositivoNaoConfirmada") + Describe(cleanupError));
     private static string Describe(Exception error) => error switch
         {
             NotSupportedException or InvalidOperationException => error.Message,
-            UnauthorizedAccessException => "O Windows negou acesso. Confira Privacidade > Microfone e permita aplicativos da área de trabalho.",
-            COMException => $"O teste de áudio falhou (0x{error.HResult:X8}). Confira conexão, permissões e formato; atualize os dispositivos.",
-            _ => "Não foi possível completar o teste. Confira os dispositivos e tente novamente."
+            UnauthorizedAccessException => StudioStrings.Get("MicrophoneTestEngine.OWindowsNegouAcessoConfira"),
+            COMException => StudioStrings.Format("MicrophoneTestEngine.OTesteDeAudioFalhou", error.HResult),
+            _ => StudioStrings.Get("MicrophoneTestEngine.NaoFoiPossivelCompletarO")
         };
 }

@@ -15,10 +15,10 @@ internal sealed class DevicePanel : GroupBox
     private bool binding;
     private DeviceSnapshot? displayed;
     private readonly ProgressBar peakBar = new() { Minimum = 0, Maximum = 1000, Dock = DockStyle.Fill, Height = 14 };
-    private readonly Label peakText = new() { AutoSize = true, Text = "Pico indisponível", Dock = DockStyle.Fill };
-    private readonly Label savedText = new() { AutoSize = true, Text = "Preferência de níveis ainda não salva.", Dock = DockStyle.Fill };
-    private readonly Button savePreference = new() { AutoSize = true, Text = "Salvar valores atuais" };
-    private readonly Button restorePreference = new() { AutoSize = true, Text = "Restaurar valores salvos…" };
+    private readonly Label peakText = new() { AutoSize = true, Text = StudioStrings.Get("DevicePanel.PicoIndisponivel"), Dock = DockStyle.Fill };
+    private readonly Label savedText = new() { AutoSize = true, Text = StudioStrings.Get("DevicePanel.PreferenciaDeNiveisAindaNao"), Dock = DockStyle.Fill };
+    private readonly Button savePreference = new() { AutoSize = true, Text = StudioStrings.Get("DevicePanel.SalvarValoresAtuais") };
+    private readonly Button restorePreference = new() { AutoSize = true, Text = StudioStrings.Get("DevicePanel.RestaurarValoresSalvos") };
     private EndpointPreference? saved;
     private bool preferenceBusy;
     private bool preferenceWritable = true;
@@ -44,7 +44,7 @@ internal sealed class DevicePanel : GroupBox
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         selector.DisplayMember = nameof(DeviceItem.Label);
         selector.AccessibleName = title;
-        information.AccessibleName = $"Informações de {title}";
+        information.AccessibleName = StudioStrings.Format("DevicePanel.InformacoesDe0", title);
         layout.Controls.Add(selector, 0, 0);
         layout.Controls.Add(information, 0, 1);
         layout.Controls.Add(this.endpointControls, 0, 2);
@@ -55,10 +55,10 @@ internal sealed class DevicePanel : GroupBox
         actions.Controls.Add(savePreference);
         actions.Controls.Add(restorePreference);
         layout.Controls.Add(actions, 0, 6);
-        savedText.AccessibleName = $"Preferências salvas de {title}";
+        savedText.AccessibleName = StudioStrings.Format("DevicePanel.PreferenciasSalvasDe0", title);
         savePreference.Click += (_, _) => SavePreferenceRequested?.Invoke();
         restorePreference.Click += (_, _) => RestorePreferenceRequested?.Invoke();
-        peakBar.AccessibleName = $"Pico real do Windows — {title}";
+        peakBar.AccessibleName = StudioStrings.Format("DevicePanel.PicoRealDoWindows0", title);
         Controls.Add(layout);
         selector.SelectedIndexChanged += (_, _) =>
         {
@@ -90,7 +90,7 @@ internal sealed class DevicePanel : GroupBox
         finally { binding = false; }
         ShowDevice(selected, resetControls);
         if (selected is null && preferredId is not null)
-            information.Text = "Preferência explícita preservada. Dispositivo indisponível — " + preferredId;
+            information.Text = StudioStrings.Get("DevicePanel.PreferenciaExplicitaPreservadaDispositivoIndisponivel") + preferredId;
     }
 
     public void ShowUnavailable(string message)
@@ -115,20 +115,20 @@ internal sealed class DevicePanel : GroupBox
         UpdatePreferenceButtons();
         if (device is null)
         {
-            information.Text = "Dispositivo selecionado indisponível ou nenhum dispositivo encontrado. Escolha uma opção da lista ou atualize.";
+            information.Text = StudioStrings.Get("DevicePanel.DispositivoSelecionadoIndisponivelOuNenhum");
             return;
         }
         var format = device.MixFormat;
         string formatText = format is null
-            ? "Formato de mixagem indisponível"
-            : $"{format.SampleRate:N0} Hz • {format.Channels} canal(is) • {format.BitsPerSample} bits • {format.Encoding}";
+            ? StudioStrings.Get("DevicePanel.FormatoDeMixagemIndisponivel")
+            : StudioStrings.Format("DevicePanel.0N0Hz1Canal", format.SampleRate, format.Channels, format.BitsPerSample, format.Encoding);
         information.Text = string.Join(Environment.NewLine + Environment.NewLine,
             device.Name,
-            $"Disponibilidade — {StateText(device.State)}",
-            $"Padrão de multimídia — {(device.IsDefaultMultimedia ? "Sim" : "Não")}",
-            $"Padrão de comunicações — {(device.IsDefaultCommunications ? "Sim" : "Não")}",
+            StudioStrings.Format("DevicePanel.Disponibilidade0", StateText(device.State)),
+            StudioStrings.Format("DevicePanel.PadraoDeMultimidia0", (device.IsDefaultMultimedia ? StudioStrings.Get("DevicePanel.Sim") : StudioStrings.Get("DevicePanel.Nao"))),
+            StudioStrings.Format("DevicePanel.PadraoDeComunicacoes0", (device.IsDefaultCommunications ? StudioStrings.Get("DevicePanel.Sim") : StudioStrings.Get("DevicePanel.Nao"))),
             formatText,
-            $"ID do endpoint — {device.Id}",
+            StudioStrings.Format("DevicePanel.IDDoEndpoint0", device.Id),
             device.InformationError ?? "");
     }
 
@@ -139,10 +139,10 @@ internal sealed class DevicePanel : GroupBox
         saved = preference;
         preferenceBusy = busy;
         preferenceWritable = canSave;
-        savedText.Text = preference is null ? "Preferência de níveis ainda não salva."
-            : $"Salvo — volume {Format(preference.VolumePercent, "%")}, mute {preference.Muted switch { true => "ligado", false => "desligado", _ => "ausente" }}, balanço {Format(preference.Balance, "")}.";
+        savedText.Text = preference is null ? StudioStrings.Get("DevicePanel.PreferenciaDeNiveisAindaNao")
+            : StudioStrings.Format("DevicePanel.SalvoVolume0Mute1", Format(preference.VolumePercent, "%"), preference.Muted switch { true => StudioStrings.Get("DevicePanel.Ligado"), false => StudioStrings.Get("DevicePanel.Desligado"), _ => StudioStrings.Get("DevicePanel.Ausente") }, Format(preference.Balance, ""));
         savedText.AccessibleDescription = savedText.Text;
-        savedText.AccessibleName = $"Preferências salvas de {Text} — {savedText.Text}";
+        savedText.AccessibleName = StudioStrings.Format("DevicePanel.PreferenciasSalvasDe01", Text, savedText.Text);
         UpdatePreferenceButtons();
     }
 
@@ -153,7 +153,7 @@ internal sealed class DevicePanel : GroupBox
         restorePreference.Enabled = available && saved is not null && saved.EndpointId == displayed?.Id && saved.Values.HasValues;
     }
 
-    private static string Format(double? value, string suffix) => value is double number ? $"{number:F1}{suffix}" : "ausente";
+    private static string Format(double? value, string suffix) => value is double number ? $"{number:F1}{suffix}" : StudioStrings.Get("DevicePanel.Ausente");
 
     public void ShowPeak(PeakReading reading)
     {
@@ -161,26 +161,26 @@ internal sealed class DevicePanel : GroupBox
         peakBar.Value = reading.Scalar is double value ? (int)Math.Round(value * 1000) : 0;
         string text = reading.Scalar switch
         {
-            null => reading.Error ?? "Pico indisponível",
-            0 => "Pico do Windows — silêncio (0%)",
-            _ => $"Pico do Windows — {reading.Scalar * 100:F1}% ({reading.Decibels:F1} dBFS)"
+            null => reading.Error ?? StudioStrings.Get("DevicePanel.PicoIndisponivel"),
+            0 => StudioStrings.Get("DevicePanel.PicoDoWindowsSilencio0"),
+            _ => StudioStrings.Format("DevicePanel.PicoDoWindows0F1", reading.Scalar * 100, reading.Decibels)
         };
         if (peakText.Text != text) peakText.Text = text;
     }
 
     private static string StateText(EndpointState state) => state switch
     {
-        EndpointState.Active => "Disponível",
-        EndpointState.Disabled => "Desabilitado no Windows",
+        EndpointState.Active => StudioStrings.Get("DevicePanel.Disponivel"),
+        EndpointState.Disabled => StudioStrings.Get("DevicePanel.DesabilitadoNoWindows"),
         EndpointState.NotPresent => "Ausente",
-        EndpointState.Unplugged => "Desconectado",
-        _ => "Estado desconhecido"
+        EndpointState.Unplugged => StudioStrings.Get("DevicePanel.Desconectado"),
+        _ => StudioStrings.Get("DevicePanel.EstadoDesconhecido")
     };
 
     private sealed record DeviceItem(DeviceSnapshot Device)
     {
         public string Label => $"{Device.Name} — {StateText(Device.State)}"
-            + (Device.IsDefaultMultimedia ? " • Padrão multimídia" : "")
-            + (Device.IsDefaultCommunications ? " • Padrão comunicações" : "");
+            + (Device.IsDefaultMultimedia ? StudioStrings.Get("DevicePanel.PadraoMultimidia") : "")
+            + (Device.IsDefaultCommunications ? StudioStrings.Get("DevicePanel.PadraoComunicacoes") : "");
     }
 }

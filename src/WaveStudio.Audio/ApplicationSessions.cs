@@ -49,8 +49,8 @@ public sealed class ApplicationSessionService : IAsyncDisposable
             {
                 using var session = endpoint.Open(index);
                 var snapshot = session.Read();
-                if (snapshot.Key.EndpointId != id || string.IsNullOrWhiteSpace(snapshot.Key.InstanceId))
-                    throw new InvalidOperationException("A identidade da sessão não pôde ser confirmada.");
+                if (snapshot.Key.EndpointId != id || string.IsNullOrWhiteSpace(snapshot.Key.InstanceId) || session.Key != snapshot.Key)
+                    throw new InvalidOperationException(StudioStrings.Get("ApplicationSessions.AIdentidadeDaSessaoNao"));
                 sessions.Add(snapshot);
             }
             catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error))
@@ -58,51 +58,69 @@ public sealed class ApplicationSessionService : IAsyncDisposable
                 warnings.Add(EndpointVolumeOperations.Describe(error));
             }
         }
-        return new ApplicationSessionCatalog(sessions.AsReadOnly(), warnings.AsReadOnly());
+        var unique = sessions.GroupBy(session => session.Key).Where(group => group.Count() == 1).Select(group => group.First()).ToArray();
+        if (unique.Length != sessions.Count) warnings.Add(StudioStrings.Get("Mixer.Duplicate"));
+        return new ApplicationSessionCatalog(unique, warnings.AsReadOnly());
     });
 
     public Task<ApplicationSessionSnapshot> ApplyAsync(EndpointSelection target, SessionKey key, ApplicationSessionCommand command)
     {
         if (target.DeviceId != key.EndpointId || string.IsNullOrWhiteSpace(key.InstanceId))
-            throw new InvalidOperationException("A sessão pertence a outra seleção de dispositivo.");
+            throw new InvalidOperationException(StudioStrings.Get("ApplicationSessions.ASessaoPertenceAOutra"));
         if (command is SetSessionVolume volume)
             StereoLevels.ValidateLevel(volume.Percent / 100);
         return queue.RunAsync(target, (id, token) =>
         {
             using var endpoint = openEndpoint(id);
-            for (int index = 0; index < endpoint.Count; index++)
+            IApplicationSessionAccess? selected = null;
+            try
             {
-                token.ThrowIfCancellationRequested();
-                IApplicationSessionAccess session;
-                try { session = endpoint.Open(index); }
-                catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error)) { continue; }
-                using (session)
+                for (int index = 0; index < endpoint.Count; index++)
                 {
-                    SessionKey observed;
-                    try { observed = session.Key; }
-                    catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error)) { continue; }
-                    if (observed != key) continue;
-                    if (session.Activity == SessionActivity.Expired || session.Key != key)
-                        throw new InvalidOperationException("A sessão foi encerrada. Atualize o mixer.");
                     token.ThrowIfCancellationRequested();
-                    switch (command)
+                    IApplicationSessionAccess session;
+                    try { session = endpoint.Open(index); }
+                    catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error)) { continue; }
+                    bool keep = false;
+                    try
                     {
-                        case SetSessionVolume requested:
-                            session.VolumeScalar = requested.Percent / 100;
-                            break;
-                        case SetSessionMute requested:
-                            session.Muted = requested.Muted;
-                            break;
-                        default: throw new ArgumentException("Comando de sessão desconhecido.", nameof(command));
+                        SessionKey observed;
+                        try { observed = session.Key; }
+                        catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error)) { continue; }
+                        if (observed != key) continue;
+                        if (selected is not null)
+                            throw new InvalidOperationException(StudioStrings.Get("Mixer.Duplicate"));
+                        selected = session;
+                        keep = true;
                     }
-                    var actual = session.Read();
-                    if (command is SetSessionVolume value && (actual.VolumePercent is null || Math.Abs(actual.VolumePercent.Value - value.Percent) > 2)
-                        || command is SetSessionMute mute && actual.Muted != mute.Muted)
-                        throw new NotSupportedException("O Windows não confirmou a alteração da sessão. Atualize o mixer.");
-                    return actual;
+                    finally { if (!keep) session.Dispose(); }
                 }
+                if (selected is null)
+                    throw new InvalidOperationException(StudioStrings.Get("ApplicationSessions.ASessaoNaoEstaMais"));
+                if (selected.Activity == SessionActivity.Expired || selected.Key != key)
+                    throw new InvalidOperationException(StudioStrings.Get("ApplicationSessions.ASessaoFoiEncerradaAtualize"));
+
+                token.ThrowIfCancellationRequested();
+                switch (command)
+                {
+                    case SetSessionVolume requested:
+                        selected.VolumeScalar = requested.Percent / 100;
+                        break;
+                    case SetSessionMute requested:
+                        selected.Muted = requested.Muted;
+                        break;
+                    default: throw new ArgumentException(StudioStrings.Get("ApplicationSessions.ComandoDeSessaoDesconhecido"), nameof(command));
+                }
+                var actual = selected.Read();
+                if (actual.Key != key || actual.Activity == SessionActivity.Expired)
+                    throw new InvalidOperationException(StudioStrings.Get("Mixer.SessionChanged"));
+                if (command is SetSessionVolume value && (actual.VolumePercent is not double readback ||
+                        !double.IsFinite(readback) || Math.Abs(readback - value.Percent) > 2) ||
+                    command is SetSessionMute mute && actual.Muted != mute.Muted)
+                    throw new NotSupportedException(StudioStrings.Get("ApplicationSessions.OWindowsNaoConfirmouA"));
+                return actual;
             }
-            throw new InvalidOperationException("A sessão não está mais disponível. Atualize o mixer.");
+            finally { selected?.Dispose(); }
         });
     }
 

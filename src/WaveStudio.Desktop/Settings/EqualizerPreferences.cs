@@ -15,7 +15,7 @@ internal sealed class EqualizerValues
     {
         settings = new(enabled, gainsDb, preampDb);
         if (GainsDb.Any(value => value != Math.Truncate(value)) || Math.Abs(preampDb * 10 - Math.Round(preampDb * 10)) > 1e-8)
-            throw new ArgumentException("Use passos de 1 dB nas bandas e 0,1 dB no ajuste de entrada.");
+            throw new ArgumentException(StudioStrings.Get("EqualizerPreferences.UsePassosDe1DB"));
     }
     public static EqualizerValues Neutral() => new(false, new double[10], 0);
     public EqualizerValues Copy() => new(Enabled, GainsDb, PreampDb);
@@ -32,8 +32,8 @@ internal sealed class EqualizerProfile
     public EqualizerProfile(string id, string name, EqualizerValues values)
     {
         if (!Guid.TryParseExact(id, "N", out var guid) || guid == Guid.Empty || id != guid.ToString("N"))
-            throw new ArgumentException("Identificação de perfil inválida.");
-        if (name != EqualizerPreferences.NormalizeName(name)) throw new ArgumentException("Nome de perfil inválido.");
+            throw new ArgumentException(StudioStrings.Get("EqualizerPreferences.IdentificacaoDePerfilInvalida"));
+        if (name != EqualizerPreferences.NormalizeName(name)) throw new ArgumentException(StudioStrings.Get("EqualizerPreferences.NomeDePerfilInvalido"));
         ArgumentNullException.ThrowIfNull(values);
         Id = id; Name = name; Values = values.Copy();
     }
@@ -52,12 +52,12 @@ internal sealed class EqualizerPreferences
     public EqualizerPreferences(EqualizerValues current, IReadOnlyList<EqualizerProfile> profiles, string? selectedProfileId = null)
     {
         ArgumentNullException.ThrowIfNull(current); ArgumentNullException.ThrowIfNull(profiles);
-        if (profiles.Count > MaximumProfiles || profiles.Any(p => p is null)) throw new ArgumentException("Limite de 20 perfis.");
+        if (profiles.Count > MaximumProfiles || profiles.Any(p => p is null)) throw new ArgumentException(StudioStrings.Get("EqualizerPreferences.LimiteDe20Perfis"));
         var copy = profiles.Select(p => new EqualizerProfile(p.Id, p.Name, p.Values)).ToArray();
         if (copy.Select(p => p.Id).Distinct(StringComparer.Ordinal).Count() != copy.Length ||
             copy.Select(p => p.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != copy.Length)
-            throw new ArgumentException("Perfis com nome ou identificação repetidos.");
-        if (selectedProfileId is not null && !copy.Any(p => p.Id == selectedProfileId)) throw new ArgumentException("Perfil selecionado não existe.");
+            throw new ArgumentException(StudioStrings.Get("EqualizerPreferences.PerfisComNomeOuIdentificacao"));
+        if (selectedProfileId is not null && !copy.Any(p => p.Id == selectedProfileId)) throw new ArgumentException(StudioStrings.Get("EqualizerPreferences.PerfilSelecionadoNaoExiste"));
         Current = current.Copy(); Profiles = Array.AsReadOnly(copy); SelectedProfileId = selectedProfileId;
     }
     public EqualizerPreferences WithCurrent(EqualizerValues values) => new(values, Profiles, SelectedProfileId);
@@ -87,14 +87,14 @@ internal sealed class EqualizerPreferences
         return new(Current, Profiles.Where(p => p.Id != selected.Id).ToArray(), null);
     }
     private EqualizerProfile Find(string? id) => Profiles.SingleOrDefault(p => p.Id == id)
-        ?? throw new InvalidOperationException("Selecione um perfil personalizado.");
+        ?? throw new InvalidOperationException(StudioStrings.Get("EqualizerPreferences.SelecioneUmPerfilPersonalizado"));
     public static string NormalizeName(string name)
     {
         ArgumentNullException.ThrowIfNull(name);
         string result = string.Join(' ', name.Normalize(NormalizationForm.FormKC).Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries));
         if (result.Length is < 1 or > MaximumNameLength || result.Equals("Padrão", StringComparison.OrdinalIgnoreCase) ||
             result.Any(c => !char.IsLetterOrDigit(c) && c is not (' ' or '-' or '_' or '(' or ')')))
-            throw new ArgumentException("Use um nome de 1 a 48 letras, números, espaços, hífen ou parênteses. Padrão é reservado.");
+            throw new ArgumentException(StudioStrings.Get("EqualizerPreferences.UseUmNomeDe1"));
         return result;
     }
 }

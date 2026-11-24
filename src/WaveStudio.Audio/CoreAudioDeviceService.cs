@@ -55,7 +55,7 @@ public sealed class CoreAudioDeviceService
         }
         catch (Exception error) when (AudioError.IsDeviceAccessError(error))
         {
-            warnings.Add($"{(direction == EndpointDirection.Playback ? "Reprodução" : "Captura")}: {AudioError.Describe(error)}");
+            warnings.Add($"{(direction == EndpointDirection.Playback ? StudioStrings.Get("CoreAudioDeviceService.Reproducao") : StudioStrings.Get("CoreAudioDeviceService.Captura"))}: {AudioError.Describe(error)}");
         }
     }
 
@@ -71,7 +71,7 @@ public sealed class CoreAudioDeviceService
         }
         catch (Exception error) when (AudioError.IsDeviceAccessError(error))
         {
-            warnings.Add($"Padrão do Windows ({flow}, {role}): {AudioError.Describe(error)}");
+            warnings.Add(StudioStrings.Format("CoreAudioDeviceService.PadraoDoWindows01", flow, role, AudioError.Describe(error)));
             return null;
         }
     }
@@ -80,7 +80,7 @@ public sealed class CoreAudioDeviceService
         string? multimedia, string? communications)
     {
         string id = device.ID;
-        string name = "Nome indisponível";
+        string name = StudioStrings.Get("CoreAudioDeviceService.NomeIndisponivel");
         string? informationError = null;
         MixFormatSnapshot? mixFormat = null;
         var state = device.State;

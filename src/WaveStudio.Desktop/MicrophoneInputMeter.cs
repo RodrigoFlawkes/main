@@ -6,9 +6,9 @@ namespace WaveStudio.Desktop;
 internal sealed class MicrophoneInputMeter : GroupBox
 {
     private readonly ProgressBar bar = new() { Minimum = 0, Maximum = 100, Height = 24, Dock = DockStyle.Fill,
-        AccessibleName = "Nível de entrada do microfone em percentual de pico" };
+        AccessibleName = StudioStrings.Get("MicrophoneInputMeter.NivelDeEntradaDoMicrofone") };
     private readonly Label reading = new() { AutoSize = true, Dock = DockStyle.Fill,
-        MaximumSize = new Size(700, 0), AccessibleName = "Leitura do nível de entrada do microfone" };
+        MaximumSize = new Size(700, 0), AccessibleName = StudioStrings.Get("MicrophoneInputMeter.LeituraDoNivelDeEntrada") };
     private AudioWatchSelection? selection;
     private string? inputId;
     private int invalidated = 1;
@@ -20,7 +20,7 @@ internal sealed class MicrophoneInputMeter : GroupBox
 
     public MicrophoneInputMeter()
     {
-        Text = "Nível de entrada do microfone";
+        Text = StudioStrings.Get("MicrophoneInputMeter.NivelDeEntradaDoMicrofone2");
         AccessibleName = Text;
         Dock = DockStyle.Fill;
         AutoSize = true;
@@ -30,7 +30,7 @@ internal sealed class MicrophoneInputMeter : GroupBox
         layout.Controls.Add(bar, 0, 0);
         layout.Controls.Add(reading, 0, 1);
         layout.Controls.Add(new Label { AutoSize = true, MaximumSize = new Size(700, 0), Dock = DockStyle.Fill,
-            Text = "Pico de amplitude de 0 a 100%: não identifica voz, inteligibilidade ou zumbido. Alguns drivers só informam nível durante captura ativa; confira também ao clicar em Gravar teste." }, 0, 2);
+            Text = StudioStrings.Get("MicrophoneInputMeter.PicoDeAmplitudeDe0") }, 0, 2);
         Controls.Add(layout);
         ShowSnapshot(null, 0);
     }
@@ -56,12 +56,12 @@ internal sealed class MicrophoneInputMeter : GroupBox
 
     public void ShowSnapshot(AudioWatchSnapshot? snapshot, long now)
     {
-        if (stopped) { Render(null, "Medição encerrada."); return; }
-        if (!measuring) { Render(null, "Medição pausada — abra esta aba com a janela restaurada."); return; }
-        if (inputId is null) { Render(null, "Microfone selecionado indisponível."); return; }
+        if (stopped) { Render(null, StudioStrings.Get("MicrophoneInputMeter.MedicaoEncerrada")); return; }
+        if (!measuring) { Render(null, StudioStrings.Get("MicrophoneInputMeter.MedicaoPausadaAbraEstaAba")); return; }
+        if (inputId is null) { Render(null, StudioStrings.Get("MicrophoneInputMeter.MicrofoneSelecionadoIndisponivel")); return; }
         if (Volatile.Read(ref invalidated) != 0 || snapshot is null || snapshot.Selection != selection || selection?.CaptureId != inputId)
         {
-            Render(null, "Nível indisponível — aguardando leitura da seleção atual.");
+            Render(null, StudioStrings.Get("MicrophoneInputMeter.NivelIndisponivelAguardandoLeituraDa"));
             return;
         }
         var current = snapshot.ForDisplay(now);
@@ -69,9 +69,9 @@ internal sealed class MicrophoneInputMeter : GroupBox
         string text = current.WorkerFailed ? current.NotificationStatus
             : peak.Scalar switch
             {
-                null => peak.Error ?? "Nível de entrada indisponível.",
-                0 => "Pico de entrada — 0% (nenhum pico detectado nesta leitura).",
-                double value => $"Pico de entrada — {value * 100:F1}%"
+                null => peak.Error ?? StudioStrings.Get("MicrophoneInputMeter.NivelDeEntradaIndisponivel"),
+                0 => StudioStrings.Get("MicrophoneInputMeter.PicoDeEntrada0Nenhum"),
+                double value => StudioStrings.Format("MicrophoneInputMeter.PicoDeEntrada0F1", value * 100)
             };
         Render(current.WorkerFailed ? null : peak.Scalar, text);
     }

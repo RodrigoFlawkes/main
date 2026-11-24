@@ -2,6 +2,12 @@
 
 ## Em desenvolvimento
 
+### 2026-11-23 — F4-I1-REAL-MIXER
+
+- Mesa com faders, mute e pico por sessão real, master do dispositivo, filtro por grupos locais e a grade em Detalhes das sessões.
+- Configurações → Idioma com recursos pt-BR, opção Seguir Windows e migração das preferências locais para o esquema 3.
+- A escrita do mixer confirma a identidade e o estado observado. A troca de dispositivo ou o fechamento cancela edições pendentes.
+
 ### 2026-11-19 — F3-I3-ROUTE-READINESS-DESKTOP
 
 - Adicionada a aba experimental de roteamento externo com inventário, seleções locais, diagnóstico do VB-CABLE simples e disponibilidade A+B.

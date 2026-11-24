@@ -1,0 +1,1338 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <data name="ApplicationMixerPanel.Silence" xml:space="preserve">
+    <value>{0:F1} (silêncio)</value>
+  </data>
+  <data name="ApplicationMixerPanel.0SessaoOesEditeO" xml:space="preserve">
+    <value>{0} sessão(ões). Edite o volume e confirme com Enter. Pico instantâneo consultado a cada segundo.</value>
+  </data>
+  <data name="ApplicationMixerPanel.Aplicativo" xml:space="preserve">
+    <value>Aplicativo</value>
+  </data>
+  <data name="ApplicationMixerPanel.Ativa" xml:space="preserve">
+    <value>Ativa</value>
+  </data>
+  <data name="ApplicationMixerPanel.AtivarMute" xml:space="preserve">
+    <value>Ativar mute</value>
+  </data>
+  <data name="ApplicationMixerPanel.AtualizarMixer" xml:space="preserve">
+    <value>Atualizar mixer</value>
+  </data>
+  <data name="ApplicationMixerPanel.DesativarMute" xml:space="preserve">
+    <value>Desativar mute</value>
+  </data>
+  <data name="ApplicationMixerPanel.Encerrada" xml:space="preserve">
+    <value>Encerrada</value>
+  </data>
+  <data name="ApplicationMixerPanel.Estado" xml:space="preserve">
+    <value>Estado</value>
+  </data>
+  <data name="ApplicationMixerPanel.Inativa" xml:space="preserve">
+    <value>Inativa</value>
+  </data>
+  <data name="ApplicationMixerPanel.Indisponivel" xml:space="preserve">
+    <value>Indisponível</value>
+  </data>
+  <data name="ApplicationMixerPanel.InformeUmVolumeEntre0" xml:space="preserve">
+    <value>Informe um volume entre 0 e 100%. Use Esc para cancelar a edição.</value>
+  </data>
+  <data name="ApplicationMixerPanel.InstanciaDaSessao" xml:space="preserve">
+    <value>Instância da sessão</value>
+  </data>
+  <data name="ApplicationMixerPanel.LeituraAtrasada" xml:space="preserve">
+    <value>Leitura atrasada</value>
+  </data>
+  <data name="ApplicationMixerPanel.MixerDeSessoesDoDispositivo" xml:space="preserve">
+    <value>Mixer de sessões do dispositivo de reprodução</value>
+  </data>
+  <data name="ApplicationMixerPanel.Mute" xml:space="preserve">
+    <value>Mute</value>
+  </data>
+  <data name="ApplicationMixerPanel.NenhumaSessaoEncontradaNesteDispositivo" xml:space="preserve">
+    <value>Nenhuma sessão encontrada neste dispositivo.</value>
+  </data>
+  <data name="ApplicationMixerPanel.PID" xml:space="preserve">
+    <value>PID</value>
+  </data>
+  <data name="ApplicationMixerPanel.Pausado" xml:space="preserve">
+    <value>Pausado</value>
+  </data>
+  <data name="ApplicationMixerPanel.Pico1S" xml:space="preserve">
+    <value>Pico (%) · 1 s</value>
+  </data>
+  <data name="ApplicationMixerPanel.PicoInstantaneoDoWindowsConsulta" xml:space="preserve">
+    <value>Pico instantâneo do Windows. Consulta de 1 s pode perder eventos breves. Edição pausa a medição.</value>
+  </data>
+  <data name="ApplicationMixerPanel.ReproducaoIndisponivel" xml:space="preserve">
+    <value>Reprodução indisponível</value>
+  </data>
+  <data name="ApplicationMixerPanel.SelecioneUmDispositivoDeReproducao" xml:space="preserve">
+    <value>Selecione um dispositivo de reprodução disponível.</value>
+  </data>
+  <data name="ApplicationMixerPanel.SessoesDeReproducao0" xml:space="preserve">
+    <value>Sessões de reprodução — {0}</value>
+  </data>
+  <data name="ApplicationMixerPanel.ValorInvalidoReviseAEdicao" xml:space="preserve">
+    <value>Valor inválido. Revise a edição ou pressione Esc.</value>
+  </data>
+  <data name="ApplicationMixerPanel.Volume" xml:space="preserve">
+    <value>Volume (%)</value>
+  </data>
+  <data name="ApplicationSessions.AIdentidadeDaSessaoNao" xml:space="preserve">
+    <value>A identidade da sessão não pôde ser confirmada.</value>
+  </data>
+  <data name="ApplicationSessions.ASessaoFoiEncerradaAtualize" xml:space="preserve">
+    <value>A sessão foi encerrada. Atualize o mixer.</value>
+  </data>
+  <data name="ApplicationSessions.ASessaoNaoEstaMais" xml:space="preserve">
+    <value>A sessão não está mais disponível. Atualize o mixer.</value>
+  </data>
+  <data name="ApplicationSessions.ASessaoPertenceAOutra" xml:space="preserve">
+    <value>A sessão pertence a outra seleção de dispositivo.</value>
+  </data>
+  <data name="ApplicationSessions.ComandoDeSessaoDesconhecido" xml:space="preserve">
+    <value>Comando de sessão desconhecido.</value>
+  </data>
+  <data name="ApplicationSessions.OWindowsNaoConfirmouA" xml:space="preserve">
+    <value>O Windows não confirmou a alteração da sessão. Atualize o mixer.</value>
+  </data>
+  <data name="AudioError.NaoFoiPossivelConsultarO" xml:space="preserve">
+    <value>Não foi possível consultar o áudio do Windows (código 0x{0:X8}). Confira a conexão e tente atualizar.</value>
+  </data>
+  <data name="AudioError.NaoFoiPossivelConsultarAs" xml:space="preserve">
+    <value>Não foi possível consultar as informações do dispositivo. Tente atualizar a lista.</value>
+  </data>
+  <data name="AudioError.ODispositivoFoiDesconectadoOu" xml:space="preserve">
+    <value>O dispositivo foi desconectado ou reconfigurado. Atualize a lista.</value>
+  </data>
+  <data name="AudioError.ODispositivoNaoEstaMais" xml:space="preserve">
+    <value>O dispositivo não está mais disponível. Atualize a lista.</value>
+  </data>
+  <data name="AudioError.OWindowsNegouAcessoAs" xml:space="preserve">
+    <value>O Windows negou acesso às informações de áudio. Confira as permissões do dispositivo.</value>
+  </data>
+  <data name="AudioWatchEngine.DeteccaoAutomaticaDeDispositivosAtiva" xml:space="preserve">
+    <value>Detecção automática de dispositivos ativa.</value>
+  </data>
+  <data name="AudioWatchEngine.DeteccaoAutomaticaIndisponivelNovaConsulta" xml:space="preserve">
+    <value>Detecção automática indisponível. Nova consulta a cada 5 s e atualização manual disponíveis. {0}</value>
+  </data>
+  <data name="AudioWatchModels.LeituraDeAudioAtrasadaUse" xml:space="preserve">
+    <value>Leitura de áudio atrasada. Use Atualizar dispositivos para recuperar.</value>
+  </data>
+  <data name="AudioWatchModels.LeituraDePicoAtrasadaAguarde" xml:space="preserve">
+    <value>Leitura de pico atrasada. Aguarde uma leitura atual ou atualize os dispositivos.</value>
+  </data>
+  <data name="AudioWatchModels.OWindowsRetornouUmPico" xml:space="preserve">
+    <value>O Windows retornou um pico inválido.</value>
+  </data>
+  <data name="AudioWatchModels.PicoIndisponivel" xml:space="preserve">
+    <value>Pico indisponível</value>
+  </data>
+  <data name="AudioWatchWorker.ConsultandoMedidores" xml:space="preserve">
+    <value>Consultando medidores…</value>
+  </data>
+  <data name="AudioWatchWorker.ConsultandoMedidoresDoDispositivoSelecionado" xml:space="preserve">
+    <value>Consultando medidores do dispositivo selecionado…</value>
+  </data>
+  <data name="AudioWatchWorker.MedicaoPausada" xml:space="preserve">
+    <value>Medição pausada.</value>
+  </data>
+  <data name="AudioWatchWorker.OServicoDeMedicaoParou" xml:space="preserve">
+    <value>O serviço de medição parou. Reinicie o Wave Studio. </value>
+  </data>
+  <data name="AudioWatchWorker.RecuperandoMedidoresEDispositivos" xml:space="preserve">
+    <value>Recuperando medidores e dispositivos…</value>
+  </data>
+  <data name="AudioWatchWorker.WaveStudioMedicaoEDispositivos" xml:space="preserve">
+    <value>Wave Studio — medição e dispositivos</value>
+  </data>
+  <data name="BoundedTestAudio.FormatoDoTesteIndisponivelRequer" xml:space="preserve">
+    <value>Formato do teste indisponível: requer mono/estéreo, PCM 16 bits ou float 32 bits, de 8 a 96 kHz.</value>
+  </data>
+  <data name="CoreAudioDeviceService.Captura" xml:space="preserve">
+    <value>Captura</value>
+  </data>
+  <data name="CoreAudioDeviceService.NomeIndisponivel" xml:space="preserve">
+    <value>Nome indisponível</value>
+  </data>
+  <data name="CoreAudioDeviceService.PadraoDoWindows01" xml:space="preserve">
+    <value>Padrão do Windows ({0}, {1}): {2}</value>
+  </data>
+  <data name="CoreAudioDeviceService.Reproducao" xml:space="preserve">
+    <value>Reprodução</value>
+  </data>
+  <data name="CoreAudioMicrophoneTestBackend.ASaidaSelecionadaEstaEm" xml:space="preserve">
+    <value>A saída selecionada está em mute no Windows. Confira o mute antes de ouvir.</value>
+  </data>
+  <data name="CoreAudioMicrophoneTestBackend.EsteStreamDeTesteJa" xml:space="preserve">
+    <value>Este stream de teste já foi iniciado.</value>
+  </data>
+  <data name="CoreAudioMicrophoneTestBackend.OMicrofoneSelecionadoEstaEm" xml:space="preserve">
+    <value>O microfone selecionado está em mute no Windows. Confira o mute antes de gravar.</value>
+  </data>
+  <data name="CoreAudioSessionEndpoint.AplicativoNaoIdentificado" xml:space="preserve">
+    <value>Aplicativo não identificado</value>
+  </data>
+  <data name="CoreAudioSessionEndpoint.SelecioneUmDispositivoDeReproducao" xml:space="preserve">
+    <value>Selecione um dispositivo de reprodução disponível para consultar o mixer.</value>
+  </data>
+  <data name="CoreAudioSessionEndpoint.SonsDoSistema" xml:space="preserve">
+    <value>Sons do sistema</value>
+  </data>
+  <data name="CoreAudioSessionEndpoint.VolumeDaSessaoIndisponivel" xml:space="preserve">
+    <value>Volume da sessão indisponível.</value>
+  </data>
+  <data name="CoreAudioVolumeAccess.BalancoIndisponivelOEndpointPrecisa" xml:space="preserve">
+    <value>Balanço indisponível — o endpoint precisa expor dois canais de volume independentes.</value>
+  </data>
+  <data name="CoreAudioVolumeAccess.BalancoIndisponivelOWindowsNao" xml:space="preserve">
+    <value>Balanço indisponível — o Windows não confirmou o mapeamento frontal esquerdo/direito.</value>
+  </data>
+  <data name="CoreAudioVolumeAccess.ODispositivoEstaIndisponivelConfira" xml:space="preserve">
+    <value>O dispositivo está indisponível. Confira a conexão e atualize a lista.</value>
+  </data>
+  <data name="CoreAudioWatchBackend.DispositivoIndisponivel" xml:space="preserve">
+    <value>Dispositivo indisponível.</value>
+  </data>
+  <data name="DevicePanel.0N0Hz1Canal" xml:space="preserve">
+    <value>{0:N0} Hz • {1} canal(is) • {2} bits • {3}</value>
+  </data>
+  <data name="DevicePanel.Ausente" xml:space="preserve">
+    <value>ausente</value>
+  </data>
+  <data name="DevicePanel.DesabilitadoNoWindows" xml:space="preserve">
+    <value>Desabilitado no Windows</value>
+  </data>
+  <data name="DevicePanel.Desconectado" xml:space="preserve">
+    <value>Desconectado</value>
+  </data>
+  <data name="DevicePanel.Desligado" xml:space="preserve">
+    <value>desligado</value>
+  </data>
+  <data name="DevicePanel.Disponivel" xml:space="preserve">
+    <value>Disponível</value>
+  </data>
+  <data name="DevicePanel.Disponibilidade0" xml:space="preserve">
+    <value>Disponibilidade — {0}</value>
+  </data>
+  <data name="DevicePanel.DispositivoSelecionadoIndisponivelOuNenhum" xml:space="preserve">
+    <value>Dispositivo selecionado indisponível ou nenhum dispositivo encontrado. Escolha uma opção da lista ou atualize.</value>
+  </data>
+  <data name="DevicePanel.EstadoDesconhecido" xml:space="preserve">
+    <value>Estado desconhecido</value>
+  </data>
+  <data name="DevicePanel.FormatoDeMixagemIndisponivel" xml:space="preserve">
+    <value>Formato de mixagem indisponível</value>
+  </data>
+  <data name="DevicePanel.IDDoEndpoint0" xml:space="preserve">
+    <value>ID do endpoint — {0}</value>
+  </data>
+  <data name="DevicePanel.InformacoesDe0" xml:space="preserve">
+    <value>Informações de {0}</value>
+  </data>
+  <data name="DevicePanel.Ligado" xml:space="preserve">
+    <value>ligado</value>
+  </data>
+  <data name="DevicePanel.Nao" xml:space="preserve">
+    <value>Não</value>
+  </data>
+  <data name="DevicePanel.PadraoComunicacoes" xml:space="preserve">
+    <value> • Padrão comunicações</value>
+  </data>
+  <data name="DevicePanel.PadraoDeComunicacoes0" xml:space="preserve">
+    <value>Padrão de comunicações — {0}</value>
+  </data>
+  <data name="DevicePanel.PadraoDeMultimidia0" xml:space="preserve">
+    <value>Padrão de multimídia — {0}</value>
+  </data>
+  <data name="DevicePanel.PadraoMultimidia" xml:space="preserve">
+    <value> • Padrão multimídia</value>
+  </data>
+  <data name="DevicePanel.PicoDoWindows0F1" xml:space="preserve">
+    <value>Pico do Windows — {0:F1}% ({1:F1} dBFS)</value>
+  </data>
+  <data name="DevicePanel.PicoDoWindowsSilencio0" xml:space="preserve">
+    <value>Pico do Windows — silêncio (0%)</value>
+  </data>
+  <data name="DevicePanel.PicoIndisponivel" xml:space="preserve">
+    <value>Pico indisponível</value>
+  </data>
+  <data name="DevicePanel.PicoRealDoWindows0" xml:space="preserve">
+    <value>Pico real do Windows — {0}</value>
+  </data>
+  <data name="DevicePanel.PreferenciaDeNiveisAindaNao" xml:space="preserve">
+    <value>Preferência de níveis ainda não salva.</value>
+  </data>
+  <data name="DevicePanel.PreferenciaExplicitaPreservadaDispositivoIndisponivel" xml:space="preserve">
+    <value>Preferência explícita preservada. Dispositivo indisponível — </value>
+  </data>
+  <data name="DevicePanel.PreferenciasSalvasDe0" xml:space="preserve">
+    <value>Preferências salvas de {0}</value>
+  </data>
+  <data name="DevicePanel.PreferenciasSalvasDe01" xml:space="preserve">
+    <value>Preferências salvas de {0} — {1}</value>
+  </data>
+  <data name="DevicePanel.RestaurarValoresSalvos" xml:space="preserve">
+    <value>Restaurar valores salvos…</value>
+  </data>
+  <data name="DevicePanel.SalvarValoresAtuais" xml:space="preserve">
+    <value>Salvar valores atuais</value>
+  </data>
+  <data name="DevicePanel.SalvoVolume0Mute1" xml:space="preserve">
+    <value>Salvo — volume {0}, mute {1}, balanço {2}.</value>
+  </data>
+  <data name="DevicePanel.Sim" xml:space="preserve">
+    <value>Sim</value>
+  </data>
+  <data name="DeviceSelection.IdentificadorDeDispositivoInvalido" xml:space="preserve">
+    <value>Identificador de dispositivo inválido.</value>
+  </data>
+  <data name="EndpointControls.0UseAtualizarDispositivosPara" xml:space="preserve">
+    <value>{0} Use Atualizar dispositivos para tentar novamente.</value>
+  </data>
+  <data name="EndpointControls.AplicandoAoDispositivoSelecionado" xml:space="preserve">
+    <value>Aplicando ao dispositivo selecionado…</value>
+  </data>
+  <data name="EndpointControls.AtivarMute" xml:space="preserve">
+    <value>Ativar mute</value>
+  </data>
+  <data name="EndpointControls.BalancoLR" xml:space="preserve">
+    <value>Balanço L/R</value>
+  </data>
+  <data name="EndpointControls.BalancoNegativoAEsquerdaE" xml:space="preserve">
+    <value>Balanço, negativo à esquerda e positivo à direita</value>
+  </data>
+  <data name="EndpointControls.BalancoNumerico" xml:space="preserve">
+    <value>Balanço numérico</value>
+  </data>
+  <data name="EndpointControls.CentralizarBalanco" xml:space="preserve">
+    <value>Centralizar balanço</value>
+  </data>
+  <data name="EndpointControls.ConcluaOAjusteAtualE" xml:space="preserve">
+    <value>Conclua o ajuste atual e selecione um dispositivo disponível.</value>
+  </data>
+  <data name="EndpointControls.ConsultandoVolumeDoWindows" xml:space="preserve">
+    <value>Consultando volume do Windows…</value>
+  </data>
+  <data name="EndpointControls.ControlesIndisponiveisSelecioneUmDispositivo" xml:space="preserve">
+    <value>Controles indisponíveis — selecione um dispositivo ativo.</value>
+  </data>
+  <data name="EndpointControls.DesativarMute" xml:space="preserve">
+    <value>Desativar mute</value>
+  </data>
+  <data name="EndpointControls.MuteIndisponivel" xml:space="preserve">
+    <value>Mute indisponível</value>
+  </data>
+  <data name="EndpointControls.Volume" xml:space="preserve">
+    <value>Volume (%)</value>
+  </data>
+  <data name="EndpointControls.VolumeDoEndpointDoWindows" xml:space="preserve">
+    <value>Volume do endpoint do Windows em porcentagem</value>
+  </data>
+  <data name="EndpointControls.VolumeDoWindowsNoEndpoint" xml:space="preserve">
+    <value>Volume do Windows no endpoint. Balanço de −100 (esquerda) a +100 (direita).</value>
+  </data>
+  <data name="EndpointControls.VolumeNumericoDoEndpointDo" xml:space="preserve">
+    <value>Volume numérico do endpoint do Windows</value>
+  </data>
+  <data name="EndpointPreferenceRestore.ARestauracaoPodeTerSido" xml:space="preserve">
+    <value>A restauração pode ter sido parcial. Confira os níveis atuais. </value>
+  </data>
+  <data name="EndpointPreferenceRestore.OBalancoFinalNaoE" xml:space="preserve">
+    <value>O balanço final não é observável com os canais em zero. Os níveis atuais foram consultados.</value>
+  </data>
+  <data name="EndpointPreferenceRestore.OEndpointAindaNaoPossui" xml:space="preserve">
+    <value>O endpoint ainda não possui valores salvos.</value>
+  </data>
+  <data name="EndpointPreferenceRestore.OWindowsAlterouOsCanais" xml:space="preserve">
+    <value>O Windows alterou os canais após aplicar a preferência. O balanço final não foi confirmado.</value>
+  </data>
+  <data name="EndpointPreferenceRestore.OWindowsRetornouNiveisDiferentes" xml:space="preserve">
+    <value>O Windows retornou níveis diferentes da preferência solicitada.</value>
+  </data>
+  <data name="EndpointPreferenceRestore.OsNiveisMudaramAposA" xml:space="preserve">
+    <value>Os níveis mudaram após a prévia. Confira os valores e confirme novamente.</value>
+  </data>
+  <data name="EndpointPreferenceRestore.UmControleSalvoEstaIndisponivel" xml:space="preserve">
+    <value>Um controle salvo está indisponível neste dispositivo. Atualize e salve os valores suportados.</value>
+  </data>
+  <data name="EndpointVolumeOperations.ComandoDeAudioDesconhecido" xml:space="preserve">
+    <value>Comando de áudio desconhecido.</value>
+  </data>
+  <data name="EndpointVolumeOperations.FalhaNoBalancoENa" xml:space="preserve">
+    <value>Falha no balanço e na restauração dos canais. Confira os níveis no Windows e atualize a lista.</value>
+  </data>
+  <data name="EndpointVolumeOperations.FoiDetectadaAlteracaoExternaDos" xml:space="preserve">
+    <value>Foi detectada alteração externa dos canais. Confira os níveis no Windows.</value>
+  </data>
+  <data name="EndpointVolumeOperations.ODriverNaoConfirmouA" xml:space="preserve">
+    <value>O driver não confirmou a restauração dos canais.</value>
+  </data>
+  <data name="EndpointVolumeOperations.ODriverNaoConfirmouCanais" xml:space="preserve">
+    <value>O driver não confirmou canais independentes. O balanço foi desativado.</value>
+  </data>
+  <data name="EndpointVolumeOperations.ODriverNaoConfirmouO" xml:space="preserve">
+    <value>O driver não confirmou o volume solicitado. O controle foi desativado.</value>
+  </data>
+  <data name="EndpointVolumeOperations.ODriverNaoConfirmouO2" xml:space="preserve">
+    <value>O driver não confirmou o estado de mute solicitado. O controle foi desativado.</value>
+  </data>
+  <data name="EqualizerPreferences.IdentificacaoDePerfilInvalida" xml:space="preserve">
+    <value>Identificação de perfil inválida.</value>
+  </data>
+  <data name="EqualizerPreferences.LimiteDe20Perfis" xml:space="preserve">
+    <value>Limite de 20 perfis.</value>
+  </data>
+  <data name="EqualizerPreferences.NomeDePerfilInvalido" xml:space="preserve">
+    <value>Nome de perfil inválido.</value>
+  </data>
+  <data name="EqualizerPreferences.PerfilSelecionadoNaoExiste" xml:space="preserve">
+    <value>Perfil selecionado não existe.</value>
+  </data>
+  <data name="EqualizerPreferences.PerfisComNomeOuIdentificacao" xml:space="preserve">
+    <value>Perfis com nome ou identificação repetidos.</value>
+  </data>
+  <data name="EqualizerPreferences.SelecioneUmPerfilPersonalizado" xml:space="preserve">
+    <value>Selecione um perfil personalizado.</value>
+  </data>
+  <data name="EqualizerPreferences.UsePassosDe1DB" xml:space="preserve">
+    <value>Use passos de 1 dB nas bandas e 0,1 dB no ajuste de entrada.</value>
+  </data>
+  <data name="EqualizerPreferences.UseUmNomeDe1" xml:space="preserve">
+    <value>Use um nome de 1 a 48 letras, números, espaços, hífen ou parênteses. Padrão é reservado.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.0000DB" xml:space="preserve">
+    <value>{0:+0;-0;0} dB</value>
+  </data>
+  <data name="EqualizerPreviewPanel.0DB" xml:space="preserve">
+    <value>0 dB</value>
+  </data>
+  <data name="EqualizerPreviewPanel.0Hz" xml:space="preserve">
+    <value>{0} Hz</value>
+  </data>
+  <data name="EqualizerPreviewPanel.0KHz" xml:space="preserve">
+    <value>{0} kHz</value>
+  </data>
+  <data name="EqualizerPreviewPanel.AjustesCarregadosAlteracoesSeraoLembradas" xml:space="preserve">
+    <value>Ajustes carregados. Alterações serão lembradas automaticamente; perfis só mudam ao salvar.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.AjustesDiferentesDoPerfil" xml:space="preserve">
+    <value> Ajustes diferentes do perfil.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.AjustesDiferentesDoPerfilCrie" xml:space="preserve">
+    <value>Ajustes diferentes do perfil. Crie um perfil ou use Salvar alterações para guardá-los nele.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.AjustesIguaisAoPerfilSelecionado" xml:space="preserve">
+    <value>Ajustes iguais ao perfil selecionado.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.AjustesSaoCongeladosAoIniciar" xml:space="preserve">
+    <value>Ajustes são congelados ao iniciar. Pare para alterar. A proteção final é hard clip, não um limiter.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.AlteracoesSalvasNoPerfil" xml:space="preserve">
+    <value>Alterações salvas no perfil.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.ArquivoProtegidoAjustesDestaAbertura" xml:space="preserve">
+    <value>Arquivo protegido. Ajustes desta abertura não serão gravados.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.AtenuacaoAutomaticaDeSeguranca0" xml:space="preserve">
+    <value>Atenuação automática de segurança: −{0:F1} dB (soma dos boosts). Preamp efetivo com EQ: {1:F1} dB. Pode soar mais baixo; não aumente o volume do Windows para compensar.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.AtivarEQNestaGravacao" xml:space="preserve">
+    <value>Ativar EQ nesta gravação</value>
+  </data>
+  <data name="EqualizerPreviewPanel.CompareAMesmaGravacaoOriginal" xml:space="preserve">
+    <value>Compare a mesma gravação original e processada. Não afeta o áudio de outros aplicativos.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.CriarPerfil" xml:space="preserve">
+    <value>Criar perfil</value>
+  </data>
+  <data name="EqualizerPreviewPanel.DisponivelEm44148" xml:space="preserve">
+    <value>Disponível em 44,1/48 kHz. Original continua sem EQ.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.EQ0EmDB" xml:space="preserve">
+    <value>EQ {0} em dB</value>
+  </data>
+  <data name="EqualizerPreviewPanel.EQDe10BandasPrevia" xml:space="preserve">
+    <value>EQ de 10 bandas — prévia da gravação</value>
+  </data>
+  <data name="EqualizerPreviewPanel.EQIndisponivelNesteFormatoRequer" xml:space="preserve">
+    <value>EQ indisponível neste formato: requer gravação em 44,1 ou 48 kHz. Ouvir original permanece disponível.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.EntradaPreamp30A0" xml:space="preserve">
+    <value>Entrada (preamp, −30 a 0 dB):</value>
+  </data>
+  <data name="EqualizerPreviewPanel.Excluir" xml:space="preserve">
+    <value>Excluir</value>
+  </data>
+  <data name="EqualizerPreviewPanel.ExcluirOPerfil0Os" xml:space="preserve">
+    <value>Excluir o perfil {0}? Os ajustes atuais serão mantidos.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.NomeDoPerfil" xml:space="preserve">
+    <value>Nome do perfil</value>
+  </data>
+  <data name="EqualizerPreviewPanel.Padrao" xml:space="preserve">
+    <value>Padrão</value>
+  </data>
+  <data name="EqualizerPreviewPanel.PerfilCriado" xml:space="preserve">
+    <value>Perfil criado.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.PerfilDoEqualizador" xml:space="preserve">
+    <value>Perfil do equalizador</value>
+  </data>
+  <data name="EqualizerPreviewPanel.PerfilExcluidoAjustesAtuaisMantidos" xml:space="preserve">
+    <value>Perfil excluído. Ajustes atuais mantidos.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.PerfilRenomeado" xml:space="preserve">
+    <value>Perfil renomeado.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.PerfisDoEqualizador" xml:space="preserve">
+    <value>Perfis do equalizador</value>
+  </data>
+  <data name="EqualizerPreviewPanel.PreampDoEQEmDB" xml:space="preserve">
+    <value>Preamp do EQ em dB</value>
+  </data>
+  <data name="EqualizerPreviewPanel.Renomear" xml:space="preserve">
+    <value>Renomear</value>
+  </data>
+  <data name="EqualizerPreviewPanel.SalvarAlteracoes" xml:space="preserve">
+    <value>Salvar alterações</value>
+  </data>
+  <data name="EqualizerPreviewPanel.TrocarDePerfilSemSalvar" xml:space="preserve">
+    <value>Trocar de perfil sem salvar as alterações nele? Os ajustes atuais serão substituídos.</value>
+  </data>
+  <data name="EqualizerPreviewPanel.ZerarEQEPreamp" xml:space="preserve">
+    <value>Zerar EQ e preamp</value>
+  </data>
+  <data name="ExternalRouteReadinessPanel.01T" xml:space="preserve">
+    <value>{0} · {1:t}</value>
+  </data>
+  <data name="ExternalRouteReadinessPanel.Codigo0" xml:space="preserve">
+    <value> (Código {0})</value>
+  </data>
+  <data name="ExternalRouteText.0Hz1CanalIs" xml:space="preserve">
+    <value>{0} Hz · {1} canal(is) · {2} bits · {3}</value>
+  </data>
+  <data name="ExternalRouteText.Ativo" xml:space="preserve">
+    <value>Ativo</value>
+  </data>
+  <data name="ExternalRouteText.BootEvidence" xml:space="preserve">
+    <value>O registro da prova instrumentada documenta Inicialização Rápida. O boot completo pós-instalação segue sem comprovação nesse registro.</value>
+  </data>
+  <data name="ExternalRouteText.Browser" xml:space="preserve">
+    <value>Navegador → headset</value>
+  </data>
+  <data name="ExternalRouteText.BrowserCapture" xml:space="preserve">
+    <value>Cabo A — captura</value>
+  </data>
+  <data name="ExternalRouteText.BrowserRender" xml:space="preserve">
+    <value>Cabo A — reprodução</value>
+  </data>
+  <data name="ExternalRouteText.CaboABDoisPares" xml:space="preserve">
+    <value>Cabo A+B — dois pares independentes. Simultaneidade indisponível.&#xD;
+1. Guarde as seleções originais. No mixer de volume do Windows 11, ou em Preferências de volume do aplicativo e do dispositivo no Windows 10, selecione só para o navegador a reprodução do cabo A. O caminho planejado é navegador → cabo A → DSP → headset.&#xD;
+2. No OBS, use uma única fonte Captura de entrada de áudio para a captura do cabo B. O caminho planejado é microfone → DSP → cabo B → fonte do OBS. Mantenha a monitoração desligada, sem duplicar a fonte nas configurações globais.&#xD;
+3. Confirme parada e liberação em cada fluxo e restaure as seleções originais.</value>
+  </data>
+  <data name="ExternalRouteText.CaboSimplesDoisFluxosSequenciais" xml:space="preserve">
+    <value>Cabo simples — dois fluxos sequenciais. Simultaneidade indisponível.&#xD;
+1. Guarde as seleções originais. No mixer de volume do Windows 11, ou em Preferências de volume do aplicativo e do dispositivo no Windows 10, selecione só para o navegador a reprodução do cabo. O caminho planejado é navegador → cabo → DSP → headset.&#xD;
+2. Depois da parada confirmada, pare o estímulo e restaure a saída original do navegador. Confirme a quietude do cabo e a ausência de outros produtores antes da troca.&#xD;
+3. No OBS, use uma única fonte Captura de entrada de áudio para a captura do cabo. O caminho planejado é microfone → DSP → cabo → fonte do OBS. Mantenha a monitoração desligada, sem duplicar a fonte nas configurações globais. Depois da parada, restaure a seleção original.</value>
+  </data>
+  <data name="ExternalRouteText.Choose" xml:space="preserve">
+    <value>Selecione um dispositivo</value>
+  </data>
+  <data name="ExternalRouteText.Confirmed" xml:space="preserve">
+    <value>confirmado em leitura</value>
+  </data>
+  <data name="ExternalRouteText.ConsultaOuDispositivoIndisponivel" xml:space="preserve">
+    <value>consulta ou dispositivo indisponível</value>
+  </data>
+  <data name="ExternalRouteText.Consulted" xml:space="preserve">
+    <value>Pré-verificação atualizada</value>
+  </data>
+  <data name="ExternalRouteText.Defaults" xml:space="preserve">
+    <value>Padrões do Windows</value>
+  </data>
+  <data name="ExternalRouteText.Desabilitado" xml:space="preserve">
+    <value>Desabilitado</value>
+  </data>
+  <data name="ExternalRouteText.Desconectado" xml:space="preserve">
+    <value>Desconectado</value>
+  </data>
+  <data name="ExternalRouteText.DetectadoSemTodosOsPinos" xml:space="preserve">
+    <value>detectado sem todos os pinos ativos e confirmados.</value>
+  </data>
+  <data name="ExternalRouteText.Device" xml:space="preserve">
+    <value>Dispositivo</value>
+  </data>
+  <data name="ExternalRouteText.Direction" xml:space="preserve">
+    <value>Direção</value>
+  </data>
+  <data name="ExternalRouteText.DirectionCapture" xml:space="preserve">
+    <value>Captura</value>
+  </data>
+  <data name="ExternalRouteText.DirectionPlayback" xml:space="preserve">
+    <value>Reprodução</value>
+  </data>
+  <data name="ExternalRouteText.DoisParesAtivosDetectados" xml:space="preserve">
+    <value>dois pares ativos detectados.</value>
+  </data>
+  <data name="ExternalRouteText.Driver" xml:space="preserve">
+    <value>Driver selecionado</value>
+  </data>
+  <data name="ExternalRouteText.DualMode" xml:space="preserve">
+    <value>VB-CABLE A+B</value>
+  </data>
+  <data name="ExternalRouteText.DualNotDetected" xml:space="preserve">
+    <value>A+B não detectado como instalado no inventário de endpoints.</value>
+  </data>
+  <data name="ExternalRouteText.DualStatus" xml:space="preserve">
+    <value>Disponibilidade A+B</value>
+  </data>
+  <data name="ExternalRouteText.FlowConfirmed" xml:space="preserve">
+    <value>formato exato e geração confirmados em leitura</value>
+  </data>
+  <data name="ExternalRouteText.Format" xml:space="preserve">
+    <value>Formato do dispositivo</value>
+  </data>
+  <data name="ExternalRouteText.FormatUnknown" xml:space="preserve">
+    <value>Formato indisponível</value>
+  </data>
+  <data name="ExternalRouteText.FormatoExatoIncompativelOuNao" xml:space="preserve">
+    <value>formato exato incompatível ou não confirmado</value>
+  </data>
+  <data name="ExternalRouteText.GuideTitle" xml:space="preserve">
+    <value>Configuração manual para uma futura prova autorizada</value>
+  </data>
+  <data name="ExternalRouteText.Headset" xml:space="preserve">
+    <value>Headset físico — reprodução</value>
+  </data>
+  <data name="ExternalRouteText.IdentidadeDirecaoOuPareamentoIncompativel" xml:space="preserve">
+    <value>identidade, direção ou pareamento incompatível</value>
+  </data>
+  <data name="ExternalRouteText.Indeterminado" xml:space="preserve">
+    <value>Indeterminado</value>
+  </data>
+  <data name="ExternalRouteText.InstanciaPnPComFalhaOu" xml:space="preserve">
+    <value>instância PnP com falha ou fora de operação</value>
+  </data>
+  <data name="ExternalRouteText.InventarioIndisponivelOuIncompleto" xml:space="preserve">
+    <value>inventário indisponível ou incompleto.</value>
+  </data>
+  <data name="ExternalRouteText.Inventory" xml:space="preserve">
+    <value>Dispositivos encontrados</value>
+  </data>
+  <data name="ExternalRouteText.LocalChoice" xml:space="preserve">
+    <value>Escolha de diagnóstico válida só nesta sessão do Wave Studio.</value>
+  </data>
+  <data name="ExternalRouteText.LocalOnly" xml:space="preserve">
+    <value>As escolhas valem para esta sessão do Wave Studio. Configure Windows e aplicativos manualmente em uma prova autorizada.</value>
+  </data>
+  <data name="ExternalRouteText.MantenhaOsPadroesDoWindows" xml:space="preserve">
+    <value>&#xD;
+&#xD;
+&#xD;
+Mantenha os padrões do Windows fora dos cabos. A consulta não mede áudio, latência ou atividade do OBS.&#xD;
+&#xD;
+Windows — saída por aplicativo&#xD;
+https://support.microsoft.com/en-au/windows/hardware/audio/fix-app-audio-not-working-while-system-sounds-work-in-windows&#xD;
+OBS — fontes de áudio&#xD;
+https://obsproject.com/kb/audio-sources/&#xD;
+Manual do VB-CABLE&#xD;
+https://vb-audio.com/Cable/VBCABLE_ReferenceManual.pdf</value>
+  </data>
+  <data name="ExternalRouteText.Mic" xml:space="preserve">
+    <value>Microfone físico — captura</value>
+  </data>
+  <data name="ExternalRouteText.MicCapture" xml:space="preserve">
+    <value>Cabo B — captura</value>
+  </data>
+  <data name="ExternalRouteText.MicRender" xml:space="preserve">
+    <value>Cabo B — reprodução</value>
+  </data>
+  <data name="ExternalRouteText.Microphone" xml:space="preserve">
+    <value>Microfone → OBS</value>
+  </data>
+  <data name="ExternalRouteText.Missing" xml:space="preserve">
+    <value>seleção ausente ou dispositivo removido</value>
+  </data>
+  <data name="ExternalRouteText.Mode" xml:space="preserve">
+    <value>Modo de cabo</value>
+  </data>
+  <data name="ExternalRouteText.NenhumaInstanciaOuEndpointDetectado" xml:space="preserve">
+    <value>nenhuma instância ou endpoint detectado.</value>
+  </data>
+  <data name="ExternalRouteText.ODispositivoMudouDuranteA" xml:space="preserve">
+    <value>o dispositivo mudou durante a consulta</value>
+  </data>
+  <data name="ExternalRouteText.Pair" xml:space="preserve">
+    <value>Identidade e pareamento</value>
+  </data>
+  <data name="ExternalRouteText.ParAtivoDetectado" xml:space="preserve">
+    <value>par ativo detectado.</value>
+  </data>
+  <data name="ExternalRouteText.PreviousUnavailable" xml:space="preserve">
+    <value>Escolha anterior indisponível</value>
+  </data>
+  <data name="ExternalRouteText.ProofPending" xml:space="preserve">
+    <value>Consulta somente leitura nesta aba. Prova física instrumentada pendente.</value>
+  </data>
+  <data name="ExternalRouteText.QueryIssue" xml:space="preserve">
+    <value>Consulta incompleta. Atualize para verificar de novo.</value>
+  </data>
+  <data name="ExternalRouteText.RefreshButton" xml:space="preserve">
+    <value>&amp;Atualizar prontidão</value>
+  </data>
+  <data name="ExternalRouteText.SeparateCode10" xml:space="preserve">
+    <value>Código 10 em outra instância, sem pino ativo associado.</value>
+  </data>
+  <data name="ExternalRouteText.SingleCapture" xml:space="preserve">
+    <value>Cabo simples — captura</value>
+  </data>
+  <data name="ExternalRouteText.SingleMode" xml:space="preserve">
+    <value>VB-CABLE simples</value>
+  </data>
+  <data name="ExternalRouteText.SingleRender" xml:space="preserve">
+    <value>Cabo simples — reprodução</value>
+  </data>
+  <data name="ExternalRouteText.SingleStatus" xml:space="preserve">
+    <value>VB-CABLE simples</value>
+  </data>
+  <data name="ExternalRouteText.State" xml:space="preserve">
+    <value>Estado</value>
+  </data>
+  <data name="ExternalRouteText.Tab" xml:space="preserve">
+    <value>Roteamento externo</value>
+  </data>
+  <data name="ExternalRouteText.Title" xml:space="preserve">
+    <value>Roteamento externo (experimental)</value>
+  </data>
+  <data name="ExternalRouteText.UmPinoDoCaboE" xml:space="preserve">
+    <value>um pino do cabo é padrão do Windows</value>
+  </data>
+  <data name="ExternalRouteText.UnlinkedCode10" xml:space="preserve">
+    <value>Código 10 observado no inventário do cabo simples. O vínculo ao par selecionado não foi confirmado.</value>
+  </data>
+  <data name="ExternalRouteText.Updating" xml:space="preserve">
+    <value>Atualizando dispositivos e prontidão…</value>
+  </data>
+  <data name="ExternalRouteText.Waiting" xml:space="preserve">
+    <value>Aguardando consulta</value>
+  </data>
+  <data name="MainForm.AtualizarDispositivos" xml:space="preserve">
+    <value>&amp;Atualizar dispositivos</value>
+  </data>
+  <data name="MainForm.Catalogo" xml:space="preserve">
+    <value>catálogo</value>
+  </data>
+  <data name="MainForm.ConsultaConcluida0EndpointS" xml:space="preserve">
+    <value>Consulta concluída — {0} endpoint(s) encontrado(s).</value>
+  </data>
+  <data name="MainForm.ConsultandoDispositivosDeAudio" xml:space="preserve">
+    <value>Consultando dispositivos de áudio…</value>
+  </data>
+  <data name="MainForm.DispositivoDeCapturaMicrofone" xml:space="preserve">
+    <value>Dispositivo de captura / microfone</value>
+  </data>
+  <data name="MainForm.DispositivoDeReproducaoHeadset" xml:space="preserve">
+    <value>Dispositivo de reprodução / headset</value>
+  </data>
+  <data name="MainForm.Dispositivos" xml:space="preserve">
+    <value>Dispositivos</value>
+  </data>
+  <data name="MainForm.EqualizerProfiles.AjustesSalvosNesteComputadorPerfis" xml:space="preserve">
+    <value>Ajustes salvos neste computador. Perfis só mudam ao salvar alterações.</value>
+  </data>
+  <data name="MainForm.EqualizerProfiles.AlteracoesAguardandoSalvamento" xml:space="preserve">
+    <value>Alterações aguardando salvamento…</value>
+  </data>
+  <data name="MainForm.EqualizerProfiles.ArquivoProtegidoEstesAjustesNao" xml:space="preserve">
+    <value>Arquivo protegido. Estes ajustes não serão gravados nesta abertura.</value>
+  </data>
+  <data name="MainForm.EqualizerProfiles.NaoFoiPossivelSalvarO" xml:space="preserve">
+    <value>Não foi possível salvar: o arquivo está protegido. Confira Preferências locais.</value>
+  </data>
+  <data name="MainForm.EqualizerProfiles.NaoFoiPossivelSalvar" xml:space="preserve">
+    <value>Não foi possível salvar. </value>
+  </data>
+  <data name="MainForm.Inicializacao" xml:space="preserve">
+    <value>inicialização</value>
+  </data>
+  <data name="MainForm.LogoOficialDoWaveStudio" xml:space="preserve">
+    <value>Logo oficial do Wave Studio</value>
+  </data>
+  <data name="MainForm.Medidores" xml:space="preserve">
+    <value>medidores</value>
+  </data>
+  <data name="MainForm.Microfone" xml:space="preserve">
+    <value>microfone</value>
+  </data>
+  <data name="MainForm.Mixer" xml:space="preserve">
+    <value>mixer</value>
+  </data>
+  <data name="MainForm.Preferencias" xml:space="preserve">
+    <value>preferências</value>
+  </data>
+  <data name="MainForm.PreferenciasLocais" xml:space="preserve">
+    <value>Preferências locais</value>
+  </data>
+  <data name="MainForm.Preferences.0PreferenciaSDeNiveis" xml:space="preserve">
+    <value>{0} preferência(s) de níveis por endpoint.</value>
+  </data>
+  <data name="MainForm.Preferences.AConfirmacaoAumentaraOVolume" xml:space="preserve">
+    <value>A confirmação aumentará o volume do endpoint.</value>
+  </data>
+  <data name="MainForm.Preferences.AConfirmacaoDesativaraOMute" xml:space="preserve">
+    <value>A confirmação desativará o mute e poderá tornar o áudio audível.</value>
+  </data>
+  <data name="MainForm.Preferences.AGravacaoAindaEstaPendente" xml:space="preserve">
+    <value>A gravação ainda está pendente. A próxima abertura deverá conferir o arquivo de preferências.</value>
+  </data>
+  <data name="MainForm.Preferences.AGravacaoDasPreferenciasFoi" xml:space="preserve">
+    <value>A gravação das preferências foi cancelada. Confira o armazenamento antes de fechar.</value>
+  </data>
+  <data name="MainForm.Preferences.AOperacaoDeArmazenamentoAinda" xml:space="preserve">
+    <value>A operação de armazenamento ainda não terminou. Aguarde e confira o arquivo antes de repetir.</value>
+  </data>
+  <data name="MainForm.Preferences.AOperacaoDePreferenciasFicou" xml:space="preserve">
+    <value>A operação de preferências ficou pendente ou falhou. Confira o arquivo na próxima abertura. </value>
+  </data>
+  <data name="MainForm.Preferences.AreaUtilDaTelaIndisponivel" xml:space="preserve">
+    <value> Área útil da tela indisponível; posição salva preservada nesta abertura.</value>
+  </data>
+  <data name="MainForm.Preferences.ASelecaoMudouConfiraOs" xml:space="preserve">
+    <value>A seleção mudou. Confira os níveis do dispositivo anterior e solicite uma nova prévia para restaurar.</value>
+  </data>
+  <data name="MainForm.Preferences.ArquivoDePreferenciasLocais" xml:space="preserve">
+    <value>Arquivo de preferências locais</value>
+  </data>
+  <data name="MainForm.Preferences.AtualizandoPreferenciasLocais" xml:space="preserve">
+    <value>Atualizando preferências locais…</value>
+  </data>
+  <data name="MainForm.Preferences.Ausente" xml:space="preserve">
+    <value>ausente</value>
+  </data>
+  <data name="MainForm.Preferences.BalancoAtual0Salvo1" xml:space="preserve">
+    <value>Balanço atual {0} → salvo {1}</value>
+  </data>
+  <data name="MainForm.Preferences.CapturaSalva01" xml:space="preserve">
+    <value>Captura salva — {0}{1}</value>
+  </data>
+  <data name="MainForm.Preferences.ConfirmarRestauracaoDeAudio" xml:space="preserve">
+    <value>Confirmar restauração de áudio</value>
+  </data>
+  <data name="MainForm.Preferences.Desligado" xml:space="preserve">
+    <value>desligado</value>
+  </data>
+  <data name="MainForm.Preferences.EstadoDoArmazenamentoDePreferencias" xml:space="preserve">
+    <value>Estado do armazenamento de preferências</value>
+  </data>
+  <data name="MainForm.Preferences.EstadoDoArmazenamentoDePreferencias2" xml:space="preserve">
+    <value>Estado do armazenamento de preferências — </value>
+  </data>
+  <data name="MainForm.Preferences.FalhaAoSalvarPreferenciasA" xml:space="preserve">
+    <value>Falha ao salvar preferências. A configuração válida foi preservada. </value>
+  </data>
+  <data name="MainForm.Preferences.FalhaNaGravacaoFinalConfira" xml:space="preserve">
+    <value>Falha na gravação final. Confira a configuração preservada. </value>
+  </data>
+  <data name="MainForm.Preferences.FalhaNaOperacaoDePreferencias" xml:space="preserve">
+    <value>Falha na operação de preferências. </value>
+  </data>
+  <data name="MainForm.Preferences.Ligado" xml:space="preserve">
+    <value>ligado</value>
+  </data>
+  <data name="MainForm.Preferences.MuteAtual0Salvo1" xml:space="preserve">
+    <value>Mute atual {0} → salvo {1}{2}</value>
+  </data>
+  <data name="MainForm.Preferences.NaoFoiPossivelConsultarOs" xml:space="preserve">
+    <value>Não foi possível consultar os valores para salvar. </value>
+  </data>
+  <data name="MainForm.Preferences.PadraoMultimidiaDe0Indisponivel" xml:space="preserve">
+    <value>Padrão multimídia de {0} indisponível. Alternativa ativa exibida — {1}.</value>
+  </data>
+  <data name="MainForm.Preferences.PreferenciaAplicadaPorSuaConfirmacao" xml:space="preserve">
+    <value>Preferência aplicada por sua confirmação. Valores atuais consultados no Windows.</value>
+  </data>
+  <data name="MainForm.Preferences.PreferenciasDeSessoesIndisponiveisIdentidade" xml:space="preserve">
+    <value>Preferências de sessões indisponíveis — identidade durável e correspondência inequívoca de aplicativos ainda aguardam validação.</value>
+  </data>
+  <data name="MainForm.Preferences.PreferenciasLocais" xml:space="preserve">
+    <value>Preferências locais</value>
+  </data>
+  <data name="MainForm.Preferences.RecuperarAsPreferenciasEOs" xml:space="preserve">
+    <value>Recuperar as preferências e os perfis do backup válido? A seleção será recarregada e os níveis atuais serão consultados.</value>
+  </data>
+  <data name="MainForm.Preferences.RecuperarBackup" xml:space="preserve">
+    <value>Recuperar backup…</value>
+  </data>
+  <data name="MainForm.Preferences.RedefinirPreferenciasLocais" xml:space="preserve">
+    <value>Redefinir preferências locais…</value>
+  </data>
+  <data name="MainForm.Preferences.RedefinirSelecoesNiveisSalvosE" xml:space="preserve">
+    <value>Redefinir seleções, níveis salvos e todos os perfis e ajustes do equalizador? A configuração válida anterior ficará no backup. Um original inválido será arquivado.</value>
+  </data>
+  <data name="MainForm.Preferences.Reproducao" xml:space="preserve">
+    <value>reprodução</value>
+  </data>
+  <data name="MainForm.Preferences.ReproducaoSalva01" xml:space="preserve">
+    <value>Reprodução salva — {0}{1}</value>
+  </data>
+  <data name="MainForm.Preferences.RestaurarOsValoresSalvosEm" xml:space="preserve">
+    <value>Restaurar os valores salvos em {0}?{1}{2}{3}{4}</value>
+  </data>
+  <data name="MainForm.Preferences.SeguirPadraoMultimidia" xml:space="preserve">
+    <value>seguir padrão multimídia</value>
+  </data>
+  <data name="MainForm.Preferences.SelecoesSaoSalvasAposSua" xml:space="preserve">
+    <value>Seleções são salvas após sua escolha. Use Salvar valores atuais em Dispositivos para guardar níveis. Restaurar valores salvos apresenta uma prévia e pede confirmação.</value>
+  </data>
+  <data name="MainForm.Preferences.VolumeAtual0Salvo1" xml:space="preserve">
+    <value>Volume atual {0} → salvo {1}{2}</value>
+  </data>
+  <data name="MainForm.Reproducao" xml:space="preserve">
+    <value>reprodução</value>
+  </data>
+  <data name="MainForm.RoteamentoExterno" xml:space="preserve">
+    <value>roteamento externo</value>
+  </data>
+  <data name="MainForm.SeguirPadraoMultimidiaDeReproducao" xml:space="preserve">
+    <value>Seguir padrão multimídia de reprodução</value>
+  </data>
+  <data name="MainForm.SeguirPadraoMultimidiaDeCaptura" xml:space="preserve">
+    <value>Seguir padrão multimídia de captura</value>
+  </data>
+  <data name="MainForm.Shutdown.AguardeETenteFecharNovamente" xml:space="preserve">
+    <value>Aguarde e tente fechar novamente. {0}</value>
+  </data>
+  <data name="MainForm.Shutdown.EncerramentoNaoConfirmado0A" xml:space="preserve">
+    <value>Encerramento não confirmado ({0}). A janela permanece aberta e novos comandos estão bloqueados. </value>
+  </data>
+  <data name="MainForm.TestarMicrofone" xml:space="preserve">
+    <value>Testar microfone</value>
+  </data>
+  <data name="MainForm.V010AlphaEm" xml:space="preserve">
+    <value>v0.1.0 Alpha em desenvolvimento</value>
+  </data>
+  <data name="MainForm.WaveStudioV010" xml:space="preserve">
+    <value>Wave Studio — v0.1.0 Alpha em desenvolvimento</value>
+  </data>
+  <data name="MicrophoneInputMeter.LeituraDoNivelDeEntrada" xml:space="preserve">
+    <value>Leitura do nível de entrada do microfone</value>
+  </data>
+  <data name="MicrophoneInputMeter.MedicaoEncerrada" xml:space="preserve">
+    <value>Medição encerrada.</value>
+  </data>
+  <data name="MicrophoneInputMeter.MedicaoPausadaAbraEstaAba" xml:space="preserve">
+    <value>Medição pausada — abra esta aba com a janela restaurada.</value>
+  </data>
+  <data name="MicrophoneInputMeter.MicrofoneSelecionadoIndisponivel" xml:space="preserve">
+    <value>Microfone selecionado indisponível.</value>
+  </data>
+  <data name="MicrophoneInputMeter.NivelDeEntradaDoMicrofone" xml:space="preserve">
+    <value>Nível de entrada do microfone em percentual de pico</value>
+  </data>
+  <data name="MicrophoneInputMeter.NivelDeEntradaDoMicrofone2" xml:space="preserve">
+    <value>Nível de entrada do microfone</value>
+  </data>
+  <data name="MicrophoneInputMeter.NivelDeEntradaIndisponivel" xml:space="preserve">
+    <value>Nível de entrada indisponível.</value>
+  </data>
+  <data name="MicrophoneInputMeter.NivelIndisponivelAguardandoLeituraDa" xml:space="preserve">
+    <value>Nível indisponível — aguardando leitura da seleção atual.</value>
+  </data>
+  <data name="MicrophoneInputMeter.PicoDeAmplitudeDe0" xml:space="preserve">
+    <value>Pico de amplitude de 0 a 100%: não identifica voz, inteligibilidade ou zumbido. Alguns drivers só informam nível durante captura ativa; confira também ao clicar em Gravar teste.</value>
+  </data>
+  <data name="MicrophoneInputMeter.PicoDeEntrada0F1" xml:space="preserve">
+    <value>Pico de entrada — {0:F1}%</value>
+  </data>
+  <data name="MicrophoneInputMeter.PicoDeEntrada0Nenhum" xml:space="preserve">
+    <value>Pico de entrada — 0% (nenhum pico detectado nesta leitura).</value>
+  </data>
+  <data name="MicrophoneTestEngine.0ReproduzindoNaSaidaSelecionada" xml:space="preserve">
+    <value>{0}: reproduzindo na saída selecionada. Captura desligada.</value>
+  </data>
+  <data name="MicrophoneTestEngine.DescartePendenteParadaAindaNao" xml:space="preserve">
+    <value>Descarte pendente; parada ainda não confirmada. Recursos preservados até o término. </value>
+  </data>
+  <data name="MicrophoneTestEngine.EncerreOsStreamsAntesDo" xml:space="preserve">
+    <value>Encerre os streams antes do descarte.</value>
+  </data>
+  <data name="MicrophoneTestEngine.GRAVANDOFalePorAte10" xml:space="preserve">
+    <value>GRAVANDO — fale por até 10 segundos. Clique em Parar quando terminar.</value>
+  </data>
+  <data name="MicrophoneTestEngine.LiberacaoDoDispositivoNaoConfirmada" xml:space="preserve">
+    <value> Liberação do dispositivo não confirmada. Reinicie o Wave Studio antes de iniciar outro teste. </value>
+  </data>
+  <data name="MicrophoneTestEngine.NaoFoiPossivelCompletarO" xml:space="preserve">
+    <value>Não foi possível completar o teste. Confira os dispositivos e tente novamente.</value>
+  </data>
+  <data name="MicrophoneTestEngine.NenhumAudioRecebidoConfiraPermissoes" xml:space="preserve">
+    <value>Nenhum áudio recebido. Confira permissões, conexão e mute do microfone.</value>
+  </data>
+  <data name="MicrophoneTestEngine.OTesteDeAudioFalhou" xml:space="preserve">
+    <value>O teste de áudio falhou (0x{0:X8}). Confira conexão, permissões e formato; atualize os dispositivos.</value>
+  </data>
+  <data name="MicrophoneTestEngine.OWindowsNegouAcessoConfira" xml:space="preserve">
+    <value>O Windows negou acesso. Confira Privacidade &gt; Microfone e permita aplicativos da área de trabalho.</value>
+  </data>
+  <data name="MicrophoneTestEngine.OperacaoCanceladaSelecaoOuDisponibilidade" xml:space="preserve">
+    <value>Operação cancelada: seleção ou disponibilidade mudou.</value>
+  </data>
+  <data name="MicrophoneTestEngine.OriginalSemEQ" xml:space="preserve">
+    <value>Original (sem EQ)</value>
+  </data>
+  <data name="MicrophoneTestEngine.OutraOperacaoDeAudioEsta" xml:space="preserve">
+    <value>Outra operação de áudio está ativa. Aguarde o término antes de testar.</value>
+  </data>
+  <data name="MicrophoneTestEngine.ParadaAindaNaoConfirmadaRecursos" xml:space="preserve">
+    <value>Parada ainda não confirmada; recursos preservados. </value>
+  </data>
+  <data name="MicrophoneTestEngine.ParandoOTeste" xml:space="preserve">
+    <value>Parando o teste…</value>
+  </data>
+  <data name="MicrophoneTestEngine.ProcessadoComEQ" xml:space="preserve">
+    <value>Processado com EQ</value>
+  </data>
+  <data name="MicrophoneTestEngine.SelecioneOMicrofoneEA" xml:space="preserve">
+    <value>Selecione o microfone e a saída na aba Dispositivos. Nenhuma gravação iniciada.</value>
+  </data>
+  <data name="MicrophoneTestEngine.TerminoExigeQuiescenciaDoDiagnostico" xml:space="preserve">
+    <value>Término exige quiescência do diagnóstico.</value>
+  </data>
+  <data name="MicrophoneTestEngine.TesteApagadoDaMemoriaNenhuma" xml:space="preserve">
+    <value>Teste apagado da memória. Nenhuma gravação iniciada.</value>
+  </data>
+  <data name="MicrophoneTestEngine.TesteDescartadoAposSelecaoAtualizacao" xml:space="preserve">
+    <value>Teste descartado após seleção/atualização dos dispositivos. Grave um novo teste.</value>
+  </data>
+  <data name="MicrophoneTestEngine.TesteEncerradoEAudioDescartado" xml:space="preserve">
+    <value>Teste encerrado e áudio descartado.</value>
+  </data>
+  <data name="MicrophoneTestEngine.TesteProntoEmMemoriaUse" xml:space="preserve">
+    <value>Teste pronto em memória. Use fones e clique em Ouvir gravação. Não há reprodução automática.</value>
+  </data>
+  <data name="MicrophoneTestModels.ODispositivoSelecionadoEstaIndisponivel" xml:space="preserve">
+    <value>O dispositivo selecionado está indisponível. Confira a seleção e a conexão.</value>
+  </data>
+  <data name="MicrophoneTestPanel.20" xml:space="preserve">
+    <value>20%</value>
+  </data>
+  <data name="MicrophoneTestPanel.AudioSomenteEmMemoriaApagado" xml:space="preserve">
+    <value>Áudio somente em memória: apagado ao limpar, trocar/atualizar dispositivos, suspender ou fechar. Sem arquivo, envio ou reprodução automática. Não é monitoramento ao vivo.</value>
+  </data>
+  <data name="MicrophoneTestPanel.EscolhaEntradaESaidaNa" xml:space="preserve">
+    <value>Escolha entrada e saída na aba Dispositivos. Confira volume e mute do Windows antes de gravar/ouvir.</value>
+  </data>
+  <data name="MicrophoneTestPanel.EstadoDoTesteDeMicrofone" xml:space="preserve">
+    <value>Estado do teste de microfone</value>
+  </data>
+  <data name="MicrophoneTestPanel.Gravado0F110S" xml:space="preserve">
+    <value>Gravado: {0:F1} / 10 s · Tempo da operação: {1:F1} s</value>
+  </data>
+  <data name="MicrophoneTestPanel.GravarTeste" xml:space="preserve">
+    <value>&amp;Gravar teste</value>
+  </data>
+  <data name="MicrophoneTestPanel.Indisponivel" xml:space="preserve">
+    <value>indisponível</value>
+  </data>
+  <data name="MicrophoneTestPanel.Indisponivel2" xml:space="preserve">
+    <value> (indisponível)</value>
+  </data>
+  <data name="MicrophoneTestPanel.LimparTeste" xml:space="preserve">
+    <value>&amp;Limpar teste</value>
+  </data>
+  <data name="MicrophoneTestPanel.Microfone01Saida2" xml:space="preserve">
+    <value>Microfone: {0}{1}
+Saída: {2}{3}</value>
+  </data>
+  <data name="MicrophoneTestPanel.NaoFoiPossivelCompletarA" xml:space="preserve">
+    <value>Não foi possível completar a operação. Atualize os dispositivos e tente novamente.</value>
+  </data>
+  <data name="MicrophoneTestPanel.Nenhuma" xml:space="preserve">
+    <value>nenhuma</value>
+  </data>
+  <data name="MicrophoneTestPanel.NivelDigitalDaReproducaoDo" xml:space="preserve">
+    <value>Nível digital da reprodução do teste</value>
+  </data>
+  <data name="MicrophoneTestPanel.NivelDigitalParaOuvirO" xml:space="preserve">
+    <value>Nível digital para ouvir o teste (0–100%, sem amplificação). Não altera o volume do Windows.</value>
+  </data>
+  <data name="MicrophoneTestPanel.OuvirComEQ" xml:space="preserve">
+    <value>Ouvir com &amp;EQ</value>
+  </data>
+  <data name="MicrophoneTestPanel.OuvirGravacao" xml:space="preserve">
+    <value>&amp;Ouvir gravação</value>
+  </data>
+  <data name="MicrophoneTestPanel.OuvirGravacaoOriginalSemEQ" xml:space="preserve">
+    <value>Ouvir gravação = original (sem EQ). Ouvir com EQ = versão processada da mesma gravação, sem gravar novamente.</value>
+  </data>
+  <data name="MicrophoneTestPanel.PararReproducao" xml:space="preserve">
+    <value>Parar &amp;reprodução</value>
+  </data>
+  <data name="MicrophoneTestPanel.TestarMicrofone" xml:space="preserve">
+    <value>Testar microfone</value>
+  </data>
+  <data name="MicrophoneTestPanel.UltimaReproducao0AmostrasLimitadas" xml:space="preserve">
+    <value>Última reprodução: {0} · Amostras limitadas no EQ: {1} · Dados inválidos tratados: {2}</value>
+  </data>
+  <data name="MicrophoneTestPanel.UseFonesEVolumeBaixo" xml:space="preserve">
+    <value>Use fones e volume baixo. A gravação dura no máximo 10 segundos e só começa ao clicar em Gravar teste.</value>
+  </data>
+  <data name="MicrophoneTestSession.EncerramentoAindaNaoConfirmadoRecursos" xml:space="preserve">
+    <value>Encerramento ainda não confirmado; recursos preservados. Aguarde e tente fechar novamente. </value>
+  </data>
+  <data name="MicrophoneTestSession.EncerrandoEDescartandoOTeste" xml:space="preserve">
+    <value>Encerrando e descartando o teste…</value>
+  </data>
+  <data name="MicrophoneTestSession.OWorkerFalhouEncerramentoNao" xml:space="preserve">
+    <value>O worker falhou; encerramento não confirmado. Recursos preservados. </value>
+  </data>
+  <data name="MicrophoneTestSession.WaveStudioTesteLocalDe" xml:space="preserve">
+    <value>Wave Studio — teste local de microfone</value>
+  </data>
+  <data name="Program.NaoFoiPossivelDefinirO" xml:space="preserve">
+    <value>Não foi possível definir o arquivo de preferências. </value>
+  </data>
+  <data name="Program.UseSettingsFileSeguidoDe" xml:space="preserve">
+    <value>Use --settings-file seguido de um caminho absoluto para armazenamento isolado.</value>
+  </data>
+  <data name="SettingsStore.AConfiguracaoFoiModificadaPor" xml:space="preserve">
+    <value>A configuração foi modificada por outra instância. Arquivo preservado. Feche e reabra para carregar a versão atual.</value>
+  </data>
+  <data name="SettingsStore.ArquivoPrincipalAusenteBackupValido" xml:space="preserve">
+    <value>Arquivo principal ausente. Backup válido disponível. Escolha Recuperar backup ou Redefinir preferências locais.</value>
+  </data>
+  <data name="SettingsStore.BackupAusenteOuInvalidoO" xml:space="preserve">
+    <value>Backup ausente ou inválido. O arquivo original foi preservado.</value>
+  </data>
+  <data name="SettingsStore.ConfiguracaoExcedeOLimiteDe" xml:space="preserve">
+    <value>Configuração excede o limite de 1 MiB.</value>
+  </data>
+  <data name="SettingsStore.ConfiguracaoInvalidaPreservadaPadroesSeguros" xml:space="preserve">
+    <value>Configuração inválida preservada. Padrões seguros estão em memória. Recupere o backup ou redefina explicitamente as preferências locais.</value>
+  </data>
+  <data name="SettingsStore.ConfiguracaoMaiorQue1MiB" xml:space="preserve">
+    <value>Configuração maior que 1 MiB preservada. Gravação, redefinição e recuperação automáticas bloqueadas. </value>
+  </data>
+  <data name="SettingsStore.FalhaAoGravarPreferenciasConfira" xml:space="preserve">
+    <value>Falha ao gravar preferências. Confira permissão, espaço em disco e outra instância em execução. </value>
+  </data>
+  <data name="SettingsStore.GravacaoProtegidaOArquivoExistente" xml:space="preserve">
+    <value>Gravação protegida. O arquivo existente foi preservado.</value>
+  </data>
+  <data name="SettingsStore.InformeOCaminhoDeUm" xml:space="preserve">
+    <value>Informe o caminho de um arquivo de preferências.</value>
+  </data>
+  <data name="SettingsStore.InspecioneOArquivoComO" xml:space="preserve">
+    <value>Inspecione o arquivo com o aplicativo fechado e reabra após corrigir seu tamanho.</value>
+  </data>
+  <data name="SettingsStore.NaoFoiPossivelLerA" xml:space="preserve">
+    <value>Não foi possível ler a configuração. Gravação bloqueada. Confira acesso à pasta e reinicie o aplicativo.</value>
+  </data>
+  <data name="SettingsStore.OArquivoMudouDuranteA" xml:space="preserve">
+    <value>O arquivo mudou durante a gravação. Conteúdo atual preservado. Reabra o aplicativo para carregar a alteração.</value>
+  </data>
+  <data name="SettingsStore.OArquivoMudouDuranteA2" xml:space="preserve">
+    <value>O arquivo mudou durante a leitura.</value>
+  </data>
+  <data name="SettingsStore.PastaLocalDoUsuarioIndisponivel" xml:space="preserve">
+    <value>Pasta local do usuário indisponível.</value>
+  </data>
+  <data name="SettingsStore.PreferenciasCarregadasOsNiveisAtuais" xml:space="preserve">
+    <value>Preferências carregadas. Os níveis atuais são consultados no Windows.</value>
+  </data>
+  <data name="SettingsStore.PreferenciasInvalidasAConfiguracaoValida" xml:space="preserve">
+    <value>Preferências inválidas. A configuração válida foi preservada. </value>
+  </data>
+  <data name="SettingsStore.PreferenciasRecuperadasOOriginalInvalido" xml:space="preserve">
+    <value>Preferências recuperadas. O original inválido foi preservado em </value>
+  </data>
+  <data name="SettingsStore.PreferenciasSalvasLocalmente" xml:space="preserve">
+    <value>Preferências salvas localmente.</value>
+  </data>
+  <data name="SettingsStore.PrimeiraExecucaoPreferenciasLocaisSerao" xml:space="preserve">
+    <value>Primeira execução. Preferências locais serão salvas após suas ações.</value>
+  </data>
+  <data name="SettingsStore.VersaoDeConfiguracaoIncompativelArquivo" xml:space="preserve">
+    <value>Versão de configuração incompatível. Arquivo preservado e gravação bloqueada. Use uma versão compatível do Wave Studio.</value>
+  </data>
+  <data name="StudioBrand.IconeOficialIncorporadoIndisponivel" xml:space="preserve">
+    <value>Ícone oficial incorporado indisponível.</value>
+  </data>
+  <data name="StudioBrand.LogoOficialIncorporadaIndisponivel" xml:space="preserve">
+    <value>Logo oficial incorporada indisponível.</value>
+  </data>
+  <data name="StudioSettings.AConfiguracaoPrecisaInformarSchemaVersion" xml:space="preserve">
+    <value>A configuração precisa informar schemaVersion.</value>
+  </data>
+  <data name="StudioSettings.AjustesDoEqualizadorAusentes" xml:space="preserve">
+    <value>Ajustes do equalizador ausentes.</value>
+  </data>
+  <data name="StudioSettings.CamposDeEQExigemA" xml:space="preserve">
+    <value>Campos de EQ exigem a versão 2.</value>
+  </data>
+  <data name="StudioSettings.ConfiguracaoExcedeOTamanhoPermitido" xml:space="preserve">
+    <value>Configuração excede o tamanho permitido.</value>
+  </data>
+  <data name="StudioSettings.ConfiguracaoVazia" xml:space="preserve">
+    <value>Configuração vazia.</value>
+  </data>
+  <data name="StudioSettings.ListaDePreferenciasInvalida" xml:space="preserve">
+    <value>Lista de preferências inválida.</value>
+  </data>
+  <data name="StudioSettings.OsControlesEstaoIndisponiveisAtualize" xml:space="preserve">
+    <value>Os controles estão indisponíveis. Atualize o dispositivo antes de salvar os níveis.</value>
+  </data>
+  <data name="StudioSettings.PreferenciaDeEndpointInvalida" xml:space="preserve">
+    <value>Preferência de endpoint inválida.</value>
+  </data>
+  <data name="StudioSettings.PreferenciasDuplicadasParaOMesmo" xml:space="preserve">
+    <value>Preferências duplicadas para o mesmo endpoint.</value>
+  </data>
+  <data name="StudioSettings.PropriedadesJSONDuplicadas" xml:space="preserve">
+    <value>Propriedades JSON duplicadas.</value>
+  </data>
+  <data name="StudioSettings.SelecaoDeDispositivoInvalida" xml:space="preserve">
+    <value>Seleção de dispositivo inválida.</value>
+  </data>
+  <data name="StudioSettings.VersaoDeConfiguracaoIncompativelArquivo" xml:space="preserve">
+    <value>Versão de configuração incompatível. Arquivo preservado.</value>
+  </data>
+  <data name="StudioSettings.VersaoInvalidaParaGravacao" xml:space="preserve">
+    <value>Versão inválida para gravação.</value>
+  </data>
+  <data name="WindowPlacement.ENecessariaUmaAreaUtil" xml:space="preserve">
+    <value>É necessária uma área útil válida.</value>
+  </data>
+  <data name="WindowPlacement.TamanhoOuPosicaoDeJanela" xml:space="preserve">
+    <value>Tamanho ou posição de janela inválidos.</value>
+  </data>
+  <data name="Settings.Tab" xml:space="preserve">
+    <value>Configurações</value>
+  </data>
+  <data name="Language.Title" xml:space="preserve">
+    <value>Idioma</value>
+  </data>
+  <data name="Language.FollowWindows" xml:space="preserve">
+    <value>Seguir Windows</value>
+  </data>
+  <data name="Language.Active" xml:space="preserve">
+    <value>Idioma em uso — {0}.</value>
+  </data>
+  <data name="Language.Fallback" xml:space="preserve">
+    <value>Idioma em uso — {0}. A opção escolhida ainda não tem tradução completa.</value>
+  </data>
+  <data name="Language.NextOpening" xml:space="preserve">
+    <value>O idioma escolhido será aplicado na próxima abertura do Wave Studio.</value>
+  </data>
+  <data name="Language.Hint" xml:space="preserve">
+    <value>A preferência vale para o Wave Studio. Números seguem a formatação regional do Windows.</value>
+  </data>
+  <data name="Language.InvalidPreference" xml:space="preserve">
+    <value>Preferência de idioma inválida.</value>
+  </data>
+  <data name="Mixer.Tab" xml:space="preserve">
+    <value>Mesa de som</value>
+  </data>
+  <data name="Mixer.Board" xml:space="preserve">
+    <value>Mesa</value>
+  </data>
+  <data name="Mixer.Details" xml:space="preserve">
+    <value>Detalhes das sessões</value>
+  </data>
+  <data name="Mixer.Unavailable" xml:space="preserve">
+    <value>Indisponível</value>
+  </data>
+  <data name="Mixer.Percent" xml:space="preserve">
+    <value>{0:F1}%</value>
+  </data>
+  <data name="Mixer.DevicePeak" xml:space="preserve">
+    <value>Pico do dispositivo</value>
+  </data>
+  <data name="Mixer.SessionPeak" xml:space="preserve">
+    <value>Pico da sessão</value>
+  </data>
+  <data name="Mixer.ChannelGroup" xml:space="preserve">
+    <value>Grupo do canal nesta sessão</value>
+  </data>
+  <data name="Mixer.DeviceMaster" xml:space="preserve">
+    <value>Master do dispositivo</value>
+  </data>
+  <data name="Mixer.EndpointVolume" xml:space="preserve">
+    <value>Volume do dispositivo no Windows</value>
+  </data>
+  <data name="Mixer.ChannelState" xml:space="preserve">
+    <value>Canal {0} · {1}</value>
+  </data>
+  <data name="Mixer.PeakStatus" xml:space="preserve">
+    <value>{0} · {1}</value>
+  </data>
+  <data name="Mixer.FaderName" xml:space="preserve">
+    <value>Fader de {0}, de 0 a 100%</value>
+  </data>
+  <data name="Mixer.MuteName" xml:space="preserve">
+    <value>{0} — {1}</value>
+  </data>
+  <data name="Mixer.GroupUngrouped" xml:space="preserve">
+    <value>Sem grupo</value>
+  </data>
+  <data name="Mixer.GroupGame" xml:space="preserve">
+    <value>Jogo</value>
+  </data>
+  <data name="Mixer.GroupChat" xml:space="preserve">
+    <value>Chat</value>
+  </data>
+  <data name="Mixer.GroupMusic" xml:space="preserve">
+    <value>Música</value>
+  </data>
+  <data name="Mixer.GroupMedia" xml:space="preserve">
+    <value>Mídia</value>
+  </data>
+  <data name="Mixer.GroupSystem" xml:space="preserve">
+    <value>Sistema</value>
+  </data>
+  <data name="Mixer.GroupAuxiliary" xml:space="preserve">
+    <value>Auxiliar</value>
+  </data>
+  <data name="Mixer.GroupAll" xml:space="preserve">
+    <value>Todos os canais</value>
+  </data>
+  <data name="Mixer.GroupFilter" xml:space="preserve">
+    <value>Filtrar por grupo</value>
+  </data>
+  <data name="Mixer.BoardHint" xml:space="preserve">
+    <value>Arraste o fader ou use as setas. A mesa confirma o valor no Windows e organiza apenas sessões presentes. A leitura de pico por sessão é instantânea.</value>
+  </data>
+  <data name="Mixer.ChannelCount" xml:space="preserve">
+    <value>{0} sessão(ões) neste dispositivo.</value>
+  </data>
+  <data name="Mixer.Duplicate" xml:space="preserve">
+    <value>Sessões com identidade duplicada foram ignoradas.</value>
+  </data>
+  <data name="Mixer.SessionChanged" xml:space="preserve">
+    <value>A sessão mudou durante a confirmação. Atualize a mesa.</value>
+  </data>
+  <data name="General.CaptureLower" xml:space="preserve">
+    <value>captura</value>
+  </data>
+  <data name="Mixer.ChannelTitle" xml:space="preserve">
+    <value>Canal {0} — {1}</value>
+  </data>
+  <data name="Mixer.NoChannelsInGroup" xml:space="preserve"><value>Nenhum canal neste grupo.</value></data>
+</root>

@@ -44,7 +44,7 @@ public sealed class CoreAudioWatchBackend : IAudioWatchBackend
         var device = enumerator.GetDevice(endpointId);
         try
         {
-            if (device.State != DeviceState.Active) throw new InvalidOperationException("Dispositivo indisponível.");
+            if (device.State != DeviceState.Active) throw new InvalidOperationException(StudioStrings.Get("CoreAudioWatchBackend.DispositivoIndisponivel"));
             return new PeakSource(device, device.AudioMeterInformation);
         }
         catch { device.Dispose(); throw; }

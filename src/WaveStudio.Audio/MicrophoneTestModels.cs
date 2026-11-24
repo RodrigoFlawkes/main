@@ -13,7 +13,7 @@ public sealed record MicrophoneTestSnapshot(MicrophoneTestState State, TimeSpan 
 internal delegate void TestAudioData(ReadOnlySpan<byte> data);
 
 internal sealed class TestEndpointUnavailableException() : InvalidOperationException(
-    "O dispositivo selecionado está indisponível. Confira a seleção e a conexão.");
+    StudioStrings.Get("MicrophoneTestModels.ODispositivoSelecionadoEstaIndisponivel"));
 
 internal interface ITestCapture : IDisposable
 {

@@ -7,20 +7,26 @@ namespace WaveStudio.Tests;
 
 internal sealed class TemporarySettingsDirectory : IDisposable
 {
-    private readonly string root = System.IO.Path.GetFullPath(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "WaveStudio.Tests"));
+    // Cada apphost usa sua própria raiz na saída de testes, sujeita ao ciclo de vida do build.
+    private static readonly string Root = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory,
+        "settings-fixtures", Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture)));
     public string Path { get; }
     public string FilePath => System.IO.Path.Combine(Path, "settings.json");
     public TemporarySettingsDirectory()
     {
-        Path = System.IO.Path.Combine(root, Guid.NewGuid().ToString("N"));
+        Path = System.IO.Path.Combine(Root, Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path);
     }
     public void Dispose()
     {
         string resolved = System.IO.Path.GetFullPath(Path);
-        if (!string.Equals(System.IO.Path.GetDirectoryName(resolved), root, StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(System.IO.Path.GetDirectoryName(resolved), Root, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Diretório de teste fora da raiz temporária específica.");
-        Directory.Delete(resolved, recursive: true);
+        try { Directory.Delete(resolved, recursive: true); }
+        catch (DirectoryNotFoundException) when (!Directory.Exists(resolved))
+        {
+            // A limpeza já terminou se o diretório exclusivo do teste deixou de existir.
+        }
     }
 }
 
@@ -118,7 +124,7 @@ public sealed class SettingsStoreTests
 
     [Theory]
     [InlineData(0)]
-    [InlineData(3)]
+    [InlineData(4)]
     [InlineData(100)]
     public async Task IncompatibleVersionSurvivesSaveResetRecoveryAndCloseStyleSave(int version)
     {
@@ -304,7 +310,7 @@ public sealed class SettingsStoreTests
 
     [Theory]
     [InlineData(1)]
-    [InlineData(3)]
+    [InlineData(4)]
     public async Task Utf8BomIsAcceptedAndIncompatibleFileStillPreserved(int version)
     {
         using var directory = new TemporarySettingsDirectory();
@@ -313,7 +319,7 @@ public sealed class SettingsStoreTests
         var store = new SettingsStore(directory.FilePath);
         var loaded = await store.LoadAsync(TestContext.Current.CancellationToken);
         Assert.Equal(version == 1 ? SettingsFileState.Ready : SettingsFileState.Unsupported, loaded.State);
-        if (version == 2) Assert.False((await store.ResetAsync(TestContext.Current.CancellationToken)).Success);
+        if (version == 4) Assert.False((await store.ResetAsync(TestContext.Current.CancellationToken)).Success);
         Assert.Equal(bytes, File.ReadAllBytes(directory.FilePath));
     }
 

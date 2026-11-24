@@ -13,13 +13,13 @@ internal sealed partial class MainForm : Form
     private readonly MicrophoneTestPanel microphoneTest;
     private readonly ExternalRouteReadinessPanel routeReadiness;
     private readonly CancellationTokenSource lifetime = new();
-    private readonly DevicePanel playback = new("Dispositivo de reprodução / headset");
-    private readonly DevicePanel capture = new("Dispositivo de captura / microfone");
-    private readonly Button refresh = new() { Text = "&Atualizar dispositivos", AutoSize = true };
+    private readonly DevicePanel playback = new(StudioStrings.Get("MainForm.DispositivoDeReproducaoHeadset"));
+    private readonly DevicePanel capture = new(StudioStrings.Get("MainForm.DispositivoDeCapturaMicrofone"));
+    private readonly Button refresh = new() { Text = StudioStrings.Get("MainForm.AtualizarDispositivos"), AutoSize = true };
     private readonly Label status = new() { AutoSize = true, Dock = DockStyle.Fill };
     private readonly Label watchStatus = new() { AutoSize = true, Dock = DockStyle.Fill };
-    private readonly CheckBox followPlayback = new() { AutoSize = true, Checked = true, Text = "Seguir padrão multimídia de reprodução" };
-    private readonly CheckBox followCapture = new() { AutoSize = true, Checked = true, Text = "Seguir padrão multimídia de captura" };
+    private readonly CheckBox followPlayback = new() { AutoSize = true, Checked = true, Text = StudioStrings.Get("MainForm.SeguirPadraoMultimidiaDeReproducao") };
+    private readonly CheckBox followCapture = new() { AutoSize = true, Checked = true, Text = StudioStrings.Get("MainForm.SeguirPadraoMultimidiaDeCaptura") };
     private readonly AudioWatchWorker watch;
     private readonly System.Windows.Forms.Timer peakTimer = new() { Interval = 100 };
     private AudioWatchSelection watchSelection = new(null, null, 0);
@@ -37,8 +37,11 @@ internal sealed partial class MainForm : Form
 
     public MainForm(SettingsStore? settingsStore = null, Action<string>? storageWarning = null,
         AudioWatchWorker? audioWatch = null, MicrophoneTestSession? microphoneSession = null,
-        Func<WindowArea[]>? workAreas = null, TimeSpan? shutdownTimeout = null)
+        Func<WindowArea[]>? workAreas = null, TimeSpan? shutdownTimeout = null,
+        SettingsLoadResult? initialSettings = null, System.Globalization.CultureInfo? windowsUiCulture = null)
     {
+        this.initialSettings = initialSettings;
+        this.windowsUiCulture = windowsUiCulture ?? System.Globalization.CultureInfo.CurrentUICulture;
         closeTimeout = shutdownTimeout ?? TimeSpan.FromSeconds(5);
         if (closeTimeout <= TimeSpan.Zero || closeTimeout > TimeSpan.FromSeconds(30)) throw new ArgumentOutOfRangeException(nameof(shutdownTimeout));
         watch = audioWatch ?? new AudioWatchWorker();
@@ -48,8 +51,8 @@ internal sealed partial class MainForm : Form
         InitializeEqualizerProfiles();
         readWorkAreas = workAreas ?? (() => Screen.AllScreens.Select(screen => screen.WorkingArea)
             .Select(area => new WindowArea(area.X, area.Y, area.Width, area.Height)).ToArray());
-        showStorageWarning = storageWarning ?? (message => MessageBox.Show(this, message, "Preferências locais", MessageBoxButtons.OK, MessageBoxIcon.Warning));
-        Text = "Wave Studio — v0.1.0 Alpha em desenvolvimento";
+        showStorageWarning = storageWarning ?? (message => MessageBox.Show(this, message, StudioStrings.Get("MainForm.PreferenciasLocais"), MessageBoxButtons.OK, MessageBoxIcon.Warning));
+        Text = StudioStrings.Get("MainForm.WaveStudioV010");
         Icon = brandIcon;
         ShowIcon = true;
         MinimumSize = new Size(600, 400);
@@ -69,10 +72,10 @@ internal sealed partial class MainForm : Form
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         var heading = new Label { Text = "Wave Studio", AutoSize = true, Font = new Font(Font.FontFamily, 20, FontStyle.Bold) };
-        var version = new Label { Text = "v0.1.0 Alpha em desenvolvimento", AutoSize = true, Margin = new Padding(3, 4, 3, 16) };
+        var version = new Label { Text = StudioStrings.Get("MainForm.V010AlphaEm"), AutoSize = true, Margin = new Padding(3, 4, 3, 16) };
         var header = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = false };
         header.Controls.Add(new PictureBox { Image = brandLogo, SizeMode = PictureBoxSizeMode.Zoom,
-            Size = new Size(64, 64), Margin = new Padding(0, 0, 12, 0), AccessibleName = "Logo oficial do Wave Studio", TabStop = false });
+            Size = new Size(64, 64), Margin = new Padding(0, 0, 12, 0), AccessibleName = StudioStrings.Get("MainForm.LogoOficialDoWaveStudio"), TabStop = false });
         heading.Margin = new Padding(0, 12, 0, 0);
         header.Controls.Add(heading);
         layout.Controls.Add(header, 0, 0);
@@ -80,7 +83,7 @@ internal sealed partial class MainForm : Form
         layout.Controls.Add(version, 0, 1);
         layout.SetColumnSpan(version, 2);
         var tabs = new TabControl { Dock = DockStyle.Fill };
-        var devicesPage = new TabPage("Dispositivos") { AutoScroll = true };
+        var devicesPage = new TabPage(StudioStrings.Get("MainForm.Dispositivos")) { AutoScroll = true };
         var devicesLayout = new TableLayoutPanel { Dock = DockStyle.Top, Height = 820, MinimumSize = new Size(780, 820), ColumnCount = 2 };
         devicesLayout.RowCount = 2;
         devicesLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -92,11 +95,11 @@ internal sealed partial class MainForm : Form
         devicesLayout.Controls.Add(playback, 0, 1);
         devicesLayout.Controls.Add(capture, 1, 1);
         devicesPage.Controls.Add(devicesLayout);
-        var mixerPage = new TabPage("Mixer de aplicativos");
+        var mixerPage = new TabPage(StudioStrings.Get("Mixer.Tab"));
         mixerPage.Controls.Add(mixer);
         tabs.TabPages.Add(devicesPage);
         tabs.TabPages.Add(mixerPage);
-        var microphoneTestPage = new TabPage("Testar microfone");
+        var microphoneTestPage = new TabPage(StudioStrings.Get("MainForm.TestarMicrofone"));
         microphoneTestPage.Controls.Add(microphoneTest);
         tabs.TabPages.Add(microphoneTestPage);
         var routePage = new TabPage(ExternalRouteText.Tab) { AccessibleDescription = ExternalRouteText.Title };
@@ -141,11 +144,13 @@ internal sealed partial class MainForm : Form
             if (snapshot.Selection != watchSelection) return;
             playback.ShowPeak(snapshot.Playback);
             capture.ShowPeak(snapshot.Capture);
+            if (tabs.SelectedTab == mixerPage) mixer.ShowEndpointPeak(snapshot, now);
         };
         void UpdateMetering()
         {
             bool visible = !stopping && WindowState != FormWindowState.Minimized;
-            watch.EnableMetering(visible && (tabs.SelectedTab == devicesPage || tabs.SelectedTab == microphoneTestPage));
+            watch.EnableMetering(visible && (tabs.SelectedTab == devicesPage || tabs.SelectedTab == microphoneTestPage || tabs.SelectedTab == mixerPage),
+                includeCapture: tabs.SelectedTab != mixerPage);
             microphoneTest.EnableInputMeter(visible && tabs.SelectedTab == microphoneTestPage);
         }
         tabs.SelectedIndexChanged += (_, _) =>
@@ -158,15 +163,15 @@ internal sealed partial class MainForm : Form
         Resize += (_, _) => UpdateMetering();
         UpdateMetering();
         closeSteps = [
-            new("microfone", async () => await microphoneTest.StopAsync()),
-            new("inicialização", () => startupTask),
-            new("preferências", async () => { await startupTask; await SaveWindowOnCloseAsync(); }),
-            new("catálogo", () => refreshTask),
-            new("roteamento externo", routeReadiness.StopAsync),
-            new("reprodução", async () => await playback.StopAsync()),
-            new("captura", async () => await capture.StopAsync()),
-            new("mixer", async () => await mixer.StopAsync()),
-            new("medidores", async () => await watch.DisposeAsync())
+            new(StudioStrings.Get("MainForm.Microfone"), async () => await microphoneTest.StopAsync()),
+            new(StudioStrings.Get("MainForm.Inicializacao"), () => startupTask),
+            new(StudioStrings.Get("MainForm.Preferencias"), async () => { await startupTask; await SaveWindowOnCloseAsync(); }),
+            new(StudioStrings.Get("MainForm.Catalogo"), () => refreshTask),
+            new(StudioStrings.Get("MainForm.RoteamentoExterno"), routeReadiness.StopAsync),
+            new(StudioStrings.Get("MainForm.Reproducao"), async () => await playback.StopAsync()),
+            new(StudioStrings.Get("General.CaptureLower"), async () => await capture.StopAsync()),
+            new(StudioStrings.Get("MainForm.Mixer"), async () => await mixer.StopAsync()),
+            new(StudioStrings.Get("MainForm.Medidores"), async () => await watch.DisposeAsync())
         ];
         FormClosing += async (_, args) =>
         {
@@ -310,7 +315,7 @@ internal sealed partial class MainForm : Form
         refresh.Enabled = false;
         playback.Enabled = false;
         capture.Enabled = false;
-        status.Text = "Consultando dispositivos de áudio…";
+        status.Text = StudioStrings.Get("MainForm.ConsultandoDispositivosDeAudio");
         try
         {
             var catalog = await audio.QueryAsync(lifetime.Token);
@@ -331,7 +336,7 @@ internal sealed partial class MainForm : Form
             AddFallbackWarning(warnings, selectedPlayback, EndpointDirection.Playback, selection.PlaybackId);
             AddFallbackWarning(warnings, selectedCapture, EndpointDirection.Capture, selection.CaptureId);
             status.Text = warnings.Count > 0 ? string.Join(Environment.NewLine, warnings.Distinct())
-                : $"Consulta concluída — {catalog.Devices.Count} endpoint(s) encontrado(s).";
+                : StudioStrings.Format("MainForm.ConsultaConcluida0EndpointS", catalog.Devices.Count);
         }
         catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
         catch (Exception error)

@@ -20,7 +20,7 @@ public sealed class DeviceSelection
     {
         if (!Enum.IsDefined(direction)) throw new ArgumentOutOfRangeException(nameof(direction));
         if (id is not null && (string.IsNullOrWhiteSpace(id) || id.Length > 2048 || id.Any(char.IsControl)))
-            throw new ArgumentException("Identificador de dispositivo inválido.", nameof(id));
+            throw new ArgumentException(StudioStrings.Get("DeviceSelection.IdentificadorDeDispositivoInvalido"), nameof(id));
     }
 
     public void SetPreference(EndpointDirection direction, string? id)

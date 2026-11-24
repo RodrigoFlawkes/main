@@ -12,8 +12,8 @@ internal sealed partial class MainForm
     private StudioSettings settings = new();
     private readonly Label storageStatus = new() { AutoSize = true, Dock = DockStyle.Fill, MaximumSize = new Size(1000, 0) };
     private readonly Label preferencesSummary = new() { AutoSize = true, MaximumSize = new Size(800, 0) };
-    private readonly Button resetPreferences = new() { AutoSize = true, Text = "Redefinir preferências locais…", Enabled = false };
-    private readonly Button recoverPreferences = new() { AutoSize = true, Text = "Recuperar backup…", Enabled = false };
+    private readonly Button resetPreferences = new() { AutoSize = true, Text = StudioStrings.Get("MainForm.Preferences.RedefinirPreferenciasLocais"), Enabled = false };
+    private readonly Button recoverPreferences = new() { AutoSize = true, Text = StudioStrings.Get("MainForm.Preferences.RecuperarBackup"), Enabled = false };
     private Task startupTask = Task.CompletedTask;
     private Task settingsTask = Task.CompletedTask;
     private Task preferenceTask = Task.CompletedTask;
@@ -27,25 +27,26 @@ internal sealed partial class MainForm
 
     private TabPage CreatePreferencesPage()
     {
-        var page = new TabPage("Preferências locais") { AutoScroll = true };
+        var page = new TabPage(StudioStrings.Get("Settings.Tab")) { AutoScroll = true };
         var layout = new FlowLayoutPanel
         {
             Dock = DockStyle.Top, AutoSize = true, FlowDirection = FlowDirection.TopDown,
             WrapContents = false, Padding = new Padding(12)
         };
-        storageStatus.AccessibleName = "Estado do armazenamento de preferências";
-        layout.Controls.Add(new TextBox { ReadOnly = true, Width = 720, Text = store.FilePath, AccessibleName = "Arquivo de preferências locais" });
+        storageStatus.AccessibleName = StudioStrings.Get("MainForm.Preferences.EstadoDoArmazenamentoDePreferencias");
+        layout.Controls.Add(new TextBox { ReadOnly = true, Width = 720, Text = store.FilePath, AccessibleName = StudioStrings.Get("MainForm.Preferences.ArquivoDePreferenciasLocais") });
         layout.Controls.Add(preferencesSummary);
         layout.Controls.Add(new Label
         {
             AutoSize = true, MaximumSize = new Size(800, 0),
-            Text = "Seleções são salvas após sua escolha. Use Salvar valores atuais em Dispositivos para guardar níveis. Restaurar valores salvos apresenta uma prévia e pede confirmação."
+            Text = StudioStrings.Get("MainForm.Preferences.SelecoesSaoSalvasAposSua")
         });
         layout.Controls.Add(new Label
         {
             AutoSize = true, MaximumSize = new Size(800, 0),
-            Text = "Preferências de sessões indisponíveis — identidade durável e correspondência inequívoca de aplicativos ainda aguardam validação."
+            Text = StudioStrings.Get("MainForm.Preferences.PreferenciasDeSessoesIndisponiveisIdentidade")
         });
+        AddLanguageControls(layout);
         layout.Controls.Add(recoverPreferences);
         layout.Controls.Add(resetPreferences);
         page.Controls.Add(layout);
@@ -61,7 +62,7 @@ internal sealed partial class MainForm
         try { await preferenceTask; }
         catch (Exception error)
         {
-            if (!stopping && !IsDisposed) ShowStorageStatus("Falha na operação de preferências. " + error.GetType().Name);
+            if (!stopping && !IsDisposed) ShowStorageStatus(StudioStrings.Get("MainForm.Preferences.FalhaNaOperacaoDePreferencias") + error.GetType().Name);
         }
     }
 
@@ -69,14 +70,15 @@ internal sealed partial class MainForm
     {
         try
         {
-            var loaded = await store.LoadAsync(lifetime.Token);
+            var loaded = initialSettings ?? await store.LoadAsync(lifetime.Token);
             if (stopping) return;
             settings = loaded.Settings;
             settingsLoaded = true;
+            ShowLanguagePreference();
             ApplySavedSelections();
             LoadEqualizerPreferences();
             windowPlacementAvailable = ApplyWindowPlacement();
-            ShowStorageStatus(loaded.Message + (windowPlacementAvailable ? "" : " Área útil da tela indisponível; posição salva preservada nesta abertura."));
+            ShowStorageStatus(loaded.Message + (windowPlacementAvailable ? "" : StudioStrings.Get("MainForm.Preferences.AreaUtilDaTelaIndisponivel")));
             EnablePreferenceSelections(true);
         }
         catch (OperationCanceledException) when (stopping) { }
@@ -145,14 +147,14 @@ internal sealed partial class MainForm
         }
         catch (OperationCanceledException)
         {
-            lastSaveError = "A gravação das preferências foi cancelada. Confira o armazenamento antes de fechar.";
+            lastSaveError = StudioStrings.Get("MainForm.Preferences.AGravacaoDasPreferenciasFoi");
             if (!IsDisposed) ShowEqualizerSaveResult(false, lastSaveError);
             if (!IsDisposed) ShowStorageStatus(lastSaveError);
         }
         catch (Exception error) when (SettingsJson.IsValidationError(error) || SettingsStore.IsStorageError(error))
         {
             settingsSaveRequested = false;
-            lastSaveError = "Falha ao salvar preferências. A configuração válida foi preservada. " + error.Message;
+            lastSaveError = StudioStrings.Get("MainForm.Preferences.FalhaAoSalvarPreferenciasA") + error.Message;
             if (!IsDisposed) ShowEqualizerSaveResult(false, lastSaveError);
             if (!IsDisposed) ShowStorageStatus(lastSaveError);
         }
@@ -162,17 +164,18 @@ internal sealed partial class MainForm
     private void ShowStorageStatus(string message)
     {
         storageStatus.Text = message;
-        storageStatus.AccessibleName = "Estado do armazenamento de preferências — " + message;
+        storageStatus.AccessibleName = StudioStrings.Get("MainForm.Preferences.EstadoDoArmazenamentoDePreferencias2") + message;
+        language.Enabled = settingsLoaded && store.CanSave && !stopping && !preferenceOperation;
         resetPreferences.Enabled = store.CanReset && !preferenceOperation;
         recoverPreferences.Enabled = store.CanRecoverBackup && !preferenceOperation;
-        preferencesSummary.Text = $"Reprodução salva — {SelectionText(settings.Playback)}{Environment.NewLine}"
-            + $"Captura salva — {SelectionText(settings.Capture)}{Environment.NewLine}"
-            + $"{settings.Endpoints.Length} preferência(s) de níveis por endpoint.";
+        preferencesSummary.Text = StudioStrings.Format("MainForm.Preferences.ReproducaoSalva01", SelectionText(settings.Playback), Environment.NewLine)
+            + StudioStrings.Format("MainForm.Preferences.CapturaSalva01", SelectionText(settings.Capture), Environment.NewLine)
+            + StudioStrings.Format("MainForm.Preferences.0PreferenciaSDeNiveis", settings.Endpoints.Length);
         ShowSavedPreferences();
     }
 
     private static string SelectionText(SelectionPreference preference) =>
-        preference.FollowDefault ? "seguir padrão multimídia" : preference.EndpointId!;
+        preference.FollowDefault ? StudioStrings.Get("MainForm.Preferences.SeguirPadraoMultimidia") : preference.EndpointId!;
 
     private EndpointPreference? SavedFor(EndpointDirection direction, DeviceSnapshot? device)
     {
@@ -201,7 +204,7 @@ internal sealed partial class MainForm
         catch (OperationCanceledException) { }
         catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error))
         {
-            ShowStorageStatus("Não foi possível consultar os valores para salvar. " + EndpointVolumeOperations.Describe(error));
+            ShowStorageStatus(StudioStrings.Get("MainForm.Preferences.NaoFoiPossivelConsultarOs") + EndpointVolumeOperations.Describe(error));
         }
         finally { preferenceOperation = false; if (!IsDisposed) ShowSavedPreferences(); }
     }
@@ -217,23 +220,23 @@ internal sealed partial class MainForm
         {
             var plan = await panel.AudioControls.PreviewRestoreAsync(preference.Values);
             if (stopping) return;
-            string preview = $"Restaurar os valores salvos em {device.Name}?{Environment.NewLine}{plan.Selection.DeviceId}{Environment.NewLine}{Environment.NewLine}"
-                + $"Volume atual {Level(plan.Original.VolumePercent)} → salvo {Level(plan.Values.VolumePercent)}{Environment.NewLine}"
-                + $"Mute atual {MuteText(plan.Original.Muted)} → salvo {MuteText(plan.Values.Muted)}{Environment.NewLine}"
-                + $"Balanço atual {Level(plan.Original.Stereo?.Balance)} → salvo {Level(plan.Values.Balance)}";
+            string preview = StudioStrings.Format("MainForm.Preferences.RestaurarOsValoresSalvosEm", device.Name, Environment.NewLine, plan.Selection.DeviceId, Environment.NewLine, Environment.NewLine)
+                + StudioStrings.Format("MainForm.Preferences.VolumeAtual0Salvo1", Level(plan.Original.VolumePercent), Level(plan.Values.VolumePercent), Environment.NewLine)
+                + StudioStrings.Format("MainForm.Preferences.MuteAtual0Salvo1", MuteText(plan.Original.Muted), MuteText(plan.Values.Muted), Environment.NewLine)
+                + StudioStrings.Format("MainForm.Preferences.BalancoAtual0Salvo1", Level(plan.Original.Stereo?.Balance), Level(plan.Values.Balance));
             if (plan.Values.VolumePercent > plan.Original.VolumePercent)
-                preview += Environment.NewLine + "A confirmação aumentará o volume do endpoint.";
+                preview += Environment.NewLine + StudioStrings.Get("MainForm.Preferences.AConfirmacaoAumentaraOVolume");
             if (plan.Values.Muted == false && plan.Original.Muted == true)
-                preview += Environment.NewLine + "A confirmação desativará o mute e poderá tornar o áudio audível.";
-            if (MessageBox.Show(this, preview, "Confirmar restauração de áudio", MessageBoxButtons.YesNo,
+                preview += Environment.NewLine + StudioStrings.Get("MainForm.Preferences.AConfirmacaoDesativaraOMute");
+            if (MessageBox.Show(this, preview, StudioStrings.Get("MainForm.Preferences.ConfirmarRestauracaoDeAudio"), MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
             var result = await panel.AudioControls.RestoreAsync(plan);
-            if (!stopping) ShowStorageStatus(result.Complete ? "Preferência aplicada por sua confirmação. Valores atuais consultados no Windows."
+            if (!stopping) ShowStorageStatus(result.Complete ? StudioStrings.Get("MainForm.Preferences.PreferenciaAplicadaPorSuaConfirmacao")
                 : result.Error!);
         }
         catch (OperationCanceledException)
         {
-            if (!stopping) ShowStorageStatus("A seleção mudou. Confira os níveis do dispositivo anterior e solicite uma nova prévia para restaurar.");
+            if (!stopping) ShowStorageStatus(StudioStrings.Get("MainForm.Preferences.ASelecaoMudouConfiraOs"));
         }
         catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error))
         {
@@ -242,22 +245,22 @@ internal sealed partial class MainForm
         finally { preferenceOperation = false; if (!IsDisposed) ShowSavedPreferences(); }
     }
 
-    private static string Level(double? value) => value is double number ? number.ToString("F1") : "ausente";
-    private static string MuteText(bool? value) => value switch { true => "ligado", false => "desligado", _ => "ausente" };
+    private static string Level(double? value) => value is double number ? number.ToString("F1") : StudioStrings.Get("MainForm.Preferences.Ausente");
+    private static string MuteText(bool? value) => value switch { true => StudioStrings.Get("MainForm.Preferences.Ligado"), false => StudioStrings.Get("MainForm.Preferences.Desligado"), _ => StudioStrings.Get("MainForm.Preferences.Ausente") };
 
     private async Task RecoverOrResetAsync(bool useBackup)
     {
         if (stopping || preferenceOperation || (useBackup ? !store.CanRecoverBackup : !store.CanReset)) return;
-        string prompt = useBackup ? "Recuperar as preferências e os perfis do backup válido? A seleção será recarregada e os níveis atuais serão consultados."
-            : "Redefinir seleções, níveis salvos e todos os perfis e ajustes do equalizador? A configuração válida anterior ficará no backup. Um original inválido será arquivado.";
-        if (MessageBox.Show(this, prompt, "Preferências locais", MessageBoxButtons.YesNo,
+        string prompt = useBackup ? StudioStrings.Get("MainForm.Preferences.RecuperarAsPreferenciasEOs")
+            : StudioStrings.Get("MainForm.Preferences.RedefinirSelecoesNiveisSalvosE");
+        if (MessageBox.Show(this, prompt, StudioStrings.Get("MainForm.Preferences.PreferenciasLocais"), MessageBoxButtons.YesNo,
             MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
         preferenceOperation = true;
         recoveringPreferences = true;
         FlushEqualizerPreferences();
         microphoneTest.Equalizer.BeginLoad();
         EnablePreferenceSelections(false);
-        ShowStorageStatus("Atualizando preferências locais…");
+        ShowStorageStatus(StudioStrings.Get("MainForm.Preferences.AtualizandoPreferenciasLocais"));
         try
         {
             await settingsTask.WaitAsync(TimeSpan.FromSeconds(5));
@@ -270,6 +273,7 @@ internal sealed partial class MainForm
                 lastSaveError = null;
                 if (!stopping)
                 {
+                    ShowLanguagePreference();
                     ApplySavedSelections();
                     LoadEqualizerPreferences();
                     RequestRefresh(true);
@@ -279,7 +283,7 @@ internal sealed partial class MainForm
         }
         catch (Exception error) when (error is OperationCanceledException or TimeoutException)
         {
-            if (!stopping) ShowStorageStatus("A operação de armazenamento ainda não terminou. Aguarde e confira o arquivo antes de repetir.");
+            if (!stopping) ShowStorageStatus(StudioStrings.Get("MainForm.Preferences.AOperacaoDeArmazenamentoAinda"));
         }
         finally
         {
@@ -305,7 +309,7 @@ internal sealed partial class MainForm
         try { await preferenceTask.WaitAsync(TimeSpan.FromSeconds(5)); }
         catch (Exception error)
         {
-            showStorageWarning("A operação de preferências ficou pendente ou falhou. Confira o arquivo na próxima abertura. " + error.GetType().Name);
+            showStorageWarning(StudioStrings.Get("MainForm.Preferences.AOperacaoDePreferenciasFicou") + error.GetType().Name);
             return;
         }
         FlushEqualizerPreferences();
@@ -317,10 +321,10 @@ internal sealed partial class MainForm
             QueueSettingsSave();
         }
         try { await settingsTask.WaitAsync(TimeSpan.FromSeconds(5)); }
-        catch (TimeoutException) { lastSaveError = "A gravação ainda está pendente. A próxima abertura deverá conferir o arquivo de preferências."; }
+        catch (TimeoutException) { lastSaveError = StudioStrings.Get("MainForm.Preferences.AGravacaoAindaEstaPendente"); }
         catch (Exception error) when (SettingsJson.IsValidationError(error) || SettingsStore.IsStorageError(error) || error is OperationCanceledException)
         {
-            lastSaveError = "Falha na gravação final. Confira a configuração preservada. " + error.GetType().Name;
+            lastSaveError = StudioStrings.Get("MainForm.Preferences.FalhaNaGravacaoFinalConfira") + error.GetType().Name;
         }
         if (lastSaveError is not null)
             showStorageWarning(lastSaveError);
@@ -329,6 +333,6 @@ internal sealed partial class MainForm
     private static void AddFallbackWarning(List<string> warnings, DeviceSnapshot? device, EndpointDirection direction, string? explicitId)
     {
         if (explicitId is null && device is { State: EndpointState.Active, IsDefaultMultimedia: false })
-            warnings.Add($"Padrão multimídia de {(direction == EndpointDirection.Playback ? "reprodução" : "captura")} indisponível. Alternativa ativa exibida — {device.Name}.");
+            warnings.Add(StudioStrings.Format("MainForm.Preferences.PadraoMultimidiaDe0Indisponivel", (direction == EndpointDirection.Playback ? StudioStrings.Get("MainForm.Preferences.Reproducao") : StudioStrings.Get("General.CaptureLower")), device.Name));
     }
 }

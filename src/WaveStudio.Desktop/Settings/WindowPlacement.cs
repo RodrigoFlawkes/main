@@ -7,14 +7,14 @@ internal sealed record WindowPlacement(int X, int Y, int Width, int Height, bool
     {
         if (Width < 100 || Height < 100 || Width > 16384 || Height > 16384
             || Math.Abs((long)X) > 1000000 || Math.Abs((long)Y) > 1000000)
-            throw new InvalidDataException("Tamanho ou posição de janela inválidos.");
+            throw new InvalidDataException(StudioStrings.Get("WindowPlacement.TamanhoOuPosicaoDeJanela"));
     }
 
     public WindowPlacement Fit(IReadOnlyList<WindowArea> areas)
     {
         Validate();
         if (areas.Count == 0 || areas.Any(area => area.Width <= 0 || area.Height <= 0))
-            throw new ArgumentException("É necessária uma área útil válida.", nameof(areas));
+            throw new ArgumentException(StudioStrings.Get("WindowPlacement.ENecessariaUmaAreaUtil"), nameof(areas));
         var area = areas.OrderByDescending(Intersection).First();
         int width = Math.Clamp(Width, Math.Min(600, area.Width), area.Width);
         int height = Math.Clamp(Height, Math.Min(400, area.Height), area.Height);

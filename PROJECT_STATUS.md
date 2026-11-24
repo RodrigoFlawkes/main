@@ -1,8 +1,18 @@
 # Status do Wave Studio
 
-Atualizado em 19/11/2026.
+Atualizado em 23/11/2026.
 
-## Estado atual — F3-I3-ROUTE-READINESS-DESKTOP, 19/11/2026
+## Estado atual — F4-I1-REAL-MIXER, 23/11/2026
+
+A aba **Mesa de som** mostra as sessões reais da saída escolhida em **Dispositivos**. Cada sessão tem faixa própria, fader vertical de 0–100%, mute e pico instantâneo quando a leitura está disponível e atual. O master controla o volume e o mute do dispositivo no Windows e mostra o pico agregado dessa saída. A grade existente continua acessível em **Detalhes das sessões**. É possível atribuir grupos a canais presentes e filtrar a mesa durante a sessão.
+
+A alternância de dispositivo e o fechamento cancelam gestos pendentes. A atualização periódica preserva o fader em edição. A escrita ocorre ao soltar o fader ou após pausa breve no teclado e confirma a identidade e o valor observado. Sessões ambíguas, encerradas ou removidas deixam de oferecer comandos válidos. O motor DSP, o teste de microfone e o fluxo de prontidão externa foram preservados.
+
+**Configurações → Idioma** oferece Português (Brasil) e Seguir Windows. Quando o idioma do sistema ainda não está disponível, a interface usa pt-BR. A preferência é gravada com as demais configurações no esquema 3, com leitura compatível dos esquemas 1 e 2 e as proteções de armazenamento existentes. A formatação numérica acompanha o Windows.
+
+O proprietário confirmou manualmente os dois fluxos externos. O relato faz parte do histórico e segue sem telemetria de um runner associada. Estabilidade prolongada, recuperação, latência e drift em hardware permanecem como pendências técnicas de release. A entrega atual permanece na Fase 4. [Uso da mesa e idioma](README.md#mesa-de-som-e-idioma) · [Validações](docs/TEST_PLAN.md#f4-i1-real-mixer--mesa-e-idioma).
+
+## Histórico — F3-I3-ROUTE-READINESS-DESKTOP, 19/11/2026
 
 A janela atual oferece **Roteamento externo (experimental)**. A aba mostra o inventário de reprodução e captura, o formato informado, as escolhas de sessão, o pareamento, a saúde PnP, os padrões do Windows e a compatibilidade de cada fluxo. O cabo simples prevê dois fluxos sequenciais com restauração e quietude entre eles. A+B fica disponível para seleção quando o inventário confirma dois pares ativos independentes.
 

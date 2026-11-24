@@ -28,7 +28,10 @@ public sealed class AudioWatchEngine : IDisposable
     public AudioWatchEngine(Func<Action, IAudioWatchBackend> factory) => this.factory = factory;
     public void Signal() => Interlocked.Exchange(ref signaled, 1);
 
-    public AudioWatchSnapshot Tick(long now, AudioWatchSelection selection, bool restart = false, bool metering = true)
+    public AudioWatchSnapshot Tick(long now, AudioWatchSelection selection, bool restart = false, bool metering = true) =>
+        Tick(now, selection, restart, metering, captureMetering: true);
+
+    internal AudioWatchSnapshot Tick(long now, AudioWatchSelection selection, bool restart, bool metering, bool captureMetering)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
         long started = Stopwatch.GetTimestamp();
@@ -54,9 +57,9 @@ public sealed class AudioWatchEngine : IDisposable
             refresh = true;
         }
         var left = Read(playback, selection.PlaybackId, now, metering);
-        var right = Read(capture, selection.CaptureId, now, metering);
-        string status = backend is not null && backendError is null ? "Detecção automática de dispositivos ativa."
-            : $"Detecção automática indisponível. Nova consulta a cada 5 s e atualização manual disponíveis. {backendError}";
+        var right = Read(capture, selection.CaptureId, now, metering && captureMetering);
+        string status = backend is not null && backendError is null ? StudioStrings.Get("AudioWatchEngine.DeteccaoAutomaticaDeDispositivosAtiva")
+            : StudioStrings.Format("AudioWatchEngine.DeteccaoAutomaticaIndisponivelNovaConsulta", backendError);
         return new AudioWatchSnapshot(selection, left, right, status, refresh, Stopwatch.GetElapsedTime(started).TotalMilliseconds,
             resetControls, Stopwatch.GetTimestamp());
     }

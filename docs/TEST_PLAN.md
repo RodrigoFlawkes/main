@@ -1,5 +1,24 @@
 # Plano de testes
 
+## F4-I1-REAL-MIXER — mesa e idioma
+
+Os casos focados preservam a grade e confirmam fader durante atualização, escrita única ao soltar, separação de sessões com mesmo PID, mute, master do endpoint, agrupamento, troca de geração, identidade duplicada, preferências versionadas e fallback de idioma. Os testes STA usam backends simulados para as escritas. Casos de visibilidade verificam que a mesa amostra a saída e que o microfone mantém suas regras de medição. O desenvolvimento encontrou uma asserção antes do carregamento da página de idioma. O teste passou a esperar a página pronta.
+
+Restore locked com auditoria NuGet em todos os pacotes e NU1900 como erro. Builds não incrementais Debug e Release x64 com zero erros e avisos. Foram aprovados 130 testes direcionados, incluindo os seis novos. A primeira regressão Debug mostrou que quatro testes de EQ procuravam um único controle de abas. O seletor do fixture passou a identificar a navegação principal, preservando as asserções de EQ e o teste de proteção de esquema futuro.
+
+| Regressão x64 | Seed | Aprovados | Falhas | Explicit excluídos | Duração |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Debug | 20261114 | 873 | 0 | 7 | 85,994 s |
+| Release | 20261113 | 873 | 0 | 7 | 56,233 s |
+
+Release registrou duas falhas em execuções iniciais ligadas à ausência da pasta ou do arquivo temporário de preferências. O fixture usa agora diretórios exclusivos por processo na saída ignorada de testes, com descarte idempotente restrito ao próprio diretório. As asserções de preservação byte a byte continuam ativas. Os 54 casos focados de preferências e mixer passaram após esse ajuste, seguidos pela regressão Release. A aprovação Debug foi coletada antes desse ajuste exclusivo do fixture, e o código final foi recompilado em Debug. Evidências e logs em `artifacts/f4-real-mixer`, ignorados pelo Git.
+
+Comandos da rodada automatizada
+
+- `dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1900`
+- `dotnet build WaveStudio.slnx -c <Debug|Release> --no-restore --no-incremental -warnaserror`
+- `dotnet test --solution WaveStudio.slnx -c <Debug|Release> --no-build -- --explicit off --seed <seed> --timeout 165s --long-running 10 --diagnostic --diagnostic-output-directory <pasta>`
+
 ## F3-I3-ROUTE-READINESS-DESKTOP — compatibilidade em leitura
 
 Testes com inventário injetado cobrem presença e ausência do cabo simples, A+B com pares distintos, seleção física incompatível ou removida, Código 10 selecionado e separado, defaults em pinos adicionais, metadados ausentes ou duplicados, formato incorreto, cancelamento, geração obsoleta e falha COM. Os testes STA verificam escolhas acessíveis, guia somente leitura, agrupamento de mudanças de seleção, hotplug durante consulta, rejeição de resultados obsoletos e encerramento cooperativo.

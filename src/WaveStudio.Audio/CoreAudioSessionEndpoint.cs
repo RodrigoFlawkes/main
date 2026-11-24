@@ -18,7 +18,7 @@ public sealed class CoreAudioSessionEndpoint : IApplicationSessionEndpoint
         try
         {
             if (device.State != DeviceState.Active || device.DataFlow != DataFlow.Render)
-                throw new InvalidOperationException("Selecione um dispositivo de reprodução disponível para consultar o mixer.");
+                throw new InvalidOperationException(StudioStrings.Get("CoreAudioSessionEndpoint.SelecioneUmDispositivoDeReproducao"));
             sessions = device.AudioSessionManager.Sessions;
         }
         catch { device.Dispose(); throw; }
@@ -33,7 +33,7 @@ public sealed class CoreAudioSessionEndpoint : IApplicationSessionEndpoint
     {
         public SessionKey Key => new(endpointId, control.GetSessionInstanceIdentifier);
         public SessionActivity Activity => (SessionActivity)(int)control.State;
-        private SimpleAudioVolume Volume => control.SimpleAudioVolume ?? throw new NotSupportedException("Volume da sessão indisponível.");
+        private SimpleAudioVolume Volume => control.SimpleAudioVolume ?? throw new NotSupportedException(StudioStrings.Get("CoreAudioSessionEndpoint.VolumeDaSessaoIndisponivel"));
         public double VolumeScalar { get => Volume.Volume; set => Volume.Volume = (float)value; }
         public bool Muted { get => Volume.Mute; set => Volume.Mute = value; }
 
@@ -43,7 +43,7 @@ public sealed class CoreAudioSessionEndpoint : IApplicationSessionEndpoint
             var activity = Activity;
             uint? pid = null;
             bool system = false;
-            string name = "Aplicativo não identificado";
+            string name = StudioStrings.Get("CoreAudioSessionEndpoint.AplicativoNaoIdentificado");
             try { pid = control.GetProcessID; }
             catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error)) { }
             try { system = control.IsSystemSoundsSession; }
@@ -61,7 +61,7 @@ public sealed class CoreAudioSessionEndpoint : IApplicationSessionEndpoint
             catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error)
                 || error is ArgumentException or Win32Exception or OverflowException) { }
             if (system)
-                name = "Sons do sistema";
+                name = StudioStrings.Get("CoreAudioSessionEndpoint.SonsDoSistema");
             double? percent = null;
             bool? muted = null;
             var errors = new List<string>();

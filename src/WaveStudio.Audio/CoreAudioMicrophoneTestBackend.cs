@@ -17,8 +17,8 @@ internal sealed class CoreAudioMicrophoneTestBackend : IMicrophoneTestBackend
                 throw new TestEndpointUnavailableException();
             if (device.AudioEndpointVolume.Mute)
                 throw new InvalidOperationException(direction == DataFlow.Capture
-                    ? "O microfone selecionado está em mute no Windows. Confira o mute antes de gravar."
-                    : "A saída selecionada está em mute no Windows. Confira o mute antes de ouvir.");
+                    ? StudioStrings.Get("CoreAudioMicrophoneTestBackend.OMicrofoneSelecionadoEstaEm")
+                    : StudioStrings.Get("CoreAudioMicrophoneTestBackend.ASaidaSelecionadaEstaEm"));
             return device;
         }
         catch { device.Dispose(); throw; }
@@ -82,7 +82,7 @@ internal sealed class CoreAudioMicrophoneTestBackend : IMicrophoneTestBackend
         }
         public void Start(TestAudioData receive)
         {
-            if (Interlocked.Exchange(ref startAttempted, 1) != 0) throw new InvalidOperationException("Este stream de teste já foi iniciado.");
+            if (Interlocked.Exchange(ref startAttempted, 1) != 0) throw new InvalidOperationException(StudioStrings.Get("CoreAudioMicrophoneTestBackend.EsteStreamDeTesteJa"));
             this.receive = receive;
             try { recorder.StartRecording(); }
             catch
@@ -136,7 +136,7 @@ internal sealed class CoreAudioMicrophoneTestBackend : IMicrophoneTestBackend
         }
         public void Start()
         {
-            if (Interlocked.Exchange(ref startAttempted, 1) != 0) throw new InvalidOperationException("Este stream de teste já foi iniciado.");
+            if (Interlocked.Exchange(ref startAttempted, 1) != 0) throw new InvalidOperationException(StudioStrings.Get("CoreAudioMicrophoneTestBackend.EsteStreamDeTesteJa"));
             try { player.Play(); }
             catch
             {

@@ -13,10 +13,10 @@ public sealed record EndpointRestoreValues(double? VolumePercent, bool? Muted, d
     internal void RequireSupport(EndpointVolumeState state)
     {
         Validate();
-        if (!HasValues) throw new InvalidOperationException("O endpoint ainda não possui valores salvos.");
+        if (!HasValues) throw new InvalidOperationException(StudioStrings.Get("EndpointPreferenceRestore.OEndpointAindaNaoPossui"));
         if (VolumePercent.HasValue && !state.VolumePercent.HasValue || Muted.HasValue && !state.Muted.HasValue
             || Balance.HasValue && state.Stereo is null)
-            throw new NotSupportedException("Um controle salvo está indisponível neste dispositivo. Atualize e salve os valores suportados.");
+            throw new NotSupportedException(StudioStrings.Get("EndpointPreferenceRestore.UmControleSalvoEstaIndisponivel"));
     }
 }
 
@@ -30,7 +30,7 @@ internal static class EndpointPreferenceRestore
         var current = EndpointVolumeOperations.Read(endpoint);
         plan.Values.RequireSupport(current);
         if (!SameLevels(current, plan.Original))
-            throw new InvalidOperationException("Os níveis mudaram após a prévia. Confira os valores e confirme novamente.");
+            throw new InvalidOperationException(StudioStrings.Get("EndpointPreferenceRestore.OsNiveisMudaramAposA"));
         try
         {
             StereoLevels? expectedStereo = null;
@@ -47,25 +47,25 @@ internal static class EndpointPreferenceRestore
             plan.Values.RequireSupport(actual);
             if (plan.Values.VolumePercent is double requested && Math.Abs(actual.VolumePercent!.Value - requested) > 2
                 || plan.Values.Muted.HasValue && actual.Muted != plan.Values.Muted)
-                throw new NotSupportedException("O Windows retornou níveis diferentes da preferência solicitada.");
+                throw new NotSupportedException(StudioStrings.Get("EndpointPreferenceRestore.OWindowsRetornouNiveisDiferentes"));
             if (expectedStereo is not null) ConfirmFinalBalance(actual.Stereo!, expectedStereo);
             return new(actual, true, null);
         }
         catch (Exception error) when (EndpointVolumeOperations.IsAccessError(error))
         {
             return new(EndpointVolumeOperations.Read(endpoint), false,
-                "A restauração pode ter sido parcial. Confira os níveis atuais. " + EndpointVolumeOperations.Describe(error));
+                StudioStrings.Get("EndpointPreferenceRestore.ARestauracaoPodeTerSido") + EndpointVolumeOperations.Describe(error));
         }
     }
 
     private static void ConfirmFinalBalance(StereoLevels actual, StereoLevels expected)
     {
         if (expected.BaseLevel == 0 || actual.BaseLevel == 0)
-            throw new InvalidOperationException("O balanço final não é observável com os canais em zero. Os níveis atuais foram consultados.");
+            throw new InvalidOperationException(StudioStrings.Get("EndpointPreferenceRestore.OBalancoFinalNaoE"));
         // Compara os canais em relação ao nível base para que um nível baixo não oculte um balanço invertido.
         double tolerance = expected.BaseLevel * 0.02;
         if (Math.Abs(actual.Left - expected.Left) > tolerance || Math.Abs(actual.Right - expected.Right) > tolerance)
-            throw new NotSupportedException("O Windows alterou os canais após aplicar a preferência. O balanço final não foi confirmado.");
+            throw new NotSupportedException(StudioStrings.Get("EndpointPreferenceRestore.OWindowsAlterouOsCanais"));
     }
 
     private static bool SameLevels(EndpointVolumeState left, EndpointVolumeState right) =>

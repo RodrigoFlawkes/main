@@ -21,14 +21,16 @@ internal sealed record EndpointPreference([property: JsonRequired] string Endpoi
             state.BalanceError is null && state.Stereo is { BaseLevel: > 0 } stereo ? stereo.Balance : null);
         preference.Values.Validate();
         if (!preference.Values.HasValues)
-            throw new InvalidOperationException("Os controles estão indisponíveis. Atualize o dispositivo antes de salvar os níveis.");
+            throw new InvalidOperationException(StudioStrings.Get("StudioSettings.OsControlesEstaoIndisponiveisAtualize"));
         return preference;
     }
 }
 
 internal sealed record StudioSettings
 {
-    public int SchemaVersion { get; init; } = 2;
+    public const int CurrentVersion = 3;
+    public int SchemaVersion { get; init; } = CurrentVersion;
+    [JsonRequired] public string Language { get; init; } = StudioLanguage.PortugueseBrazil;
     public SelectionPreference Playback { get; init; } = new();
     public SelectionPreference Capture { get; init; } = new();
     public WindowPlacement? Window { get; init; }
@@ -59,28 +61,30 @@ internal static class SettingsJson
 
     public static StudioSettings Decode(byte[] bytes)
     {
-        if (bytes.Length > MaximumBytes) throw new InvalidDataException("Configuração excede o tamanho permitido.");
+        if (bytes.Length > MaximumBytes) throw new InvalidDataException(StudioStrings.Get("StudioSettings.ConfiguracaoExcedeOTamanhoPermitido"));
         ReadOnlyMemory<byte> payload = bytes;
         if (payload.Span.StartsWith(Encoding.UTF8.Preamble)) payload = payload[Encoding.UTF8.Preamble.Length..];
         using var document = JsonDocument.Parse(payload, new JsonDocumentOptions { MaxDepth = 16 });
         var root = document.RootElement;
         if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("schemaVersion", out var version)
             || version.ValueKind != JsonValueKind.Number || !version.TryGetInt32(out int number))
-            throw new InvalidDataException("A configuração precisa informar schemaVersion.");
-        if (number is not (1 or 2)) throw new NotSupportedException("Versão de configuração incompatível. Arquivo preservado.");
+            throw new InvalidDataException(StudioStrings.Get("StudioSettings.AConfiguracaoPrecisaInformarSchemaVersion"));
+        if (number is not (1 or 2 or StudioSettings.CurrentVersion)) throw new NotSupportedException(StudioStrings.Get("StudioSettings.VersaoDeConfiguracaoIncompativelArquivo"));
         CheckDuplicateProperties(root);
-        if (number == 1)
+        if (number < StudioSettings.CurrentVersion)
         {
-            if (root.TryGetProperty("equalizer", out _)) throw new InvalidDataException("Campos de EQ exigem a versão 2.");
-            // Migração explícita v1 -> v2 em memória. SettingsStore permanece responsável pelos bytes originais e pela referência inicial.
+            if (root.TryGetProperty("language", out _))
+                throw new InvalidDataException(StudioStrings.Get("Language.InvalidPreference"));
+            if (number == 1 && root.TryGetProperty("equalizer", out _)) throw new InvalidDataException(StudioStrings.Get("StudioSettings.CamposDeEQExigemA"));
+            // Migra em memória. SettingsStore conserva o arquivo original até a primeira gravação válida.
             using var migrated = new MemoryStream();
             using (var writer = new Utf8JsonWriter(migrated))
             {
                 writer.WriteStartObject();
                 foreach (var property in root.EnumerateObject())
                 {
-                    if (property.Name == "schemaVersion") writer.WriteNumber("schemaVersion", 2);
-                    else if (property.Name == "window" && property.Value.ValueKind == JsonValueKind.Object)
+                    if (property.Name == "schemaVersion") writer.WriteNumber("schemaVersion", StudioSettings.CurrentVersion);
+                    else if (number == 1 && property.Name == "window" && property.Value.ValueKind == JsonValueKind.Object)
                     {
                         // Na v1, a omissão de X/Y significava zero. Preenche explicitamente esses valores padrão do formato anterior.
                         writer.WritePropertyName("window");
@@ -88,14 +92,18 @@ internal static class SettingsJson
                     }
                     else property.WriteTo(writer);
                 }
-                writer.WritePropertyName("equalizer");
-                JsonSerializer.Serialize(writer, new EqualizerPreferences(), Options);
+                if (number == 1)
+                {
+                    writer.WritePropertyName("equalizer");
+                    JsonSerializer.Serialize(writer, new EqualizerPreferences(), Options);
+                }
+                writer.WriteString("language", StudioLanguage.PortugueseBrazil);
                 writer.WriteEndObject();
             }
             payload = migrated.ToArray();
         }
         var settings = JsonSerializer.Deserialize<StudioSettings>(payload.Span, Options)
-            ?? throw new InvalidDataException("Configuração vazia.");
+            ?? throw new InvalidDataException(StudioStrings.Get("StudioSettings.ConfiguracaoVazia"));
         Validate(settings);
         return settings;
     }
@@ -104,25 +112,27 @@ internal static class SettingsJson
     {
         Validate(settings);
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(settings, Options);
-        if (bytes.Length > MaximumBytes) throw new InvalidDataException("Configuração excede o tamanho permitido.");
+        if (bytes.Length > MaximumBytes) throw new InvalidDataException(StudioStrings.Get("StudioSettings.ConfiguracaoExcedeOTamanhoPermitido"));
         return bytes;
     }
 
     public static void Validate(StudioSettings settings)
     {
-        if (settings.SchemaVersion != 2) throw new InvalidDataException("Versão inválida para gravação.");
-        if (settings.Equalizer is null) throw new InvalidDataException("Ajustes do equalizador ausentes.");
+        if (settings.SchemaVersion != StudioSettings.CurrentVersion) throw new InvalidDataException(StudioStrings.Get("StudioSettings.VersaoInvalidaParaGravacao"));
+        if (settings.Equalizer is null) throw new InvalidDataException(StudioStrings.Get("StudioSettings.AjustesDoEqualizadorAusentes"));
+        if (!StudioLanguage.IsValidPreference(settings.Language))
+            throw new InvalidDataException(StudioStrings.Get("Language.InvalidPreference"));
         ValidateSelection(settings.Playback);
         ValidateSelection(settings.Capture);
         if (settings.Endpoints is null || settings.Endpoints.Length > 1000)
-            throw new InvalidDataException("Lista de preferências inválida.");
+            throw new InvalidDataException(StudioStrings.Get("StudioSettings.ListaDePreferenciasInvalida"));
         var keys = new HashSet<(EndpointDirection, string)>();
         foreach (var endpoint in settings.Endpoints)
         {
-            if (endpoint is null) throw new InvalidDataException("Preferência de endpoint inválida.");
+            if (endpoint is null) throw new InvalidDataException(StudioStrings.Get("StudioSettings.PreferenciaDeEndpointInvalida"));
             DeviceSelection.ValidatePreference(endpoint.Direction, endpoint.EndpointId);
             if (!keys.Add((endpoint.Direction, endpoint.EndpointId)))
-                throw new InvalidDataException("Preferências duplicadas para o mesmo endpoint.");
+                throw new InvalidDataException(StudioStrings.Get("StudioSettings.PreferenciasDuplicadasParaOMesmo"));
             endpoint.Values.Validate();
         }
         settings.Window?.Validate();
@@ -131,7 +141,7 @@ internal static class SettingsJson
     private static void ValidateSelection(SelectionPreference selection)
     {
         if (selection is null || selection.FollowDefault != (selection.EndpointId is null))
-            throw new InvalidDataException("Seleção de dispositivo inválida.");
+            throw new InvalidDataException(StudioStrings.Get("StudioSettings.SelecaoDeDispositivoInvalida"));
         if (selection.EndpointId is not null)
             DeviceSelection.ValidatePreference(EndpointDirection.Playback, selection.EndpointId);
     }
@@ -143,7 +153,7 @@ internal static class SettingsJson
             var names = new HashSet<string>(StringComparer.Ordinal);
             foreach (var property in element.EnumerateObject())
             {
-                if (!names.Add(property.Name)) throw new InvalidDataException("Propriedades JSON duplicadas.");
+                if (!names.Add(property.Name)) throw new InvalidDataException(StudioStrings.Get("StudioSettings.PropriedadesJSONDuplicadas"));
                 CheckDuplicateProperties(property.Value);
             }
         }

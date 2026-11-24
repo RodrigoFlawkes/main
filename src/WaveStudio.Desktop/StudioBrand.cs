@@ -8,7 +8,7 @@ internal static class StudioBrand
     public static Icon CreateIcon()
     {
         using var stream = typeof(StudioBrand).Assembly.GetManifestResourceStream("WaveStudio.Brand.Icon")
-            ?? throw new InvalidOperationException("Ícone oficial incorporado indisponível.");
+            ?? throw new InvalidOperationException(StudioStrings.Get("StudioBrand.IconeOficialIncorporadoIndisponivel"));
         using var icon = new Icon(stream, new Size(32, 32));
         return (Icon)icon.Clone();
     }
@@ -16,7 +16,7 @@ internal static class StudioBrand
     public static Bitmap CreateLogo()
     {
         using var stream = typeof(StudioBrand).Assembly.GetManifestResourceStream("WaveStudio.Brand.Logo")
-            ?? throw new InvalidOperationException("Logo oficial incorporada indisponível.");
+            ?? throw new InvalidOperationException(StudioStrings.Get("StudioBrand.LogoOficialIncorporadaIndisponivel"));
         using var image = Image.FromStream(stream);
         return new Bitmap(image);
     }

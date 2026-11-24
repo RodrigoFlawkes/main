@@ -34,7 +34,7 @@ internal sealed class BoundedTestAudio : IDisposable
               (standard.Encoding == WaveFormatEncoding.Pcm && standard.BitsPerSample == 16)) ||
             standard.BlockAlign != standard.Channels * standard.BitsPerSample / 8 ||
             standard.AverageBytesPerSecond != standard.SampleRate * standard.BlockAlign)
-            throw new NotSupportedException("Formato do teste indisponível: requer mono/estéreo, PCM 16 bits ou float 32 bits, de 8 a 96 kHz.");
+            throw new NotSupportedException(StudioStrings.Get("BoundedTestAudio.FormatoDoTesteIndisponivelRequer"));
         return standard;
     }
 

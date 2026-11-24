@@ -18,7 +18,7 @@ public sealed class EqualizerProfileSettingsTests
         var model = new StudioSettings { Playback = new(false, "output"), Window = new(10, 20, 900, 700),
             Endpoints = [new("output", EndpointDirection.Playback, 25, true, -5)], Equalizer = edited };
         var bytes = SettingsJson.Encode(model); var restored = SettingsJson.Decode(bytes);
-        Assert.Equal(2, restored.SchemaVersion); Assert.True(edited.SameAs(restored.Equalizer)); Assert.True(restored.Equalizer.HasUnsavedChanges());
+        Assert.Equal(StudioSettings.CurrentVersion, restored.SchemaVersion); Assert.True(edited.SameAs(restored.Equalizer)); Assert.True(restored.Equalizer.HasUnsavedChanges());
         Assert.True(restored.Equalizer.Profiles.Single().Values.Enabled); Assert.False(restored.Equalizer.Current.Enabled);
         Assert.Equal(model.Playback, restored.Playback); Assert.Equal(model.Endpoints, restored.Endpoints); Assert.Equal(model.Window, restored.Window);
         Assert.DoesNotContain("headroom", Encoding.UTF8.GetString(bytes), StringComparison.OrdinalIgnoreCase);
@@ -70,7 +70,7 @@ public sealed class EqualizerProfileSettingsTests
         byte[] legacy = Encoding.UTF8.GetBytes("{\"schemaVersion\":1,\"playback\":{\"followDefault\":false,\"endpointId\":\"out\"},\"capture\":{\"followDefault\":true},\"window\":{\"x\":10,\"y\":20,\"width\":900,\"height\":700},\"endpoints\":[{\"endpointId\":\"out\",\"direction\":\"Playback\",\"volumePercent\":37,\"muted\":true,\"balance\":-8}]}");
         File.WriteAllBytes(directory.FilePath, legacy); var store = new SettingsStore(directory.FilePath);
         var loaded = await store.LoadAsync(TestContext.Current.CancellationToken);
-        Assert.Equal(SettingsFileState.Ready, loaded.State); Assert.Equal(2, loaded.Settings.SchemaVersion); Assert.Equal(legacy, File.ReadAllBytes(directory.FilePath));
+        Assert.Equal(SettingsFileState.Ready, loaded.State); Assert.Equal(StudioSettings.CurrentVersion, loaded.Settings.SchemaVersion); Assert.Equal(legacy, File.ReadAllBytes(directory.FilePath));
         Assert.False(loaded.Settings.Equalizer.Current.Enabled); Assert.Empty(loaded.Settings.Equalizer.Profiles);
         Assert.All(loaded.Settings.Equalizer.Current.GainsDb, gain => Assert.Equal(0, gain));
         var next = loaded.Settings with { Equalizer = Named() }; Assert.True((await store.SaveAsync(next, TestContext.Current.CancellationToken)).Success);
@@ -94,7 +94,7 @@ public sealed class EqualizerProfileSettingsTests
         File.WriteAllBytes(directory.FilePath, Encoding.UTF8.GetBytes("corrupt")); File.WriteAllBytes(directory.FilePath + ".bak", backup);
         var store = new SettingsStore(directory.FilePath); await store.LoadAsync(TestContext.Current.CancellationToken);
         Assert.True(store.CanRecoverBackup); Assert.True((await store.RecoverBackupAsync(TestContext.Current.CancellationToken)).Success);
-        var actual = SettingsJson.Decode(File.ReadAllBytes(directory.FilePath)); Assert.Equal(2, actual.SchemaVersion);
+        var actual = SettingsJson.Decode(File.ReadAllBytes(directory.FilePath)); Assert.Equal(StudioSettings.CurrentVersion, actual.SchemaVersion);
         Assert.Equal(version == 2, actual.Equalizer.Current.Enabled); Assert.Equal(backup, File.ReadAllBytes(directory.FilePath + ".bak"));
     }
     [Theory]
@@ -135,7 +135,7 @@ public sealed class EqualizerProfileSettingsTests
         Assert.True((await first.SaveAsync(new() { Equalizer = Named() }, TestContext.Current.CancellationToken)).Success);
         var saved = File.ReadAllBytes(directory.FilePath);
         Assert.False((await second.SaveAsync(new() { Equalizer = new() }, TestContext.Current.CancellationToken)).Success); Assert.Equal(saved, File.ReadAllBytes(directory.FilePath));
-        byte[] future = Encoding.UTF8.GetBytes("{\"schemaVersion\":3,\"equalizer\":{\"anything\":true}}"); File.WriteAllBytes(directory.FilePath, future);
+        byte[] future = Encoding.UTF8.GetBytes("{\"schemaVersion\":4,\"equalizer\":{\"anything\":true}}"); File.WriteAllBytes(directory.FilePath, future);
         var protectedStore = new SettingsStore(directory.FilePath); Assert.Equal(SettingsFileState.Unsupported, (await protectedStore.LoadAsync(TestContext.Current.CancellationToken)).State);
         Assert.False((await protectedStore.SaveAsync(new() { Equalizer = Named() }, TestContext.Current.CancellationToken)).Success);
         Assert.False((await protectedStore.ResetAsync(TestContext.Current.CancellationToken)).Success); Assert.Equal(future, File.ReadAllBytes(directory.FilePath));

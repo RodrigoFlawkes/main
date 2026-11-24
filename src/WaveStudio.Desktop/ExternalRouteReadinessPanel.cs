@@ -189,12 +189,12 @@ internal sealed class ExternalRouteReadinessPanel : UserControl
     private void ShowResult(RouteReadiness report)
     {
         consultation.Text = report.Inventory.Complete
-            ? $"{ExternalRouteText.Consulted} · {DateTime.Now:t}" : ExternalRouteText.QueryIssue;
+            ? StudioStrings.Format("ExternalRouteReadinessPanel.01T", ExternalRouteText.Consulted, DateTime.Now) : ExternalRouteText.QueryIssue;
         ShowStatus(single, ExternalRouteText.Availability(report.SingleCable));
         ShowStatus(dual, ExternalRouteText.Availability(report.DualCable, dual: true));
         ShowStatus(pair, ExternalRouteText.Check(report.Pair));
         string driverText = ExternalRouteText.Check(report.Driver);
-        if (report.SelectedProblem is uint problem) driverText += $" (Código {problem})";
+        if (report.SelectedProblem is uint problem) driverText += StudioStrings.Format("ExternalRouteReadinessPanel.Codigo0", problem);
         if (report.SecondaryCode10) driverText += " · " + ExternalRouteText.SeparateCode10;
         else if (report.SelectedProblem != 10u && report.Inventory.SingleDrivers?.Any(adapter => adapter.Problem == 10) == true)
             driverText += " · " + ExternalRouteText.UnlinkedCode10;

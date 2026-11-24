@@ -15,7 +15,7 @@ public sealed class CoreAudioVolumeAccess : IEndpointVolumeAccess
         try
         {
             if (device.State != DeviceState.Active)
-                throw new InvalidOperationException("O dispositivo está indisponível. Confira a conexão e atualize a lista.");
+                throw new InvalidOperationException(StudioStrings.Get("CoreAudioVolumeAccess.ODispositivoEstaIndisponivelConfira"));
             volume = device.AudioEndpointVolume;
         }
         catch
@@ -40,12 +40,12 @@ public sealed class CoreAudioVolumeAccess : IEndpointVolumeAccess
     public StereoLevels ReadStereo()
     {
         if (volume.Channels.Count != 2)
-            throw new NotSupportedException("Balanço indisponível — o endpoint precisa expor dois canais de volume independentes.");
+            throw new NotSupportedException(StudioStrings.Get("CoreAudioVolumeAccess.BalancoIndisponivelOEndpointPrecisa"));
         using var client = device.CreateAudioClient();
         var format = client.MixFormat;
         int? mask = (format as WaveFormatExtensible)?.ChannelMask;
         if (!StereoLevels.IsConfirmedStereo(volume.Channels.Count, format.Channels, mask))
-            throw new NotSupportedException("Balanço indisponível — o Windows não confirmou o mapeamento frontal esquerdo/direito.");
+            throw new NotSupportedException(StudioStrings.Get("CoreAudioVolumeAccess.BalancoIndisponivelOWindowsNao"));
 
         return new StereoLevels(volume.Channels[0].VolumeLevelScalar, volume.Channels[1].VolumeLevelScalar);
     }

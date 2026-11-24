@@ -31,9 +31,11 @@ public sealed class MixerGridTests
             try
             {
                 using var form = new TestForm { ClientSize = new Size(1000, 700), ShowInTaskbar = false, Opacity = 0 };
-                using var panel = new ApplicationMixerPanel(new ApplicationSessionService(openEndpoint ?? (_ => new EmptyEndpoint())));
+                using var panel = new ApplicationMixerPanel(new ApplicationSessionService(openEndpoint ?? (_ => new EmptyEndpoint())),
+                    new EndpointVolumeSession(_ => throw new NotSupportedException()));
                 form.Controls.Add(panel);
                 form.Show();
+                panel.MixerViews.SelectedIndex = 1;
                 _ = panel.SessionGrid.Handle;
                 panel.SelectDevice(Device);
                 Pump(panel.PendingRead);

@@ -8,18 +8,18 @@ internal sealed class MicrophoneTestPanel : UserControl
     private readonly MicrophoneTestSession session;
     private readonly System.Windows.Forms.Timer timer = new() { Interval = 100 };
     private readonly Label devices = new() { AutoSize = true, Dock = DockStyle.Fill };
-    private readonly Label status = new() { AutoSize = true, Dock = DockStyle.Fill, AccessibleName = "Estado do teste de microfone" };
+    private readonly Label status = new() { AutoSize = true, Dock = DockStyle.Fill, AccessibleName = StudioStrings.Get("MicrophoneTestPanel.EstadoDoTesteDeMicrofone") };
     private readonly Label time = new() { AutoSize = true, Dock = DockStyle.Fill };
-    private readonly Button record = new() { Text = "&Gravar teste", AutoSize = true };
+    private readonly Button record = new() { Text = StudioStrings.Get("MicrophoneTestPanel.GravarTeste"), AutoSize = true };
     private readonly Button stop = new() { Text = "&Parar", AutoSize = true };
-    private readonly Button play = new() { Text = "&Ouvir gravação", AutoSize = true };
-    private readonly Button playEqualized = new() { Text = "Ouvir com &EQ", AutoSize = true };
+    private readonly Button play = new() { Text = StudioStrings.Get("MicrophoneTestPanel.OuvirGravacao"), AutoSize = true };
+    private readonly Button playEqualized = new() { Text = StudioStrings.Get("MicrophoneTestPanel.OuvirComEQ"), AutoSize = true };
     private readonly EqualizerPreviewPanel equalizer = new();
     private readonly Label protection = new() { AutoSize = true, MaximumSize = new Size(700, 0) };
-    private readonly Button stopPlayback = new() { Text = "Parar &reprodução", AutoSize = true };
-    private readonly Button clear = new() { Text = "&Limpar teste", AutoSize = true };
-    private readonly TrackBar level = new() { Minimum = 0, Maximum = 100, Value = 20, TickFrequency = 10, Width = 270, AccessibleName = "Nível digital da reprodução do teste" };
-    private readonly Label levelValue = new() { Text = "20%", AutoSize = true };
+    private readonly Button stopPlayback = new() { Text = StudioStrings.Get("MicrophoneTestPanel.PararReproducao"), AutoSize = true };
+    private readonly Button clear = new() { Text = StudioStrings.Get("MicrophoneTestPanel.LimparTeste"), AutoSize = true };
+    private readonly TrackBar level = new() { Minimum = 0, Maximum = 100, Value = 20, TickFrequency = 10, Width = 270, AccessibleName = StudioStrings.Get("MicrophoneTestPanel.NivelDigitalDaReproducaoDo") };
+    private readonly Label levelValue = new() { Text = StudioStrings.Get("MicrophoneTestPanel.20"), AutoSize = true };
     private readonly MicrophoneInputMeter inputMeter = new();
     private string? inputId;
     private string? outputId;
@@ -43,16 +43,16 @@ internal sealed class MicrophoneTestPanel : UserControl
         AutoScroll = true;
         var layout = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(18), ColumnCount = 1, MinimumSize = new Size(480, 0) };
         void Add(Control control) => layout.Controls.Add(control, 0, layout.RowCount++);
-        Add(new Label { Text = "Testar microfone", AutoSize = true, Font = new Font(Font, FontStyle.Bold) });
-        Add(new Label { Text = "Use fones e volume baixo. A gravação dura no máximo 10 segundos e só começa ao clicar em Gravar teste.", AutoSize = true, MaximumSize = new Size(700, 0), Margin = new Padding(3, 14, 3, 14) });
+        Add(new Label { Text = StudioStrings.Get("MicrophoneTestPanel.TestarMicrofone"), AutoSize = true, Font = new Font(Font, FontStyle.Bold) });
+        Add(new Label { Text = StudioStrings.Get("MicrophoneTestPanel.UseFonesEVolumeBaixo"), AutoSize = true, MaximumSize = new Size(700, 0), Margin = new Padding(3, 14, 3, 14) });
         Add(devices);
         Add(inputMeter);
-        Add(new Label { Text = "Escolha entrada e saída na aba Dispositivos. Confira volume e mute do Windows antes de gravar/ouvir.", AutoSize = true, MaximumSize = new Size(700, 0), Margin = new Padding(3, 10, 3, 10) });
+        Add(new Label { Text = StudioStrings.Get("MicrophoneTestPanel.EscolhaEntradaESaidaNa"), AutoSize = true, MaximumSize = new Size(700, 0), Margin = new Padding(3, 10, 3, 10) });
         var buttons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true };
         buttons.Controls.AddRange([record, stop, play, playEqualized, stopPlayback, clear]);
         Add(buttons);
-        Add(new Label { Text = "Ouvir gravação = original (sem EQ). Ouvir com EQ = versão processada da mesma gravação, sem gravar novamente.", AutoSize = true, MaximumSize = new Size(700, 0) });
-        Add(new Label { Text = "Nível digital para ouvir o teste (0–100%, sem amplificação). Não altera o volume do Windows.", AutoSize = true, MaximumSize = new Size(700, 0), Margin = new Padding(3, 16, 3, 3) });
+        Add(new Label { Text = StudioStrings.Get("MicrophoneTestPanel.OuvirGravacaoOriginalSemEQ"), AutoSize = true, MaximumSize = new Size(700, 0) });
+        Add(new Label { Text = StudioStrings.Get("MicrophoneTestPanel.NivelDigitalParaOuvirO"), AutoSize = true, MaximumSize = new Size(700, 0), Margin = new Padding(3, 16, 3, 3) });
         var levels = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill };
         levels.Controls.AddRange([level, levelValue]);
         Add(levels);
@@ -60,7 +60,7 @@ internal sealed class MicrophoneTestPanel : UserControl
         Add(status);
         Add(protection);
         Add(equalizer);
-        Add(new Label { Text = "Áudio somente em memória: apagado ao limpar, trocar/atualizar dispositivos, suspender ou fechar. Sem arquivo, envio ou reprodução automática. Não é monitoramento ao vivo.", AutoSize = true, MaximumSize = new Size(700, 0), Margin = new Padding(3, 20, 3, 3) });
+        Add(new Label { Text = StudioStrings.Get("MicrophoneTestPanel.AudioSomenteEmMemoriaApagado"), AutoSize = true, MaximumSize = new Size(700, 0), Margin = new Padding(3, 20, 3, 3) });
         Controls.Add(layout);
         record.Click += async (_, _) => await RunAsync(this.session.RecordAsync);
         stop.Click += async (_, _) => await RunAsync(this.session.StopAsync);
@@ -83,7 +83,7 @@ internal sealed class MicrophoneTestPanel : UserControl
         if (stopped) return;
         string? nextInput = input?.State == EndpointState.Active ? input.Id : null;
         string? nextOutput = output?.State == EndpointState.Active ? output.Id : null;
-        devices.Text = $"Microfone: {input?.Name ?? "indisponível"}{(nextInput is null ? " (indisponível)" : "")}\nSaída: {output?.Name ?? "indisponível"}{(nextOutput is null ? " (indisponível)" : "")}";
+        devices.Text = StudioStrings.Format("MicrophoneTestPanel.Microfone01Saida2", input?.Name ?? StudioStrings.Get("MicrophoneTestPanel.Indisponivel"), (nextInput is null ? StudioStrings.Get("MicrophoneTestPanel.Indisponivel2") : ""), output?.Name ?? StudioStrings.Get("MicrophoneTestPanel.Indisponivel"), (nextOutput is null ? StudioStrings.Get("MicrophoneTestPanel.Indisponivel2") : ""));
         if (!invalidate && nextInput == inputId && nextOutput == outputId && inputFormat == input?.MixFormat && outputFormat == output?.MixFormat) return;
         inputId = nextInput;
         outputId = nextOutput;
@@ -119,7 +119,7 @@ internal sealed class MicrophoneTestPanel : UserControl
             if (!stopped)
             {
                 ShowSnapshot();
-                if (failed) status.Text = "Não foi possível completar a operação. Atualize os dispositivos e tente novamente.";
+                if (failed) status.Text = StudioStrings.Get("MicrophoneTestPanel.NaoFoiPossivelCompletarA");
             }
         }
     }
@@ -140,8 +140,8 @@ internal sealed class MicrophoneTestPanel : UserControl
         level.Enabled = !stopped && pending == 0 && !busy;
         status.Text = value.Message;
         status.ForeColor = value.State == MicrophoneTestState.Recording ? Color.Firebrick : SystemColors.ControlText;
-        time.Text = $"Gravado: {value.RecordedDuration.TotalSeconds:F1} / 10 s · Tempo da operação: {Math.Min(12, value.Elapsed.TotalSeconds):F1} s";
-        protection.Text = $"Última reprodução: {value.PlaybackMode ?? "nenhuma"} · Amostras limitadas no EQ: {value.LimitedSamples} · Dados inválidos tratados: {value.SanitizedSamples}";
+        time.Text = StudioStrings.Format("MicrophoneTestPanel.Gravado0F110S", value.RecordedDuration.TotalSeconds, Math.Min(12, value.Elapsed.TotalSeconds));
+        protection.Text = StudioStrings.Format("MicrophoneTestPanel.UltimaReproducao0AmostrasLimitadas", value.PlaybackMode ?? StudioStrings.Get("MicrophoneTestPanel.Nenhuma"), value.LimitedSamples, value.SanitizedSamples);
     }
 
     public async ValueTask StopAsync()

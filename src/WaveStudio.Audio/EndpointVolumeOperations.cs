@@ -44,18 +44,18 @@ public static class EndpointVolumeOperations
                 double actual = endpoint.VolumeScalar;
                 StereoLevels.ValidateLevel(actual);
                 if (Math.Abs(actual - volume.Percent / 100) > 0.02)
-                    throw new NotSupportedException("O driver não confirmou o volume solicitado. O controle foi desativado.");
+                    throw new NotSupportedException(StudioStrings.Get("EndpointVolumeOperations.ODriverNaoConfirmouO"));
                 break;
             case SetEndpointMute mute:
                 endpoint.Muted = mute.Muted;
                 if (endpoint.Muted != mute.Muted)
-                    throw new NotSupportedException("O driver não confirmou o estado de mute solicitado. O controle foi desativado.");
+                    throw new NotSupportedException(StudioStrings.Get("EndpointVolumeOperations.ODriverNaoConfirmouO2"));
                 break;
             case SetEndpointBalance balance:
                 ApplyBalance(endpoint, balance.Position, cancellationToken);
                 break;
             default:
-                throw new ArgumentException("Comando de áudio desconhecido.", nameof(command));
+                throw new ArgumentException(StudioStrings.Get("EndpointVolumeOperations.ComandoDeAudioDesconhecido"), nameof(command));
         }
     }
 
@@ -72,7 +72,7 @@ public static class EndpointVolumeOperations
             var actual = endpoint.ReadStereo();
             if (actual.BaseLevel > original.BaseLevel + 0.00001
                 || Math.Abs(actual.Left - requested.Left) > 0.02 || Math.Abs(actual.Right - requested.Right) > 0.02)
-                throw new NotSupportedException("O driver não confirmou canais independentes. O balanço foi desativado.");
+                throw new NotSupportedException(StudioStrings.Get("EndpointVolumeOperations.ODriverNaoConfirmouCanais"));
         }
         catch (Exception error) when (writeStarted)
         {
@@ -82,15 +82,15 @@ public static class EndpointVolumeOperations
                 var current = endpoint.ReadStereo();
                 if (!MatchesKnownLevel(current.Left, original.Left, expected.Left)
                     || !MatchesKnownLevel(current.Right, original.Right, expected.Right))
-                    throw new InvalidOperationException("Foi detectada alteração externa dos canais. Confira os níveis no Windows.");
+                    throw new InvalidOperationException(StudioStrings.Get("EndpointVolumeOperations.FoiDetectadaAlteracaoExternaDos"));
                 WriteChannels(endpoint, current, original, CancellationToken.None);
                 var restored = endpoint.ReadStereo();
                 if (Math.Abs(restored.Left - original.Left) > 0.02 || Math.Abs(restored.Right - original.Right) > 0.02)
-                    throw new InvalidOperationException("O driver não confirmou a restauração dos canais.");
+                    throw new InvalidOperationException(StudioStrings.Get("EndpointVolumeOperations.ODriverNaoConfirmouA"));
             }
             catch (Exception restoreError) when (IsAccessError(restoreError))
             {
-                throw new InvalidOperationException("Falha no balanço e na restauração dos canais. Confira os níveis no Windows e atualize a lista.",
+                throw new InvalidOperationException(StudioStrings.Get("EndpointVolumeOperations.FalhaNoBalancoENa"),
                     new AggregateException(error, restoreError));
             }
             throw;

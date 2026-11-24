@@ -21,11 +21,11 @@ internal sealed partial class MainForm
             equalizerSaveTimer.Stop();
             if (!store.CanSave)
             {
-                microphoneTest.Equalizer.SetSaveStatus("Arquivo protegido. Estes ajustes não serão gravados nesta abertura.");
+                microphoneTest.Equalizer.SetSaveStatus(StudioStrings.Get("MainForm.EqualizerProfiles.ArquivoProtegidoEstesAjustesNao"));
                 return;
             }
             if (!equalizerSavePending) return;
-            microphoneTest.Equalizer.SetSaveStatus("Alterações aguardando salvamento…");
+            microphoneTest.Equalizer.SetSaveStatus(StudioStrings.Get("MainForm.EqualizerProfiles.AlteracoesAguardandoSalvamento"));
             if (microphoneTest.Equalizer.IsAdjusting) return;
             if (saveNow) FlushEqualizerPreferences();
             else equalizerSaveTimer.Start();
@@ -49,7 +49,7 @@ internal sealed partial class MainForm
         if (!equalizerSavePending) return;
         if (!store.CanSave)
         {
-            microphoneTest.Equalizer.SetSaveStatus("Não foi possível salvar: o arquivo está protegido. Confira Preferências locais.");
+            microphoneTest.Equalizer.SetSaveStatus(StudioStrings.Get("MainForm.EqualizerProfiles.NaoFoiPossivelSalvarO"));
             return;
         }
         equalizerSavePending = false;
@@ -60,7 +60,7 @@ internal sealed partial class MainForm
         if (!success) equalizerSavePending = true; // Mantém o estado mais recente em memória disponível para nova tentativa explícita ou gravação no encerramento.
         microphoneTest.Equalizer.SetWritable(store.CanSave && !recoveringPreferences);
         microphoneTest.Equalizer.SetSaveStatus(success
-            ? equalizerSavePending || settingsSaveRequested ? "Alterações aguardando salvamento…" : "Ajustes salvos neste computador. Perfis só mudam ao salvar alterações."
-            : "Não foi possível salvar. " + message);
+            ? equalizerSavePending || settingsSaveRequested ? StudioStrings.Get("MainForm.EqualizerProfiles.AlteracoesAguardandoSalvamento") : StudioStrings.Get("MainForm.EqualizerProfiles.AjustesSalvosNesteComputadorPerfis")
+            : StudioStrings.Get("MainForm.EqualizerProfiles.NaoFoiPossivelSalvar") + message);
     }
 }

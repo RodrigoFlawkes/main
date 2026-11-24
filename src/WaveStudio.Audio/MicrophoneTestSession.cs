@@ -25,7 +25,7 @@ public sealed class MicrophoneTestSession : IAsyncDisposable
             return Volatile.Read(ref stopping) && !completion.Task.IsCompleted
                 ? snapshot with { State = MicrophoneTestState.Stopping, CanRecord = false, CanPlay = false,
                     ShutdownPending = true, ResourcesRetained = true,
-                    Message = "Encerramento ainda não confirmado; recursos preservados. Aguarde e tente fechar novamente. " + snapshot.Message }
+                    Message = StudioStrings.Get("MicrophoneTestSession.EncerramentoAindaNaoConfirmadoRecursos") + snapshot.Message }
                 : snapshot;
         }
     }
@@ -37,7 +37,7 @@ public sealed class MicrophoneTestSession : IAsyncDisposable
         if (this.shutdownTimeout <= TimeSpan.Zero || this.shutdownTimeout > TimeSpan.FromSeconds(30)) throw new ArgumentOutOfRangeException(nameof(shutdownTimeout));
         engine = new MicrophoneTestEngine(backend, value => value == Volatile.Read(ref revision), activityGuard);
         latest = engine.Snapshot;
-        var thread = new Thread(Run) { IsBackground = true, Name = "Wave Studio — teste local de microfone" };
+        var thread = new Thread(Run) { IsBackground = true, Name = StudioStrings.Get("MicrophoneTestSession.WaveStudioTesteLocalDe") };
         thread.SetApartmentState(ApartmentState.MTA);
         thread.Start();
     }
@@ -111,7 +111,7 @@ public sealed class MicrophoneTestSession : IAsyncDisposable
                 if (end && !shutdownStarted)
                 {
                     shutdownStarted = true;
-                    engine.Clear("Encerrando e descartando o teste…");
+                    engine.Clear(StudioStrings.Get("MicrophoneTestSession.EncerrandoEDescartandoOTeste"));
                 }
                 try { engine.Tick(clock.Elapsed); }
                 catch (Exception error)
@@ -135,7 +135,7 @@ public sealed class MicrophoneTestSession : IAsyncDisposable
             Interlocked.Increment(ref revision);
             Volatile.Write(ref latest, latest with { State = MicrophoneTestState.Error, CanRecord = false, CanPlay = false,
                 ResourcesRetained = true, ShutdownPending = true, PrimaryError = error.GetType().Name,
-                Message = "O worker falhou; encerramento não confirmado. Recursos preservados. " + error.GetType().Name });
+                Message = StudioStrings.Get("MicrophoneTestSession.OWorkerFalhouEncerramentoNao") + error.GetType().Name });
             completion.TrySetException(error);
         }
         finally
