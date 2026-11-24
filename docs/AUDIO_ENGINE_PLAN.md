@@ -1,5 +1,13 @@
 # Motor de áudio — fundação, conversão e relógios
 
+## F5-I1-BUS-MATRIX-CORE
+
+- **Relógio.** O transporte alinha as entradas à mesma origem de tempo e apresenta blocos de 10 ms (441 ou 480 frames). O agendador chama `Process` com índice monotônico. Um bloco atrasado, incompleto ou de outra geração vira silêncio apenas para a fonte correspondente. Lacunas zeram o histórico do FIR e a reentrada usa rampa de 5 ms. Uma desconexão corta o áudio imediatamente.
+- **Formato.** Mono e estéreo L/R em 44,1 e 48 kHz. A política explícita preserva canais, duplica mono ou calcula a média de estéreo. Taxas iguais usam `ChannelAdapter` diretamente. As conversões usam `NominalConversionStage`, com atraso fixo de 80 frames de entrada (aproximadamente 1,67–1,81 ms). A grade de blocos é comum. A compensação fracionária por fonte e a disciplina de relógios independentes ficam para a integração física.
+- **Soma.** A ordem ordinal dos IDs fixa a acumulação em `double`. Entradas são limitadas a ±1 e valores não finitos e subnormais viram zero. Envios e masters aceitam ganho linear de 0 a 1, com rampa de 5 ms por frame quando o alvo muda. Ao final, a saída satura em ±1. Pico, RMS e quantidade de amostras saturadas são calculados sobre a entrega e sua soma imediatamente anterior à saturação. É proteção numérica por teto rígido, sem compressor ou limiter.
+- **Ciclo de vida.** A topologia e os buffers são preparados no controle. O callback lê uma publicação coerente dos ganhos e opera sem espera, alocação gerenciada, COM, I/O ou rede no caminho normal. A substituição e o Stop invalidam o ticket antigo. Cancelamento é refletido no mesmo ticket. Buffers de outra geração jamais são reutilizados. O transporte deve validar o ticket no ponto de entrega, incluindo antes de liberar dados copiados para consumo posterior. Uma entrega já efetivada antes da invalidação é irreversível.
+- **F5-I2 após revisão.** Validar alinhamento, compensação, recuperação e latência com PCM de fontes reais e destinos autorizados. A ligação física contínua depende da viabilidade de endpoints disponíveis e de uma verificação de identidade, origem e prevenção de feedback. O VB-CABLE simples e as provas F3 de até cinco segundos ainda são as condições comprovadas.
+
 ## F2-I6D-ALLOC-MONITOR — prova audível limitada
 
 A prova audível isolada mantém razão nominal. A rampa de ganho inicia após o preenchimento da fila e um corte coerente, com teto digital de 0,05 e entrega cancelável. A prova futura documentará o PCM submetido e o encerramento. [Roteiro e evidências esperadas](WASAPI_BACKEND_PLAN.md#f2-i6d-alloc-monitor--roteiro-para-revisão).

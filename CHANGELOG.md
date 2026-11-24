@@ -2,6 +2,13 @@
 
 ## Em desenvolvimento
 
+### 2026-11-24 — F5-I1-BUS-MATRIX-CORE
+
+- Motor PCM float32 de dois barramentos com matriz de envios autorizados, ganho e mute independentes, rampas, proteção contra clipping e medição de pico/RMS.
+- Transporte injetado com blocos sincronizados, adaptação mono/estéreo, conversão nominal 44,1/48 kHz, descarte de blocos obsoletos e ticket por geração.
+- Stream Mix com destino externo desativado por padrão, autorização explícita de fontes sensíveis e exclusão do retorno da mesma chamada.
+- Workflow de regressão Windows x64 em Debug e Release. Os dois barramentos permanecem internos nesta entrega.
+
 ### 2026-11-24 — F4-I2-GAMECHAT-SOLO-LANG
 
 - Adicionado balanço proporcional entre sessões Windows ativas atribuídas a Jogo e Comunicação, com restauração condicional, leitura de confirmação e aviso de conflito.

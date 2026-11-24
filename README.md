@@ -15,6 +15,10 @@
 > [!NOTE]
 > **Continuidade entre chats do ChatGPT:** leia [CHAT_CONTINUITY.md](CHAT_CONTINUITY.md) antes de retomar o projeto. O guia reúne o fluxo, as decisões, os checkpoints e o protocolo de recuperação.
 
+## Barramentos internos em revisão
+
+A F5-I1 implementa **Personal Mix** e **Stream Mix** com processamento PCM, envios independentes e medidores calculados sobre as amostras de saída. A integração usa um transporte injetado. Captura contínua de aplicativos e conexão dos barramentos a OBS, Discord ou dispositivos físicos dependem da próxima etapa de integração. A regressão da solução usa GitHub Actions em Windows x64. [Arquitetura do motor](docs/ARCHITECTURE.md#f5-i1-bus-matrix-core) · [Workflow](.github/workflows/windows-x64.yml)
+
 ## Recursos
 
 ### Disponíveis na prévia

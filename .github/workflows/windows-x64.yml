@@ -1,0 +1,60 @@
+name: Testes Windows x64
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  TESTINGPLATFORM_TELEMETRY_OPTOUT: '1'
+
+jobs:
+  regressao:
+    name: Windows x64 / ${{ matrix.configuration }}
+    runs-on: windows-2025
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - configuration: Debug
+            seed: 20261114
+          - configuration: Release
+            seed: 20261113
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Confirmar arquitetura e SDK
+        shell: pwsh
+        run: |
+          if ($env:RUNNER_ARCH -ne 'X64' -or [System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture -ne 'X64') {
+            throw 'A validação exige runner e processo Windows x64.'
+          }
+          dotnet --info
+      - name: Restaurar com auditoria NuGet
+        run: dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1900
+      - name: Compilar sem avisos
+        run: dotnet build WaveStudio.slnx -c ${{ matrix.configuration }} --no-restore --no-incremental -warnaserror --nologo
+      - name: Executar regressão comum
+        timeout-minutes: 5
+        shell: pwsh
+        run: |
+          $diagnostics = Join-Path $env:RUNNER_TEMP 'wavestudio-diagnostics'
+          New-Item -ItemType Directory -Path $diagnostics -Force | Out-Null
+          dotnet test --solution WaveStudio.slnx -c ${{ matrix.configuration }} --no-build -- --explicit off --seed ${{ matrix.seed }} --timeout 165s --long-running 10 --diagnostic --diagnostic-output-directory "$diagnostics"
+      - name: Arquivar diagnósticos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnosticos-${{ matrix.configuration }}
+          path: ${{ runner.temp }}/wavestudio-diagnostics
+          if-no-files-found: ignore
