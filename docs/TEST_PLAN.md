@@ -1,8 +1,8 @@
 # Plano de testes
 
-## F5-I2A-BOUNDED-PCM-BRIDGE — integração por filas (em revisão)
+## F5-I2A-BOUNDED-PCM-BRIDGE — integração por filas (integrada)
 
-Seis testes novos exercitam dados PCM float32 em memória entre produtores `TryOfferCapture`, `BusMixSession` e consumidores `TryReadOutput`/`TryReadExternal`: somas de fontes, saídas independentes, privacidade do microfone, ausência de dados, backpressure, identificação exata de endpoint, recusa de bloco antigo, ticket de geração inválido e fechamento. Não há abertura de dispositivo nem teste físico. Estes casos complementam os 932 testes comuns de base da F5-I1; a nova contagem precisa ser **confirmada na CI Windows x64 do commit final** antes de qualquer merge. Os sete Explicit continuam excluídos.
+Seis testes novos exercitam dados PCM float32 em memória entre produtores `TryOfferCapture`, `BusMixSession` e consumidores `TryReadOutput`/`TryReadExternal`: somas de fontes, saídas independentes, privacidade do microfone, ausência de dados, backpressure, identificação exata de endpoint, recusa de bloco antigo, ticket de geração inválido e fechamento. Não há abertura de dispositivo nem teste físico. Estes casos complementam os 932 testes comuns da F5-I1. A [CI Windows x64 final](https://github.com/Wave-Universal-Studio/main/actions/runs/45336327862) confirmou **938 aprovados em Debug, 938 em Release**, zero falhas, sete Explicit excluídos por configuração e builds sem avisos/erros. Os testes de rampa de recuperação e reconciliação do mixer foram estabilizados antes do merge.
 
 A etapa não mede latência física, derivações de clocks entre dispositivos, recuperação no hardware, compatibilidade real OBS/Discord ou o isolamento por aplicativo. São requisitos de integração nativa posterior, não resultados simulados.
 

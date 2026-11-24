@@ -1,6 +1,6 @@
 # Arquitetura do Wave Studio
 
-## F5-I2A-BOUNDED-PCM-BRIDGE (em revisão)
+## F5-I2A-BOUNDED-PCM-BRIDGE (integrada)
 
 `BoundedBusPcmTransport` implementa `IBusPcmTransport` em produção, mantendo filas SPSC pré-alocadas para cada origem de captura e para as saídas Personal Mix, Stream Mix e, opcionalmente, Stream externo. As fontes são registradas por `TransportEndpoint` (ID/direção/geração), com `PcmFloatFormat` de 44,1/48 kHz, mono ou estéreo; um bloco contém exatamente 10 ms. O produtor oferece PCM com índice de bloco monotonamente crescente; o consumidor do mixer exige o bloco exato e descarta os anteriores. Blocos futuros são conservados. Capacidade é fixa de 2 a 64 blocos, potência de dois; sobrecarga rejeita novo dado sem sobrescrever o que o outro lado ainda não leu.
 

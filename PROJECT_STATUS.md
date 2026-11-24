@@ -2,11 +2,11 @@
 
 Atualizado em 24/11/2026.
 
-## Em revisão — F5-I2A-BOUNDED-PCM-BRIDGE, 24/11/2026
+## Implementado — F5-I2A-BOUNDED-PCM-BRIDGE, 24/11/2026
 
 Nova ponte `BoundedBusPcmTransport` liga o núcleo PCM de F5-I1 a produtores de blocos de captura e consumidores independentes de Personal/Stream. As filas SPSC são limitadas por fonte e barramento, identificam geração, formato e bloco de 10 ms, recusam dados antigos/incompletos e só retornam saídas com ticket ainda válido. A saída externa permanece opt-in e não abre nenhum dispositivo. Se o consumidor não acompanhar, a entrega falha fechada, sem substituir áudio ainda não consumido.
 
-São seis novos testes de integração em memória, cobrindo isolamento, privacidade, fila cheia, identidade, gerações obsoletas e fechamento. **Ainda não há conexão nativa contínua, clock WASAPI real, reprodução física, OBS/Discord nem nova interface de usuário.** O GitHub Actions deve validar a branch em Windows x64 antes de aprovar a entrega. [Issue #2](https://github.com/Wave-Universal-Studio/main/issues/2).
+São seis novos testes de integração em memória, cobrindo isolamento, privacidade, fila cheia, identidade, gerações obsoletas e fechamento. **Ainda não há conexão nativa contínua, clock WASAPI real, reprodução física, OBS/Discord nem nova interface de usuário.** A [PR #3](https://github.com/Wave-Universal-Studio/main/pull/3) foi integrada por squash no commit `c7eb383b7293424ea9430455a6e56f8da574f44e`. [CI Windows x64 final](https://github.com/Wave-Universal-Studio/main/actions/runs/45336327862): **938 testes comuns aprovados em Debug e 938 em Release**, zero falhas, sete Explicit excluídos por configuração e builds sem avisos/erros. A ponte permanece interna; sem WASAPI contínuo nem OBS/Discord conectados. [Issue #2](https://github.com/Wave-Universal-Studio/main/issues/2).
 
 ## Implementado — F5-I1-BUS-MATRIX-CORE, 24/11/2026 (PR #1 integrada)
 

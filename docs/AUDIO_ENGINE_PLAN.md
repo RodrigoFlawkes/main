@@ -1,6 +1,6 @@
 # Motor de áudio — fundação, conversão e relógios
 
-## F5-I2A-BOUNDED-PCM-BRIDGE (em revisão)
+## F5-I2A-BOUNDED-PCM-BRIDGE (integrada)
 
 O transporte em filas `BoundedBusPcmTransport` separa a chegada dos blocos de captura do processamento de `BusMixSession` e do consumo de Personal/Stream. Cada lane é SPSC, limitada, pré-alocada, possui identidade estável (ID, direção e geração) e índices de bloco. Escritas duplicadas, fora de ordem, atrasadas ou quando não há espaço são rejeitadas. O consumidor descarta índices anteriores, mantém um índice futuro para a chamada correta e entrega silêncio na ausência do bloco esperado. Sem fila infinita, alocação por bloco ou reordenação implícita de relógios. Capacidade default de 8 blocos; requisito nativo futuro deve considerar atraso e variação observados.
 

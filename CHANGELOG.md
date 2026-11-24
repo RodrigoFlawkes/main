@@ -2,7 +2,7 @@
 
 ## Em desenvolvimento
 
-### 2026-11-24 — F5-I2A-BOUNDED-PCM-BRIDGE (em revisão)
+### 2026-11-24 — F5-I2A-BOUNDED-PCM-BRIDGE (integrada)
 
 - Adicionada ponte de transporte PCM com filas SPSC limitadas por captura, Personal Mix, Stream Mix e destino externo autorizado, sem abrir áudio nativo.
 - Confiabilidade: identidade endpoint/geração, slots 10 ms, backpressure, descarte de blocos obsoletos e tickets válidos até o ponto de publicação.
