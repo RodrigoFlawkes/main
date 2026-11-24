@@ -40,11 +40,11 @@ Em **Dispositivos**, selecione a saída. Na **Mesa de som**, ajuste cada aplicat
 
 ## Estado do projeto
 
-**24/11/2026 — F4-I2 integrada; F5-I1 em revisão.**
+**24/11/2026 — F5-I1 integrada; F5-I2 em preparação.**
 
 - **Base da `main`:** mesa de som, balanço Jogo/Comunicação e três idiomas implementados. A última regressão consolidada da F4-I2 registrou **914 testes aprovados em Debug e 914 em Release**, com sete testes físicos `Explicit` excluídos.
-- **[F5-I1 — PR #1](https://github.com/Wave-Universal-Studio/main/pull/1):** núcleo PCM de **Personal Mix** e **Stream Mix**, com matriz de envios, ganho/mute por barramento e isolamento; implementação em análise e integração por transporte injetado. **Não** equivale a áudio contínuo independente para OBS/Discord.
-- **Validação:** o GitHub Actions executa builds e regressões em Windows x64 na PR. A integração na `main` depende de revisão e verificações concluídas.
+- **[F5-I1 — integrada](https://github.com/Wave-Universal-Studio/main/commit/787df9181f62bc5b340300ee53d1b0ecabf83eca):** núcleo PCM de **Personal Mix** e **Stream Mix**, com matriz de envios, ganho/mute por barramento e isolamento; processamento testado com transporte injetado. **Não** equivale a áudio contínuo independente para OBS/Discord.
+- **Validação:** [GitHub Actions Windows x64](https://github.com/Wave-Universal-Studio/main/actions/runs/45333419531): **932 testes aprovados** em Debug e **932** em Release, zero falhas, sete Explicit excluídos por configuração e builds limpos. O teste de clock legado foi estabilizado com sincronização temporal no fake.
 - **Pendências:** estabilidade e recuperação prolongadas em hardware, latência/drift, aceitação instrumental de rotas externas e conexão dos barramentos com entradas/saídas contínuas.
 
 O proprietário relatou funcionamento manual dos dois fluxos externos estudados; isso não substitui medições instrumentadas. Para o histórico e as evidências, consulte [Status](PROJECT_STATUS.md), [Plano de testes](docs/TEST_PLAN.md) e [Próxima tarefa](NEXT_TASK.md).

@@ -2,13 +2,13 @@
 
 Atualizado em 24/11/2026.
 
-## Em revisão — F5-I1-BUS-MATRIX-CORE, 24/11/2026
+## Implementado — F5-I1-BUS-MATRIX-CORE, 24/11/2026 (PR #1 integrada)
 
 O motor interno soma PCM float32 em **Personal Mix** e **Stream Mix** por uma matriz de envios explícitos. Cada envio e master tem ganho e mute independentes. O transporte injetado exercita conversão, soma, proteção de saída, medição, isolamento, desconexão e renovação de geração usando amostras. A saída externa é opt-in, com autorização específica para conteúdo sensível e proteção contra retorno para a mesma chamada.
 
-O Linux restaurou a solução em modo locked com auditoria NuGet e compilou os alvos Windows x64 em Debug e Release. Os 18 casos novos de PCM foram executados em um projeto de validação local que referencia a biblioteca de áudio, sem Windows Forms ou dispositivos. O workflow Windows x64 executa as regressões da solução com as seeds do projeto. O resultado do runner fica associado ao PR. [Plano de testes](docs/TEST_PLAN.md#f5-i1-bus-matrix-core)
+**Validação final integrada:** Linux restaurou pacotes em modo locked/auditoria, compilou Windows x64 e executou 18 casos portáteis de PCM por configuração. Em [GitHub Actions Windows x64](https://github.com/Wave-Universal-Studio/main/actions/runs/45333419531), os builds Debug e Release terminaram sem avisos ou erros; cada regressão registrou **932 aprovados, zero falhas e sete Explicit excluídos** (939 totais). A correção de um teste legado de clock simulado esperou o tempo monotônico da leitura, sem modificar o backend de áudio. PR #1 integrada por squash no commit `787df9181f62bc5b340300ee53d1b0ecabf83eca`. [Plano de testes](docs/TEST_PLAN.md#f5-i1-bus-matrix-core)
 
-F5-I2 aguarda revisão deste incremento. Nessa etapa futura, avaliar fontes, destinos e relógios físicos sob autorização própria, incluindo a viabilidade de rotas simultâneas. A entrega atual opera com o transporte injetado e não ativa endpoints nem adiciona controles à interface.
+**Próxima etapa F5-I2** preparada na [Issue #2](https://github.com/Wave-Universal-Studio/main/issues/2): integração de fluxos e destinos reais após análise de relógios, isolamento, disponibilidade do Windows e segurança. A F5-I1 opera exclusivamente com transporte PCM injetado e não ativa endpoints nem adiciona controles à interface. Não repetir testes físicos já aprovados, reinicializações ou instalar drivers sem necessidade e autorização específica.
 
 ## Histórico — F4-I2-GAMECHAT-SOLO-LANG, 24/11/2026
 
