@@ -1,125 +1,92 @@
 <div align="center">
-  <img src="assets/branding/icons/WaveStudio-256.png" width="144" height="144" alt="Logo oficial do Wave Studio" />
+  <img src="assets/branding/icons/WaveStudio-256.png" width="128" height="128" alt="Logotipo do Wave Studio" />
   <h1>Wave Studio</h1>
   <p><strong>Seu áudio. Seu microfone. Seu estúdio.</strong></p>
-  <p>Central universal de áudio para Windows, independente de fabricante.<br>Controle, personalização e mixagem para jogos, comunicação, streaming e música.</p>
-  <p><code>v0.1.0 Alpha</code> · <code>Windows x64</code> · <code>C# / .NET 10</code> · <code>PT-BR</code></p>
-  <p><a href="#recursos">Recursos</a> · <a href="#roadmap">Roadmap</a> · <a href="#experimentar">Experimentar</a> · <a href="#documentação">Documentação</a></p>
+  <p>Central de áudio para Windows, independente da marca do equipamento.<br>Controle de dispositivos, mixagem de aplicativos e processamento de áudio em um só lugar.</p>
+  <p><code>v0.1.0 Alpha</code> · <code>Windows x64</code> · <code>C# / .NET 10</code> · <code>PT-BR · EN · ES</code></p>
+  <p><a href="#recursos">Recursos</a> · <a href="#estado-do-projeto">Estado</a> · <a href="#roadmap">Roadmap</a> · <a href="#executar">Executar</a> · <a href="#documentação">Documentação</a></p>
 </div>
 
 ---
 
 > [!IMPORTANT]
-> **Alpha experimental.** Os controles do Windows e o teste de microfone já funcionam na prévia. Equalização global, monitoramento contínuo, microfone virtual e roteamento externo ainda estão em desenvolvimento. Não há instalador ou release pública.
-
-> [!NOTE]
-> **Continuidade entre chats do ChatGPT:** leia [CHAT_CONTINUITY.md](CHAT_CONTINUITY.md) antes de retomar o projeto. O guia reúne o fluxo, as decisões, os checkpoints e o protocolo de recuperação.
+> **Alpha em desenvolvimento.** O aplicativo ainda não tem instalador ou release pública estável. Equalização global, áudio virtual contínuo e barramentos ligados a saídas reais **não** estão disponíveis como funções prontas.
 
 ## Recursos
 
-### Disponíveis na prévia
+| Módulo | Disponível na versão Alpha |
+| --- | --- |
+| **Dispositivos** | Enumeração de entradas/saídas, seleção, volume, mute, balanço estéreo e detecção de alterações. |
+| **Mesa de som** | Faders de 0–100%, mute e pico das sessões reais de aplicativos; master da saída do Windows; grupos e filtros temporários. |
+| **Jogo / Comunicação** | Balanço que atenua o grupo oposto sem elevar o volume original, com restauração condicional e avisos de conflitos. |
+| **Microfone** | Teste de gravação curta (até 10 s) e reprodução explícita, com indicação de captação. |
+| **Equalizador** | Prévia de EQ de 10 bandas, preamp, bypass, comparação A/B e perfis locais. |
+| **Roteamento externo** | Diagnóstico **somente leitura** de dispositivos, formatos, pareamento e compatibilidade; guia de configuração e restauração manual. |
+| **Configurações** | Preferências persistentes, backup e restauração; interface em português brasileiro, inglês e espanhol, com opção Seguir Windows. |
 
-- Seleção de entrada e saída, volume, mute e balanço estéreo quando suportado.
-- Mesa de som com faders, mute e picos de sessões reais, grupos e master da saída do Windows.
-- Teste de microfone de até 10 segundos, com reprodução explícita.
-- EQ de 10 bandas, preamp, bypass, comparação A/B e perfis locais.
-- Preferências persistentes, backup, restauração, detecção de dispositivos e idioma da interface.
-
-O EQ atual atua **somente sobre a gravação curta reproduzida dentro do Wave Studio**. Não modifica o áudio de jogos, Discord ou OBS. O áudio do teste permanece temporariamente em memória.
+O equalizador atual processa **apenas a gravação de teste reproduzida pelo Wave Studio**; não altera globalmente jogos, Discord ou OBS. Os picos são leituras instantâneas e dependem dos recursos fornecidos pelo Windows.
 
 ### Mesa de som e idioma
 
-Escolha a saída em **Dispositivos**. Em **Mesa de som**, arraste o fader do aplicativo ou use as setas, alterne o mute e atribua grupos às sessões presentes. Use o seletor acima das faixas para filtrar os grupos. A aba **Detalhes das sessões** mantém a grade com volume numérico, PID e instância. O pico de cada faixa é uma amostra instantânea e pode perder eventos breves. O master mostra o pico agregado e controla o volume e mute dessa saída no Windows.
+Em **Dispositivos**, selecione a saída. Na **Mesa de som**, ajuste cada aplicativo por fader ou mute; a grade técnica continua em **Detalhes das sessões**. Para usar **Balanço Jogo / Comunicação**, atribua sessões ativas aos dois grupos. Centralizar ou sair da mesa tenta restaurar os níveis modificados, mas alterações externas e sessões encerradas podem impedir a restauração completa.
 
-Para usar **Balanço Jogo / Comunicação**, atribua pelo menos uma sessão ativa a cada grupo. Mova o controle para o lado que deseja ouvir em destaque. O outro lado é atenuado a partir dos volumes originais. **Centralizar** tenta restaurar esses volumes. Ao sair da mesa, trocar de saída ou fechar normalmente, o Wave Studio também tenta restaurar os valores que ainda correspondem aos que aplicou. Se houver conflito ou faltar confirmação, a mesa mostra um aviso e conserva valores alterados externamente.
+**Atenção:** o balanço e o master atuam sobre volumes **reais do Windows**, podendo afetar chamadas e transmissões. Não são barramentos pessoais independentes. A opção **Configurações → Idioma** aplica a tradução selecionada na próxima abertura do aplicativo.
 
-O balanço altera os volumes de sessão do Windows na saída selecionada e pode afetar o que chega à transmissão. Solo de sessão fica fora desta versão porque exigiria silenciar outros aplicativos, inclusive chamadas, com restauração sujeita a concorrência.
+## Estado do projeto
 
-Em **Configurações → Idioma**, escolha **Português (Brasil)**, **English (United States)**, **español (España)** ou **Seguir Windows**. A escolha é salva automaticamente e vale na próxima abertura do Wave Studio. Seguir Windows usa o inglês ou espanhol quando corresponde a uma dessas famílias e pt-BR para idiomas sem tradução disponível. A formatação numérica segue a configuração regional do Windows.
+**24/11/2026 — F4-I2 integrada; F5-I1 em revisão.**
 
-### Visão do produto
+- **Base da `main`:** mesa de som, balanço Jogo/Comunicação e três idiomas implementados. A última regressão consolidada da F4-I2 registrou **914 testes aprovados em Debug e 914 em Release**, com sete testes físicos `Explicit` excluídos.
+- **[F5-I1 — PR #1](https://github.com/Wave-Universal-Studio/main/pull/1):** núcleo PCM de **Personal Mix** e **Stream Mix**, com matriz de envios, ganho/mute por barramento e isolamento; implementação em análise e integração por transporte injetado. **Não** equivale a áudio contínuo independente para OBS/Discord.
+- **Validação:** o GitHub Actions executa builds e regressões em Windows x64 na PR. A integração na `main` depende de revisão e verificações concluídas.
+- **Pendências:** estabilidade e recuperação prolongadas em hardware, latência/drift, aceitação instrumental de rotas externas e conexão dos barramentos com entradas/saídas contínuas.
 
-| Área | Funcionalidades planejadas |
-| --- | --- |
-| **Hub** | Equipamentos, catálogo visual e personalização |
-| **Áudio** | EQ básico, 31 bandas e paramétrico, dinâmica, efeitos e surround 7.1 |
-| **Microfone** | EQ, boost, redução de ruído, tratamento vocal, alteração de voz e Soundboard |
-| **Mixer** | Mesa digital, faders, canais, barramentos, game/chat balance e gravação |
-| **Reparos** | Diagnóstico e correções seguras de áudio e dispositivos |
-| **Config** | Idiomas, temas, cores, wallpaper, animações, perfis e atalhos |
-
-Também estão previstos integração com aplicativos externos, mix-minus e estudos de compatibilidade com VST3, Equalizer APO e AutoEQ. O acesso Apoiar será voluntário e não bloqueará recursos.
-
-[Plano completo do produto](docs/PRODUCT_MASTER_PLAN.md)
-
-## Estado atual
-
-**24/11/2026 · F4-I2 — balanço Jogo / Comunicação e três idiomas**
-
-A mesa usa as sessões de reprodução do dispositivo escolhido. Os dois fluxos externos foram confirmados manualmente pelo proprietário e seguem sem telemetria associada a uma prova instrumentada. Monitoramento contínuo, recuperação em hardware, latência acústica e drift permanecem como pendências técnicas de release.
-
-[Status detalhado](PROJECT_STATUS.md) · [Próxima tarefa](NEXT_TASK.md) · [Roteiro agrupado](docs/EXTERNAL_ROUTE_PROOF.md)
+O proprietário relatou funcionamento manual dos dois fluxos externos estudados; isso não substitui medições instrumentadas. Para o histórico e as evidências, consulte [Status](PROJECT_STATUS.md), [Plano de testes](docs/TEST_PLAN.md) e [Próxima tarefa](NEXT_TASK.md).
 
 ## Roadmap
 
-| Fase | Objetivo |
+| Fases | Objetivo |
 | --- | --- |
-| 0–1 | Arquitetura e controles básicos do Windows — base implementada |
-| 2 | Motor de áudio, resampling, sincronização e monitoramento — em desenvolvimento |
-| 3 | Integração real com aplicativos externos |
-| 4–5 | Mesa digital, barramentos e roteamento |
-| 6–7 | Equalização e tratamento de áudio/microfone |
-| 8–10 | Soundboard, alteração de voz e surround |
-| 11–12 | Gravação, perfis, automação, otimização e distribuição |
+| **1** | Controles reais de dispositivos e sessões do Windows — base implementada. |
+| **2–3** | DSP, WASAPI, sincronização e integração externa — fundação/diagnóstico experimental. |
+| **4–5** | Mesa, Jogo/Comunicação, barramentos e matriz — mesa implementada; núcleo de barramentos em revisão. |
+| **6–7** | EQ global/avançado, dinâmica, supressão de ruído e tratamento de microfone. |
+| **8–10** | Soundboard, efeitos/transformação de voz e surround virtual. |
+| **11–12** | Gravação multifaixa, perfis, automação, otimização e distribuição. |
+
+Também estão planejados um hub visual de equipamentos, diagnósticos/reparos seguros, aparência personalizável e estudos de integração com VST3, Equalizer APO e AutoEQ. Veja o [plano mestre](docs/PRODUCT_MASTER_PLAN.md) para o escopo completo.
 
 ## Compatibilidade
 
-**Windows 11 x64** é a plataforma prioritária (validação física pendente); **Windows 10 x64** é experimental. O projeto trabalha com os endpoints expostos pelo Windows: USB, Bluetooth, P2/P3, HDMI/DP, wireless e interfaces de áudio. Recursos de hardware dependem do suporte real de cada dispositivo.
+**Windows 11 x64** é o alvo prioritário, ainda com validação física completa pendente. **Windows 10 x64** é experimental. USB, Bluetooth, P2/P3, HDMI/DP e interfaces são tratados conforme os endpoints e recursos realmente expostos pelo Windows.
 
-Processamento local, sem envio de áudio pelo aplicativo. Sem driver próprio para os controles básicos.
+A aplicação usa processamento local e não envia gravações a serviços externos. O motor é desenvolvido em C#/.NET 10 com WinForms, NAudio, Core Audio/WASAPI e testes automatizados. O ambiente Codex Cloud/Linux pode compilar alvos Windows, **mas não substitui a execução WinForms e os testes de integração em Windows**.
 
-## Experimentar
+## Executar
 
-Na raiz do repositório, com o SDK definido em [global.json](global.json):
-
-```powershell
-dotnet run --project .\src\WaveStudio.Desktop -c Release
-```
-
-A prévia local anterior, se gerada, está em `artifacts/alpha-preview/win-x64/WaveStudio.exe` e requer .NET Desktop Runtime 10 x64. Não é um instalador público.
-
-[Guia de teste e aceitação](docs/ALPHA_ACCEPTANCE.md) · [Teste de microfone e EQ](docs/EQ_PREVIEW.md)
-
-## Desenvolvimento
-
-**Stack:** C# · .NET 10 LTS · WinForms · NAudio · Core Audio/WASAPI · JSON · xUnit v3.
+Requer **Windows x64** com o SDK indicado em [global.json](global.json). Na raiz do repositório:
 
 ```powershell
-dotnet restore WaveStudio.slnx --locked-mode -p:NuGetAudit=true -p:NuGetAuditMode=all
+dotnet restore WaveStudio.slnx --locked-mode
 dotnet build WaveStudio.slnx -c Debug --no-restore
-$env:TESTINGPLATFORM_TELEMETRY_OPTOUT = '1'
-dotnet test --solution WaveStudio.slnx -c Debug --no-build
+dotnet run --project src/WaveStudio.Desktop -c Debug
 ```
 
-`src/` — aplicação e motor · `tests/` — testes · `assets/` — identidade visual · `docs/` — documentação
-
-Os testes físicos Explicit são separados das regressões e exigem autorização específica. Os comentários do código próprio estão em português brasileiro. A interface oferece três idiomas em Configurações → Idioma.
+Para validar, consulte o [plano de testes](docs/TEST_PLAN.md): a suíte Windows é executada separadamente, e os testes `Explicit` não devem ser disparados sem consentimento. Não há instalador público nesta fase.
 
 ## Documentação
 
-| Tema | Referências |
+| Para conhecer | Para desenvolver e revisar |
 | --- | --- |
-| Produto | [Plano mestre](docs/PRODUCT_MASTER_PLAN.md) · [Requisitos](docs/REQUIREMENTS.md) · [Hub](docs/PRODUCT_HUB_PLAN.md) |
-| Engenharia | [Arquitetura](docs/ARCHITECTURE.md) · [Motor](docs/AUDIO_ENGINE_PLAN.md) · [WASAPI](docs/WASAPI_BACKEND_PLAN.md) · [Viabilidade](docs/FEASIBILITY.md) |
-| Planejamento | [Implementação](docs/IMPLEMENTATION_PLAN.md) · [Efeitos futuros](docs/FUTURE_AUDIO_FEATURES.md) · [Próxima tarefa](NEXT_TASK.md) |
-| Progresso | [Status](PROJECT_STATUS.md) · [Changelog](CHANGELOG.md) · [Revisões](REVIEW.md) |
-| Qualidade | [Testes](docs/TEST_PLAN.md) · [Aceitação](docs/ALPHA_ACCEPTANCE.md) · [Auditoria](docs/GENERAL_CHECKUP.md) · [Recuperação](docs/RECOVERY_AUDIT.md) |
-| Continuidade | [Guia para o próximo chat](CHAT_CONTINUITY.md) |
-| Projeto | [Identidade visual](assets/branding/README.md) · [Licenças de terceiros](docs/THIRD_PARTY_NOTICES.md) · [Agentes](AGENTS.md) |
+| [Requisitos](docs/REQUIREMENTS.md) · [Plano mestre](docs/PRODUCT_MASTER_PLAN.md) · [Hub](docs/PRODUCT_HUB_PLAN.md) | [Arquitetura](docs/ARCHITECTURE.md) · [Motor de áudio](docs/AUDIO_ENGINE_PLAN.md) · [WASAPI](docs/WASAPI_BACKEND_PLAN.md) |
+| [Progresso](PROJECT_STATUS.md) · [Histórico](CHANGELOG.md) · [Roadmap imediato](NEXT_TASK.md) | [Testes](docs/TEST_PLAN.md) · [Revisões](REVIEW.md) · [Instruções para agentes](AGENTS.md) |
+| [Identidade visual](assets/branding/README.md) · [Licenças](docs/THIRD_PARTY_NOTICES.md) | [Guia de continuidade](CHAT_CONTINUITY.md) · [Prova externa](docs/EXTERNAL_ROUTE_PROOF.md) |
+
+> O repositório é uma **Alpha técnica**: o README destaca recursos verificáveis, enquanto `docs/` preserva decisões, limitações e evidências completas.
 
 ---
 
 <div align="center">
   <img src="assets/branding/icons/WaveStudio-64.png" width="40" height="40" alt="Wave Studio" />
-  <p><strong>Wave Studio</strong><br>Controle real. Áudio personalizado.</p>
+  <p><strong>Wave Studio</strong> · Controle real. Áudio personalizado.</p>
 </div>
