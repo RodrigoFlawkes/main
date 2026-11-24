@@ -48,7 +48,11 @@ public sealed class BoundedBusPcmTransportTests
 
         float[] samples = new float[480];
         Assert.True(bridge.TryReadOutput(MixBus.Personal, 1, samples, out _));
-        Assert.All(samples, sample => Assert.Equal(.4f, sample));
+        // Após perder um bloco, o motor retoma em rampa de 5 ms para evitar estalos.
+        // O teste valida o início atenuado e o nível estável após a recuperação.
+        Assert.InRange(samples[0], 0f, .01f);
+        Assert.True(samples[100] < samples[239]);
+        Assert.All(samples[239..], sample => Assert.Equal(.4f, sample));
         Assert.False(bridge.TryReadOutput(MixBus.Personal, 0, samples, out _));
         Assert.All(samples, sample => Assert.Equal(0, sample));
         Assert.False(bridge.TryOfferCapture(game.Endpoint, 0, Constant(.5f)));
