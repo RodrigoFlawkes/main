@@ -1,8 +1,8 @@
 # Plano de testes
 
-## F5-I2C1-OWNED-WASAPI-PACKET-STEPS (em revisão)
+## F5-I2C1-OWNED-WASAPI-PACKET-STEPS (integrada)
 
-Oito testes novos em MTA verificam pacotes de captura/render com owners falsos: liberação sempre efetuada, rejeição de timestamp futuro/flags erradas, frames incompletos, invalidade de buffer, saída PCM16 com flag SILENT quando necessário, cancelamento antes da aquisição e recursos retidos se ReleaseBuffer falhar. Sem qualquer COM ou hardware real. Próximo gate: GitHub Actions Windows x64 Debug e Release, baseline **946 testes comuns + 8**, sete Explicit excluídos, builds/restore sem avisos. Prova instrumental nativa e duração continuam pendentes.
+Oito testes novos em MTA verificam pacotes de captura/render com owners falsos: liberação sempre efetuada, rejeição de timestamp futuro/flags erradas, frames incompletos, invalidade de buffer, saída PCM16 com flag SILENT quando necessário, cancelamento antes da aquisição e recursos retidos se ReleaseBuffer falhar. Sem qualquer COM ou hardware real. A [CI Windows x64 final](https://github.com/Wave-Universal-Studio/main/actions/runs/45338821387) aprovou **954 testes comuns Debug e 954 Release**, sete Explicit excluídos por configuração, zero falhas e builds sem avisos/erros. Prova instrumental nativa e execução prolongada continuam pendentes.
 
 ## F5-I2B-NATIVE-PCM-PACKET-ADAPTER (integrada)
 

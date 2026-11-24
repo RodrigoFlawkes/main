@@ -1,6 +1,6 @@
 # Arquitetura do Wave Studio
 
-## F5-I2C1-OWNED-WASAPI-PACKET-STEPS (em revisão)
+## F5-I2C1-OWNED-WASAPI-PACKET-STEPS (integrada)
 
 `WasapiBusCaptureOwnerStep` e `WasapiBusRenderOwnerStep` são proprietários dos serviços `IWasapiCapturePackets` e `IWasapiRenderPackets` já abertos. Verificam `MTA` e identidade da thread criadora em toda operação, copiam os dados somente enquanto o buffer nativo está adquirido e chamam ReleaseBuffer com o número correto de frames (ou SILENT para render não autorizado/indisponível). Uma falha de liberação é tratada como recurso retido: não descartar o wrapper COM e invalidar a ponte de buffers PCM para impedir publicação tardia.
 

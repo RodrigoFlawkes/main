@@ -1,6 +1,6 @@
 # Motor de áudio — fundação, conversão e relógios
 
-## F5-I2C1-OWNED-WASAPI-PACKET-STEPS (em revisão)
+## F5-I2C1-OWNED-WASAPI-PACKET-STEPS (integrada)
 
 A costura nativa por etapas usa owners MTA em volta de IAudioCaptureClient/IAudioRenderClient já adquiridos. O owner de captura obtém pacote, confirma direção/timestamp/posição, converte o span nativo para PCM do mixer e libera o buffer em `finally`, inclusive em erro de flags. O owner de render solicita buffer de 10 ms, prepara o pacote Personal/Stream e solta com flag SILENT se o ticket estiver inválido. Erros de ReleaseBuffer invalidam os tickets e retêm recursos porque não se conhece a conclusão física da entrega.
 

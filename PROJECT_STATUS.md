@@ -2,11 +2,11 @@
 
 Atualizado em 24/11/2026.
 
-## Em revisão — F5-I2C1-OWNED-WASAPI-PACKET-STEPS, 24/11/2026
+## Implementado — F5-I2C1-OWNED-WASAPI-PACKET-STEPS, 24/11/2026
 
 Os componentes `WasapiBusCaptureOwnerStep` e `WasapiBusRenderOwnerStep` trabalham sobre interfaces WASAPI de captura/render **já abertas** por um owner MTA autorizado. Cada passo obtém e libera seu buffer na mesma thread, verifica identidade, tamanho, QPC básico, flags e cancelamento, e liga os adapters PCM16/float32 da F5-I2B aos dois barramentos internos. ReleaseBuffer falho põe a ponte em falha fechada e retém o owner até recuperação explícita, sem liberar COM incerto.
 
-A F5-I2C1 **não inicia `IAudioClient`, não cria streams contínuos nem muda dispositivos do Windows**. OITO testes novos de owners simulados exercitam cópia, liberação, timestamp, silêncio, bloqueio e retenção em erro. A CI ainda precisa validar esse código. Continua pendente agendamento de clocks reais e prova em hardware antes de anunciar recursos nativos completos.
+A F5-I2C1 **não inicia `IAudioClient`, não cria streams contínuos nem muda dispositivos do Windows**. Oito testes novos de owners simulados exercitam cópia, liberação, timestamp, silêncio, bloqueio e retenção em erro. [CI Windows x64 final](https://github.com/Wave-Universal-Studio/main/actions/runs/45338821387) confirmou **954 testes comuns aprovados em Debug e 954 em Release**, zero falhas, sete Explicit excluídos por configuração e builds sem avisos/erros. [PR #9](https://github.com/Wave-Universal-Studio/main/pull/9) integrada no commit `26cfb38b732b7b4fb9c6a9ddf2b5daebbe828906`. Continua pendente agendamento de clocks reais e prova em hardware antes de anunciar recursos nativos completos.
 
 ## Implementado — F5-I2B-NATIVE-PCM-PACKET-ADAPTER, 24/11/2026
 
