@@ -424,12 +424,22 @@ public sealed class WasapiSilentTests
     {
         var route = WasapiContractTests.Route();
         var calls = new Calls(route);
-        calls.Input.ReadClockOverride = index => new(0, 192000, 0, index switch
+        calls.Input.ReadClockOverride = index =>
         {
-            0 => 19200,
-            1 => 38400,
-            _ => reason == "PositionRegressed" ? 1u : 60000u
-        }, (ulong)calls.Input.StartTime + (ulong)index * 1_000_000);
+            // A leitura simulada deve respeitar o relógio monotônico real do teste.
+            // Sem aguardar o instante previsto, um runner rápido rejeita o QPC futuro
+            // como InvalidTime antes de verificar a falha de posição pretendida.
+            long instantePrevisto = calls.Input.StartTime + (long)index * 1_000_000;
+            Assert.True(
+                SpinWait.SpinUntil(() => WasapiTime.Now100ns() >= instantePrevisto, TimeSpan.FromSeconds(1)),
+                "O relógio do teste não alcançou a leitura simulada no prazo.");
+            return new(0, 192000, 0, index switch
+            {
+                0 => 19200,
+                1 => 38400,
+                _ => reason == "PositionRegressed" ? 1u : 60000u
+            }, (ulong)instantePrevisto);
+        };
         await using var session = new WasapiSilentSession(route, new(), calls.Open);
 
         var result = await session.RunAsync(TimeSpan.FromSeconds(1), TestContext.Current.CancellationToken);

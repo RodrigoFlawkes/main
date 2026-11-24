@@ -1,5 +1,13 @@
 # Arquitetura do Wave Studio
 
+## F5-I1-BUS-MATRIX-CORE
+
+`BusMixSession` usa a identidade `TransportEndpoint` do motor e o formato `PcmFloatFormat`. O transporte `IBusPcmTransport` oferece PCM em blocos identificados por fluxo, geração e índice. Ele recebe os dois barramentos e seus medidores em uma entrega interna. A entrega externa opcional recebe somente Stream Mix. O ticket associa entrega, formato, geração e destino autorizado e deve ser conferido na publicação e no consumo de cópias enfileiradas.
+
+Uma geração contém até oito fontes e uma matriz explícita. Cada envio começa ausente até a configuração da topologia. Ganho e mute operam somente sobre envios autorizados. Stream exige consentimento separado para microfone, comunicação, retorno de chamada e origem agregada. Para um destino identificado como chamada, o motor exclui o retorno da própria chamada, comunicação sem identificação de retorno e agregados cujo conteúdo de retorno é indeterminado. Fontes marcadas como saídas de barramento são recusadas. O transporte responde pela procedência correta das fontes e pela identidade do destino.
+
+A sessão injeta transporte sem tocar os runners nativos limitados a cinco segundos. A próxima integração poderá ligar fontes e destinos reais após revisão, autorização e prova de viabilidade. Solo/PFL/AFL pertence a um monitoramento Personal futuro. [Contrato temporal e de processamento](AUDIO_ENGINE_PLAN.md#f5-i1-bus-matrix-core)
+
 ## F4-I2-GAMECHAT-SOLO-LANG — balanço e idiomas
 
 O balanço reutiliza a fila de comandos de `ApplicationSessionService`. A identidade é a composição do endpoint, da geração de seleção e de `SessionKey`, independente do PID. O painel requer os dois grupos e todas as faixas neles atribuídas ativas, identificadas e com volume disponível. A faixa de sons do sistema fica fora do balanço. O arraste confirma no fim do gesto. As setas agrupam mudanças por 180 ms e Esc cancela a edição pendente. O gesto fica separado dos faders absolutos da mesa.

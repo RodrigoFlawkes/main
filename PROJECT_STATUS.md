@@ -2,7 +2,15 @@
 
 Atualizado em 24/11/2026.
 
-## Estado atual — F4-I2-GAMECHAT-SOLO-LANG, 24/11/2026
+## Em revisão — F5-I1-BUS-MATRIX-CORE, 24/11/2026
+
+O motor interno soma PCM float32 em **Personal Mix** e **Stream Mix** por uma matriz de envios explícitos. Cada envio e master tem ganho e mute independentes. O transporte injetado exercita conversão, soma, proteção de saída, medição, isolamento, desconexão e renovação de geração usando amostras. A saída externa é opt-in, com autorização específica para conteúdo sensível e proteção contra retorno para a mesma chamada.
+
+O Linux restaurou a solução em modo locked com auditoria NuGet e compilou os alvos Windows x64 em Debug e Release. Os 18 casos novos de PCM foram executados em um projeto de validação local que referencia a biblioteca de áudio, sem Windows Forms ou dispositivos. O workflow Windows x64 executa as regressões da solução com as seeds do projeto. O resultado do runner fica associado ao PR. [Plano de testes](docs/TEST_PLAN.md#f5-i1-bus-matrix-core)
+
+F5-I2 aguarda revisão deste incremento. Nessa etapa futura, avaliar fontes, destinos e relógios físicos sob autorização própria, incluindo a viabilidade de rotas simultâneas. A entrega atual opera com o transporte injetado e não ativa endpoints nem adiciona controles à interface.
+
+## Histórico — F4-I2-GAMECHAT-SOLO-LANG, 24/11/2026
 
 A Mesa de som ajusta o balanço das sessões ativas que o usuário atribui a **Jogo** e **Comunicação** na saída selecionada. O gesto atenua o grupo oposto até zero em relação ao volume original de cada instância. **Centralizar**, mudar os participantes, trocar de saída, sair da mesa ou fechar normalmente restauram apenas os níveis que ainda correspondem à atuação do aplicativo. Conflitos e restauração sem confirmação são sinalizados. O controle atua nas sessões do Windows e pode afetar a transmissão.
 

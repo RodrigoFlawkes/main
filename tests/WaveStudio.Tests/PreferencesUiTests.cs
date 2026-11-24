@@ -282,7 +282,11 @@ public sealed class PreferencesUiTests(ITestOutputHelper output)
             form.Show();
             await PumpUntilAsync(() => form.StartupTask.IsCompleted);
             form.StartupTask.GetAwaiter().GetResult();
-            await PumpUntilAsync(() => Descendants(form).OfType<CheckBox>().All(check => check.Enabled)
+            var choices = Descendants(form).OfType<CheckBox>().ToArray();
+            var followPlayback = choices.Single(check => check.Text == "Seguir padrão multimídia de reprodução");
+            var followCapture = choices.Single(check => check.Text == "Seguir padrão multimídia de captura");
+            // O mute pode ficar desabilitado na ausência de um endpoint. A consulta deve liberar a seleção.
+            await PumpUntilAsync(() => followPlayback.Enabled && followCapture.Enabled
                 && Descendants(form).OfType<DevicePanel>().All(panel => panel.Enabled));
             Assert.All(Descendants(form).OfType<DevicePanel>(), panel => Assert.True(panel.Enabled));
             Assert.Equal(FormWindowState.Normal, form.WindowState); // Sem maximizar com uma área fictícia.

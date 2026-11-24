@@ -1,5 +1,13 @@
 # Plano de testes
 
+## F5-I1-BUS-MATRIX-CORE
+
+Os 18 casos novos exercitam o caminho completo de entrega PCM com transporte simulado. Cobrem soma, dois barramentos, ganho e mute independentes, master, pico/RMS e clipping, privacidade e mix-minus, origem agregada, formatos 44,1/48 kHz, mono e estéreo, sanitização, matriz determinística, entrega atrasada e parcial, troca de geração, cancelamento, Stop e zero alocações gerenciadas após aquecimento no cenário medido.
+
+No Linux, o restore locked rodou com `EnableWindowsTargeting=true`, auditoria NuGet de todas as dependências e NU1900 tratado como erro. Os builds x64 Debug e Release da solução usaram `--no-restore --no-incremental -warnaserror` e cross-targeting. O projeto efêmero de validação referenciou a biblioteca de áudio e executou a classe `BusMixSessionTests` sem Windows Forms, Core Audio ou hardware.
+
+O workflow [Testes Windows x64](../.github/workflows/windows-x64.yml) usa `windows-2025` com o SDK de `global.json`, restore locked auditado, builds não incrementais e a regressão comum. Debug usa seed 20261114 e Release usa seed 20261113. O xUnit usa `--culture pt-BR` no processo de testes. A primeira execução em en-US teve 871 aprovados, 61 falhas e sete excluídos em cada configuração. Os logs mostraram expectativas de texto em pt-BR nos testes existentes. Uma execução focada de `AudioErrorTests` reproduziu três falhas em en-US e aprovou quatro casos em pt-BR, sem alterar o sistema. A segunda execução Windows aprovou 925 testes por configuração e encontrou sete timeouts em um teste de posicionamento. Ele aguardava até os controles de mute de endpoints indisponíveis ficarem habilitados. O teste passou a aguardar a seleção e os painéis, preservando as asserções de posicionamento e persistência. A expectativa é 932 testes comuns por configuração (914 da base e 18 novos) e sete Explicit excluídos. Consultar a execução do PR para contagens reais e logs. A regressão de Windows não foi executada no Linux. Os testes novos não leem, abrem ou alteram dispositivos.
+
 ## F4-I2-GAMECHAT-SOLO-LANG — balanço e idiomas
 
 Os casos com sessões simuladas verificam centro, atenuação proporcional nos dois lados e nos extremos, instâncias com o mesmo PID, ordem das reduções antes das devoluções, valores externos, ausência de escrita em sessões não atribuídas, duplicidade, geração obsoleta, expiração, falha COM após a escrita, leitura divergente e falha de descarte. Os casos STA verificam reassociação de grupo, proteção dos sons do sistema, restauração antes da mudança de saída, aviso após desconexão e fechamento cooperativo.
