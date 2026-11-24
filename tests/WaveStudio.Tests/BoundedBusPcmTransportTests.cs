@@ -127,7 +127,12 @@ public sealed class BoundedBusPcmTransportTests
         session.Start(1, Mono, [game], cancellation: TestContext.Current.CancellationToken);
         Assert.True(bridge.TryOfferCapture(game.Endpoint, 0, Constant(.2f)));
         Assert.True(session.Process(1, 0));
+        float[] beforeClose = new float[480];
+        Assert.True(bridge.TryReadOutput(MixBus.Personal, 0, beforeClose, out var issuedTicket));
+        Assert.NotNull(issuedTicket);
+        Assert.True(issuedTicket.IsValid);
         bridge.Dispose();
+        Assert.False(issuedTicket.IsValid);
 
         float[] output = Constant(1);
         Assert.False(bridge.TryReadOutput(MixBus.Personal, 0, output, out _));

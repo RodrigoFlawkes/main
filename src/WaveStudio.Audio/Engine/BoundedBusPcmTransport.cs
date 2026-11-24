@@ -14,6 +14,7 @@ internal sealed class BoundedBusPcmTransport : IBusPcmTransport, IDisposable
     private readonly FrameLane stream;
     private readonly FrameLane? external;
     private readonly MixExternalDestination? destination;
+    private MixDeliveryTicket? publishedTicket;
     private int closed;
 
     public BoundedBusPcmTransport(long generation, PcmFloatFormat outputFormat,
@@ -97,6 +98,9 @@ internal sealed class BoundedBusPcmTransport : IBusPcmTransport, IDisposable
             ticket.Invalidate();
             return false;
         }
+        // Fechar a ponte deve invalidar também tickets obtidos antes do fechamento.
+        Volatile.Write(ref publishedTicket, ticket);
+        if (!Valid(ticket)) return false;
         bool ok = personal.TryWrite(block, personalPcm, ticket) && stream.TryWrite(block, streamPcm, ticket);
         if (!ok || !Valid(ticket)) { ticket.Invalidate(); return false; }
         return true;
@@ -153,7 +157,11 @@ internal sealed class BoundedBusPcmTransport : IBusPcmTransport, IDisposable
         return true;
     }
 
-    public void Dispose() => Interlocked.Exchange(ref closed, 1);
+    public void Dispose()
+    {
+        if (Interlocked.Exchange(ref closed, 1) == 0)
+            Volatile.Read(ref publishedTicket)?.Invalidate();
+    }
 
     private bool Valid(MixDeliveryTicket ticket) =>
         Volatile.Read(ref closed) == 0 && ticket.Generation == generation &&
