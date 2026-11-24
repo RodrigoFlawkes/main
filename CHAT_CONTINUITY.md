@@ -4,13 +4,13 @@
 
 Criado em 18/11/2026 na transição do WaveStudio P1. O histórico integral de chats pode não estar acessível. Não presumir leitura completa. As decisões e evidências versionadas são a memória operacional do projeto. Esta fotografia inicial é histórica; sempre consultar o HEAD atual antes de trabalhar.
 
-## Estado de retomada mais recente — 24/11/2026 (F5-I2A integrada)
+## Estado de retomada mais recente — 24/11/2026 (F5-I2B integrada)
 
-**Main funcional mais recente c7eb383b7293424ea9430455a6e56f8da574f44e** (mais commits documentais após). PR #3 F5-I2A BOUNDED-PCM-BRIDGE integrada: filas SPSC pré-alocadas, índices de 10 ms, geração/tickets, saída interna Personal/Stream e externa opcional injetada, sem hardware WASAPI contínuo. CI Windows x64 (https://github.com/Wave-Universal-Studio/main/actions/runs/45336327862) **938 aprovados em Debug e 938 em Release**, 7 Explicit excluídos cada, builds limpos. README FULL com logo e mini resumo de 3 linhas restaurado e PRESERVADO. Nunca substituir por texto cru.
+**Main funcional F5-I2B `8929bc6449b6c5e79a57810dd7e362940a1913c6`** (docs posteriores avançaram). PR #5 com adapter `WasapiCaptureBlockAdapter`/`WasapiRenderBlockAdapter` integrou suporte a pacotes PCM16/float32 WASAPI já adquiridos, mono/estéreo 44,1/48, flags e ticket, sem abrir dispositivos. Base F5-I1 (`BusMixSession`) + F5-I2A (`BoundedBusPcmTransport`) integra matriz PCM e filas seguras. **CI Windows** https://github.com/Wave-Universal-Studio/main/actions/runs/45337303234: Debug 946 aprovados, Release 946, 7 Explicit excluídos/configuração, builds sem avisos/erros. F5-I2B é conversão de pacotes, não prova de WASAPI nativo contínuo.
 
-F5-I1 mergeada antes (787df918): mixer PCM float32 de duas saídas internas, Stream por consentimento, bloqueio retorno de chamada. A F5-I2A completa a ponte de filas mas ainda NÃO faz streaming OBS/Discord, WASAPI contínuo, solo PFL ou separação de captura por aplicativo. Correções nos testes legados: WASAPI QPC fake, reconciliação mixer em STA. Um timeout intermitente de ExternalRouteTests release apareceu em CI intermediária, final passou: acompanhar sem mexer desnecessariamente no áudio físico.
+Próxima **F5-I2C-OWNED-WASAPI-SESSION** detalhada em NEXT_TASK.md/Issue #2: conexão segura de owners WASAPI, clock QPC, captura/render opt-in, Stop e recursos, usando fakes no CI. Não iniciar captura silenciosa, driver, reboot ou provas físicas do usuário. Não inventar separação de PCM por PID. Stream externo precisa autorização e proteção de retorno. A+B físico não instalado; somente cabo simples histórico. O usuário quer autonomia máxima sem pedirmos prompts e aprovou decisões técnicas, mas não autoriza custos/credenciais/hardware automaticamente. Automação horária do ChatGPT monitora GitHub e pode tomar ações disponíveis, NÃO executa Codex Cloud ilimitado.
 
-**Próxima F5-I2B-NATIVE-PCM-PACKET-ADAPTER** documentada em NEXT_TASK.md e Issue #2, para adaptar pacotes nativos PCM16/float32 aos buffers do motor com verificação de formatos/gerações. Usuário concedeu autonomia de rotina, desde que testes finais Windows CI verdes, sem force push, driver, reboot, compras ou mudança física/credenciais. Automação de acompanhamento GitHub **horária** ativa mas NÃO inicia tarefas Codex Cloud ilimitadas. Usuário não quer microintervenções nem repetir testes físicos já aceitos.
+README público COMPLETO com logo, navegação e mini resumo de três linhas foi preservado; nunca substituir por texto cru. PR #4 adicional de CI e templates existe com status action_required, ainda não validada/mergada. CI antiga teve alguns timeouts de testes em simulação e foi estabilizada; manter atenção a flaky tests. F3 dois fluxos relatados como funcionais manualmente, mas sem prova instrumental; não pedir refazer testes nem boot.
 
 ## 1. Missão e papéis
 
@@ -206,6 +206,8 @@ Se o limite ocorrer sem aviso, o próximo chat deve reconstruir a passagem usand
 | 24/11/2026 | F5-I1 PR #1 integrada via squash 787df91 após correção de QPC futuro no teste WASAPI legado: CI Windows Debug 932/932, Release 932/932, 7 Explicit excluídos, zero warning/error; núcleo PCM dois buses real via transporte injetado, sem destinos nativos. README público completo preservado e resumo 3 linhas. | F5-I2-STREAM-ENDPOINT-BRIDGE / Issue #2: conectar transporte a fontes e sinks válidos com segurança e CI sem provas físicas; não fingir streaming OBS. Automação horária autorizada a avançar via GitHub. |
 
 | 24/11/2026 | F5-I2A PR #3 merge c7eb383, filas PCM SPSC seguras, CI Windows 938/938 Debug/Release, 7 Explicit excluídos, README completo preservado; não equivale a áudio nativo contínuo. | F5-I2B adapter de pacotes WASAPI PCM16/float32 a buffers internos, Issue #2, sem ativar hardware automaticamente. |
+
+| 24/11/2026 | F5-I2B PR #5 squash 8929bc6, adapters PCM16/float32 WASAPI -> float32 mixer e inverso, 8 novos testes; CI Windows 946/946 Debug/Release, 7 Explicit fora, builds limpos. README completo preservado. | Próxima F5-I2C-OWNED-WASAPI-SESSION, lifecycle nativo opt-in/clock QPC/owners com provas injetadas sem alterar hardware. PR #4 CI/templates action_required, não mergeada. |
 
 ## 12. Prompt para abrir o próximo chat ChatGPT
 
